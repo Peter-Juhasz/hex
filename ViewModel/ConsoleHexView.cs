@@ -10,6 +10,12 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 	private int GroupingSize = 4;
 	private int AddressLength = viewBuffer.DataBuffer.Length <= 0xFFFFFFFF ? 8 : 16;
 
+	private ConsoleFormattingRule[] FormattingRules =
+	[
+		new ConsoleFormattingRule(0x00, 0x1F, ConsoleColor.DarkGray),
+		new ConsoleFormattingRule(0x20, 0x7E, ConsoleColor.White),
+	];
+
 	private int CalculateBytesPerLine(int windowWidth)
 	{
 		var usableWidth = windowWidth - (
@@ -217,17 +223,45 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 				writer.Write(' ');
 			}
 
+			// get value
 			var value = data[col];
 
-			if (value == 0)
+			// determine formatting
+			ConsoleFormattingRule? effectiveRule = null;
+			if (FormattingRules?.Length > 0)
 			{
-				Console.ForegroundColor = ConsoleColor.DarkGray;
+				foreach (var rule in FormattingRules)
+				{
+					if (rule.IsMatch(value))
+					{
+						effectiveRule = rule;
+						break;
+					}
+				}
 			}
 
+			if (effectiveRule != null)
+			{
+				if (effectiveRule.ForegroundColor != null)
+				{
+					Console.ForegroundColor = effectiveRule.ForegroundColor.Value;
+				}
+
+				if (effectiveRule.BackgroundColor != null)
+				{
+					Console.BackgroundColor = effectiveRule.BackgroundColor.Value;
+				}
+			}
+
+			// write hex value
 			value.TryFormat(formatBuffer, out _, "X2");
 			writer.Write(formatBuffer[..2]);
 
-			Console.ResetColor();
+			// reset formatting
+			if (effectiveRule != null)
+			{
+				Console.ResetColor();
+			}
 		}
 
 		writer.Write(" | ");
@@ -235,17 +269,49 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		// ASCII
 		for (int col = 0; col < data.Length; col++)
 		{
-			var b = data[col];
-			if (b >= 32 && b <= 126)
+			// get value
+			var value = data[col];
+
+			// determine formatting
+			ConsoleFormattingRule? effectiveRule = null;
+			if (FormattingRules?.Length > 0)
 			{
-				writer.Write((char)b);
+				foreach (var rule in FormattingRules)
+				{
+					if (rule.IsMatch(value))
+					{
+						effectiveRule = rule;
+						break;
+					}
+				}
+			}
+
+			if (effectiveRule != null)
+			{
+				if (effectiveRule.ForegroundColor != null)
+				{
+					Console.ForegroundColor = effectiveRule.ForegroundColor.Value;
+				}
+
+				if (effectiveRule.BackgroundColor != null)
+				{
+					Console.BackgroundColor = effectiveRule.BackgroundColor.Value;
+				}
+			}
+
+			// write character or dot
+			if (value >= 32 && value <= 126)
+			{
+				writer.Write((char)value);
 			}
 			else
 			{
-				Console.ForegroundColor = ConsoleColor.DarkGray;
-
 				writer.Write('.');
+			}
 
+			// reset formatting
+			if (effectiveRule != null)
+			{
 				Console.ResetColor();
 			}
 		}
