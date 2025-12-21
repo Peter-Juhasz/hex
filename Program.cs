@@ -21,18 +21,35 @@ Console.CancelKeyPress += (sender, eventArgs) =>
 var root = new RootCommand();
 var filePathArgument = new Argument<string>("path");
 root.Add(filePathArgument);
+var columnsOption = new Option<int?>("--columns");
+root.Add(columnsOption);
+var rowsOption = new Option<int?>("--rows");
+root.Add(rowsOption);
 var interactiveOption = new Option<bool>("--interactive");
 root.Add(interactiveOption);
 root.SetAction(async (context, ct) =>
 {
 	var path = context.GetRequiredValue(filePathArgument);
+
+	var columns = context.GetValue(columnsOption);
+	var rows = context.GetValue(rowsOption);
+
 	var interactive = context.GetValue(interactiveOption);
 
 	using var handle = File.OpenHandle(path);
 	await using var binaryBuffer = new SafeFileHandleBinaryBuffer(handle);
 	var viewBuffer = new LazyViewBuffer(binaryBuffer);
 	var hexView = new ConsoleHexView(viewBuffer);
-	await hexView.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, ct);
+
+	if (columns != null && rows != null)
+	{
+		await hexView.ResizeAsync(columns.Value, rows.Value, cancellationToken);
+	}
+	else
+	{
+		await hexView.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, ct);
+	}
+
 	hexView.Render();
 
 	if (!interactive)
