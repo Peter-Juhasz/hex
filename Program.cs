@@ -39,15 +39,15 @@ root.SetAction(async (context, ct) =>
 	using var handle = File.OpenHandle(path);
 	await using var binaryBuffer = new SafeFileHandleBinaryBuffer(handle);
 	var viewBuffer = new LazyViewBuffer(binaryBuffer);
-	var hexView = new ConsoleHexView(viewBuffer);
+	var view = new ConsoleHexView(viewBuffer);
 
 	if (columns != null && rows != null)
 	{
-		await hexView.ResizeAsync(columns.Value, rows.Value, cancellationToken);
+		await view.ResizeAsync(columns.Value, rows.Value, cancellationToken);
 	}
 	else
 	{
-		await hexView.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, ct);
+		await view.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, ct);
 	}
 
 	if (!interactive)
@@ -61,19 +61,27 @@ root.SetAction(async (context, ct) =>
 		switch (key.Key)
 		{
 			case ConsoleKey.PageUp:
-				await hexView.PageUpAsync(ct);
+				await view.PageUpAsync(ct);
 				break;
 
 			case ConsoleKey.PageDown:
-				await hexView.PageDownAsync(ct);
+				await view.PageDownAsync(ct);
+				break;
+
+			case ConsoleKey.Home:
+				await view.GoToFirstPageAsync(ct);
+				break;
+
+			case ConsoleKey.End:
+				await view.GoToLastPageAsync(ct);
 				break;
 
 			case ConsoleKey.DownArrow:
-				await hexView.ScrollDownAsync(ct);
+				await view.ScrollDownAsync(ct);
 				break;
 
 			case ConsoleKey.UpArrow:
-				await hexView.ScrollUpAsync(ct);
+				await view.ScrollUpAsync(ct);
 				break;
 
 			case ConsoleKey.Escape:

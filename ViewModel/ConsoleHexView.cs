@@ -65,6 +65,8 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	public int VisibleBytesPerScreen => VisibleLineCount * Columns;
 
+	public int LastPageIndex => LineCount / Rows * Rows;
+
 	public Task ResizeWindowAsync(int newWindowWidth, int newWindowHeight, CancellationToken cancellationToken)
 	{
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowWidth);
@@ -143,6 +145,29 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		}
 
 		_lineIndex++;
+		return LoadAndInvalidateAsync(cancellationToken);
+	}
+
+	public Task GoToFirstPageAsync(CancellationToken cancellationToken)
+	{
+		if (_lineIndex == 0)
+		{
+			return Task.CompletedTask;
+		}
+
+		_lineIndex = 0;
+		return LoadAndInvalidateAsync(cancellationToken);
+	}
+
+	public Task GoToLastPageAsync(CancellationToken cancellationToken)
+	{
+		var lastPageIndex = LastPageIndex;
+		if (_lineIndex == lastPageIndex)
+		{
+			return Task.CompletedTask;
+		}
+
+		_lineIndex = lastPageIndex;
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
