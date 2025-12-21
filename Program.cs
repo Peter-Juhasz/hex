@@ -10,7 +10,7 @@ if (args is [])
 #endif
 
 using var cts = new CancellationTokenSource();
-var cancelationToken = cts.Token;
+var cancellationToken = cts.Token;
 
 Console.CancelKeyPress += (sender, eventArgs) =>
 {
@@ -23,7 +23,7 @@ var filePathArgument = new Argument<string>("path");
 root.Add(filePathArgument);
 var interactiveOption = new Option<bool>("--interactive");
 root.Add(interactiveOption);
-root.SetAction(async (context, cancelationToken) =>
+root.SetAction(async (context, ct) =>
 {
 	var path = context.GetRequiredValue(filePathArgument);
 	var interactive = context.GetValue(interactiveOption);
@@ -32,7 +32,7 @@ root.SetAction(async (context, cancelationToken) =>
 	await using var binaryBuffer = new SafeFileHandleBinaryBuffer(handle);
 	var viewBuffer = new LazyViewBuffer(binaryBuffer);
 	var hexView = new ConsoleHexView(viewBuffer);
-	await hexView.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, cancelationToken);
+	await hexView.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, ct);
 	hexView.Render();
 
 	if (!interactive)
@@ -46,22 +46,22 @@ root.SetAction(async (context, cancelationToken) =>
 		switch (key.Key)
 		{
 			case ConsoleKey.PageUp:
-				await hexView.PageUpAsync(cancelationToken);
+				await hexView.PageUpAsync(ct);
 				hexView.Render();
 				break;
 
 			case ConsoleKey.PageDown:
-				await hexView.PageDownAsync(cancelationToken);
+				await hexView.PageDownAsync(ct);
 				hexView.Render();
 				break;
 
 			case ConsoleKey.DownArrow:
-				await hexView.ScrollDownAsync(cancelationToken);
+				await hexView.ScrollDownAsync(ct);
 				hexView.Render();
 				break;
 
 			case ConsoleKey.UpArrow:
-				await hexView.ScrollUpAsync(cancelationToken);
+				await hexView.ScrollUpAsync(ct);
 				hexView.Render();
 				break;
 
@@ -72,4 +72,4 @@ root.SetAction(async (context, cancelationToken) =>
 	}
 });
 
-await root.Parse(args).InvokeAsync(cancellationToken: cancelationToken);
+await root.Parse(args).InvokeAsync(cancellationToken: cancellationToken);
