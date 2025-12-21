@@ -8,6 +8,7 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 	private int Rows = -1;
 
 	private int GroupingSize = 4;
+	private int AddressLength = viewBuffer.DataBuffer.Length <= 0xFFFFFFFF ? 8 : 16;
 
 	private int CalculateBytesPerLine(int windowWidth)
 	{
@@ -87,7 +88,13 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		Columns = newColumns;
 		Rows = newRows;
 
-		return viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
+		return LoadAndInvalidateAsync(cancellationToken);
+	}
+
+	private async Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
+	{
+		await viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
+		Render();
 	}
 
 	public Task PageDownAsync(CancellationToken cancellationToken)
@@ -98,7 +105,7 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		}
 
 		_lineIndex += Rows;
-		return viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
+		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task PageUpAsync(CancellationToken cancellationToken)
@@ -108,8 +115,13 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 			return Task.CompletedTask;
 		}
 
+		if (_lineIndex == 0)
+		{
+			return Task.CompletedTask;
+		}
+
 		_lineIndex = Math.Max(0, _lineIndex - Rows);
-		return viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
+		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task ScrollUpAsync(CancellationToken cancellationToken)
@@ -120,7 +132,7 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		}
 
 		_lineIndex = Math.Max(0, _lineIndex - 1);
-		return viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
+		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task ScrollDownAsync(CancellationToken cancellationToken)
@@ -131,7 +143,7 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		}
 
 		_lineIndex++;
-		return viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
+		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 
@@ -160,13 +172,13 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	private void RenderLine(IViewLine line)
 	{
-		Span<char> screenBuffer = stackalloc char[20 + Columns * 4];
-		var writer = new SpanWriter<char>(screenBuffer);
+		var writer = Console.Out;
+
+		Span<char> formatBuffer = stackalloc char[16];
 
 		// Address
-		var addressLength = 8;
-		line.Offset.TryFormat(writer.GetSpan(addressLength), out _, "X8");
-		writer.Advance(addressLength);
+		line.Offset.TryFormat(formatBuffer, out _, AddressLength switch { 8 => "X8", _ => "X16" });
+		writer.Write(formatBuffer[..AddressLength]);
 		writer.Write(':');
 
 		// Hex
@@ -180,8 +192,17 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 				writer.Write(' ');
 			}
 
-			data[col].TryFormat(writer.GetSpan(2), out _, "X2");
-			writer.Advance(2);
+			var value = data[col];
+
+			if (value == 0)
+			{
+				Console.ForegroundColor = ConsoleColor.DarkGray;
+			}
+
+			value.TryFormat(formatBuffer, out _, "X2");
+			writer.Write(formatBuffer[..2]);
+
+			Console.ResetColor();
 		}
 
 		writer.Write(" | ");
@@ -196,13 +217,14 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 			}
 			else
 			{
+				Console.ForegroundColor = ConsoleColor.DarkGray;
+
 				writer.Write('.');
+
+				Console.ResetColor();
 			}
 		}
 
 		writer.Write(Environment.NewLine);
-
-		var output = Console.Out;
-		output.Write(writer.WrittenSpan);
 	}
 }

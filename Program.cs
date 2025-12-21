@@ -5,7 +5,7 @@ using System.CommandLine;
 #if DEBUG
 if (args is [])
 {
-	args = [@"E:\roslyn.txt", "--interactive"];
+	args = [@"E:\rock2.mid", "--interactive"];
 }
 #endif
 
@@ -50,8 +50,6 @@ root.SetAction(async (context, ct) =>
 		await hexView.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, ct);
 	}
 
-	hexView.Render();
-
 	if (!interactive)
 	{
 		return;
@@ -64,22 +62,18 @@ root.SetAction(async (context, ct) =>
 		{
 			case ConsoleKey.PageUp:
 				await hexView.PageUpAsync(ct);
-				hexView.Render();
 				break;
 
 			case ConsoleKey.PageDown:
 				await hexView.PageDownAsync(ct);
-				hexView.Render();
 				break;
 
 			case ConsoleKey.DownArrow:
 				await hexView.ScrollDownAsync(ct);
-				hexView.Render();
 				break;
 
 			case ConsoleKey.UpArrow:
 				await hexView.ScrollUpAsync(ct);
-				hexView.Render();
 				break;
 
 			case ConsoleKey.Escape:
