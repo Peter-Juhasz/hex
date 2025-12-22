@@ -2,7 +2,7 @@
 
 namespace HexEditor.ViewModel;
 
-public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
+public partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 {
 	private int Columns = -1;
 	private int Rows = -1;
@@ -10,27 +10,7 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 	private int GroupingSize = 4;
 	private int AddressLength = viewBuffer.DataBuffer.Length <= 0xFFFFFFFF ? 8 : 16;
 
-	private ConsoleFormattingRule[] FormattingRules =
-	[
-		new ConsoleFormattingRule(0x00, 0x1F, ConsoleColor.DarkGray),
-		new ConsoleFormattingRule(0x20, 0x7E, ConsoleColor.White),
-	];
-
-	private int CalculateBytesPerLine(int windowWidth)
-	{
-		var usableWidth = windowWidth - (
-			4 * 2 + // Address
-			1 +     // Separator
-			3 +     // Spaces between HEX and ASCII
-			0
-		);
-		return (int)MathF.Floor(usableWidth / (
-			1 + // Space
-			2 + // Hex byte
-			(1f / GroupingSize) + // Extra spaces for grouping
-			1 // ASCII representation
-		));
-	}
+	private ConsoleTheme? Theme = Themes.Dark;
 
 	public bool TryGetLine(long index, [NotNullWhen(true)] out IViewLine? line)
 	{
@@ -175,147 +155,5 @@ public class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 		_lineIndex = lastPageIndex;
 		return LoadAndInvalidateAsync(cancellationToken);
-	}
-
-
-	public void Render()
-	{
-		if (Columns == -1)
-		{
-			throw new InvalidOperationException("View has not been initialized. Call ResizeAsync first.");
-		}
-
-		Console.Clear();
-
-		if (viewBuffer.DataBuffer.Length == 0)
-		{
-			return;
-		}
-		
-		for (long lineIndex = FirstVisibleLineIndex; lineIndex <= LastVisibleLineIndex; lineIndex++)
-		{
-			if (TryGetLine(lineIndex, out var line))
-			{
-				RenderLine(line);
-			}
-		}
-	}
-
-	private void RenderLine(IViewLine line)
-	{
-		var writer = Console.Out;
-
-		Span<char> formatBuffer = stackalloc char[16];
-
-		// Address
-		line.Offset.TryFormat(formatBuffer, out _, AddressLength switch { 8 => "X8", _ => "X16" });
-		writer.Write(formatBuffer[..AddressLength]);
-		writer.Write(':');
-
-		// Hex
-		var data = line.Data;
-		for (int col = 0; col < data.Length; col++)
-		{
-			writer.Write(' ');
-
-			if (col > 0 && col % GroupingSize == 0)
-			{
-				writer.Write(' ');
-			}
-
-			// get value
-			var value = data[col];
-
-			// determine formatting
-			ConsoleFormattingRule? effectiveRule = null;
-			if (FormattingRules?.Length > 0)
-			{
-				foreach (var rule in FormattingRules)
-				{
-					if (rule.IsMatch(value))
-					{
-						effectiveRule = rule;
-						break;
-					}
-				}
-			}
-
-			if (effectiveRule != null)
-			{
-				if (effectiveRule.ForegroundColor != null)
-				{
-					Console.ForegroundColor = effectiveRule.ForegroundColor.Value;
-				}
-
-				if (effectiveRule.BackgroundColor != null)
-				{
-					Console.BackgroundColor = effectiveRule.BackgroundColor.Value;
-				}
-			}
-
-			// write hex value
-			value.TryFormat(formatBuffer, out _, "X2");
-			writer.Write(formatBuffer[..2]);
-
-			// reset formatting
-			if (effectiveRule != null)
-			{
-				Console.ResetColor();
-			}
-		}
-
-		writer.Write(" | ");
-
-		// ASCII
-		for (int col = 0; col < data.Length; col++)
-		{
-			// get value
-			var value = data[col];
-
-			// determine formatting
-			ConsoleFormattingRule? effectiveRule = null;
-			if (FormattingRules?.Length > 0)
-			{
-				foreach (var rule in FormattingRules)
-				{
-					if (rule.IsMatch(value))
-					{
-						effectiveRule = rule;
-						break;
-					}
-				}
-			}
-
-			if (effectiveRule != null)
-			{
-				if (effectiveRule.ForegroundColor != null)
-				{
-					Console.ForegroundColor = effectiveRule.ForegroundColor.Value;
-				}
-
-				if (effectiveRule.BackgroundColor != null)
-				{
-					Console.BackgroundColor = effectiveRule.BackgroundColor.Value;
-				}
-			}
-
-			// write character or dot
-			if (value >= 32 && value <= 126)
-			{
-				writer.Write((char)value);
-			}
-			else
-			{
-				writer.Write('.');
-			}
-
-			// reset formatting
-			if (effectiveRule != null)
-			{
-				Console.ResetColor();
-			}
-		}
-
-		writer.Write(Environment.NewLine);
 	}
 }
