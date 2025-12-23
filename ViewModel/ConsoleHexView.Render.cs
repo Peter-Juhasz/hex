@@ -6,35 +6,45 @@ internal partial class ConsoleHexView
 	{
 		var usableWidth = windowWidth - (
 			// Address
-			(Theme?.AddressBar?.Margin?.Left ?? 0) +
-			(Theme?.AddressBar?.Border?.Left != null ? 1 : 0) +
-			(Theme?.AddressBar?.Padding?.Left ?? 0) +
-			AddressLength +
-			(Theme?.AddressBar?.Padding?.Right ?? 0) +
-			(Theme?.AddressBar?.Border?.Right != null ? 1 : 0) +
-			(Theme?.AddressBar?.Margin?.Right ?? 0) +
+			(Theme?.AddressBar?.Visible == false ? 0 : (
+				(Theme?.AddressBar?.Margin?.Left ?? 0) +
+				(Theme?.AddressBar?.Border?.Left != null ? 1 : 0) +
+				(Theme?.AddressBar?.Padding?.Left ?? 0) +
+				AddressLength +
+				(Theme?.AddressBar?.Padding?.Right ?? 0) +
+				(Theme?.AddressBar?.Border?.Right != null ? 1 : 0) +
+				(Theme?.AddressBar?.Margin?.Right ?? 0)
+			)) +
 
 			// Hex
-			(Theme?.HexView?.Margin?.Left ?? 0) +
-			(Theme?.HexView?.Border?.Left != null ? 1 : 0) +
-			(Theme?.HexView?.Padding?.Left ?? 0) +
-			(Theme?.HexView?.Padding?.Right ?? 0) +
-			(Theme?.HexView?.Border?.Right != null ? 1 : 0) +
-			(Theme?.HexView?.Margin?.Right ?? 0) +
+			(Theme?.HexView?.Visible == false ? 0 : (
+				(Theme?.HexView?.Margin?.Left ?? 0) +
+				(Theme?.HexView?.Border?.Left != null ? 1 : 0) +
+				(Theme?.HexView?.Padding?.Left ?? 0) +
+				(Theme?.HexView?.Padding?.Right ?? 0) +
+				(Theme?.HexView?.Border?.Right != null ? 1 : 0) +
+				(Theme?.HexView?.Margin?.Right ?? 0)
+			)) +
 
 			// ASCII
-			(Theme?.AsciiView?.Margin?.Left ?? 0) +
-			(Theme?.AsciiView?.Border?.Left != null ? 1 : 0) +
-			(Theme?.AsciiView?.Padding?.Left ?? 0) +
-			(Theme?.AsciiView?.Padding?.Right ?? 0) +
-			(Theme?.AsciiView?.Border?.Right != null ? 1 : 0) +
-			(Theme?.AsciiView?.Margin?.Right ?? 0)
+			(Theme?.AsciiView?.Visible == false ? 0 : (
+				(Theme?.AsciiView?.Margin?.Left ?? 0) +
+				(Theme?.AsciiView?.Border?.Left != null ? 1 : 0) +
+				(Theme?.AsciiView?.Padding?.Left ?? 0) +
+				(Theme?.AsciiView?.Padding?.Right ?? 0) +
+				(Theme?.AsciiView?.Border?.Right != null ? 1 : 0) +
+				(Theme?.AsciiView?.Margin?.Right ?? 0)
+			))
 		);
 		return (int)MathF.Floor(usableWidth / (
 			1 + // Space
-			2 + // Hex byte
-			(Theme?.HexView?.GroupingSize is int grouping ? 1f / grouping : 0) + // Extra spaces for grouping
-			1 // ASCII representation
+			(Theme?.HexView?.Visible == false ? 0 : (
+				2 + // Hex byte
+				(Theme?.HexView?.GroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
+			)) +
+			(Theme?.AsciiView?.Visible == false ? 0 : (
+				1 // ASCII representation
+			))
 		));
 	}
 
@@ -79,103 +89,112 @@ internal partial class ConsoleHexView
 
 		// Address
 		var addressStyle = Theme?.AddressBar;
-		RenderSpacing(addressStyle?.Margin?.Left);
-		RenderVerticalBorder(addressStyle?.Border?.Left);
-		RenderSpacing(addressStyle?.Padding?.Left);
-		using (UseStyle(addressStyle?.TextStyle))
+		if (addressStyle?.Visible != false)
 		{
-			line.Offset.TryFormat(formatBuffer, out _, AddressLength switch
+			RenderSpacing(addressStyle?.Margin?.Left);
+			RenderVerticalBorder(addressStyle?.Border?.Left);
+			RenderSpacing(addressStyle?.Padding?.Left);
+			using (UseStyle(addressStyle?.TextStyle))
 			{
-				2 => "X2",
-				4 => "X4",
-				8 => "X8",
-				_ => "X16" 
-			});
-			writer.Write(formatBuffer[..AddressLength]);
+				line.Offset.TryFormat(formatBuffer, out _, AddressLength switch
+				{
+					2 => "X2",
+					4 => "X4",
+					8 => "X8",
+					_ => "X16"
+				});
+				writer.Write(formatBuffer[..AddressLength]);
+			}
+			RenderSpacing(addressStyle?.Margin?.Right);
+			RenderVerticalBorder(addressStyle?.Border?.Right);
+			RenderSpacing(addressStyle?.Padding?.Right);
 		}
-		RenderSpacing(addressStyle?.Margin?.Right);
-		RenderVerticalBorder(addressStyle?.Border?.Right);
-		RenderSpacing(addressStyle?.Padding?.Right);
 
 		var data = line.Data;
 
 		// Hex
 		var hexViewStyle = Theme?.HexView;
-		RenderSpacing(hexViewStyle?.Margin?.Left);
-		RenderVerticalBorder(hexViewStyle?.Border?.Left);
-		RenderSpacing(hexViewStyle?.Padding?.Left);
-		using (UseStyle(Theme?.HexView?.TextStyle))
+		if (hexViewStyle?.Visible != false)
 		{
-			for (int col = 0; col < data.Length; col++)
+			RenderSpacing(hexViewStyle?.Margin?.Left);
+			RenderVerticalBorder(hexViewStyle?.Border?.Left);
+			RenderSpacing(hexViewStyle?.Padding?.Left);
+			using (UseStyle(Theme?.HexView?.TextStyle))
 			{
-				// get value
-				byte value = data[col];
-
-				// determine formatting
-				using (UseStyle(MatchRule(value, new(
-					Offset: line.Offset + col,
-					Row: line.LineIndex,
-					Column: col
-				))))
+				for (int col = 0; col < data.Length; col++)
 				{
-					// write hex value
-					value.TryFormat(formatBuffer, out _, "X2");
-					writer.Write(formatBuffer[..2]);
-				}
+					// get value
+					byte value = data[col];
 
-				// separator
-				if (col < data.Length - 1)
-				{
-					writer.Write(' ');
-
-					if (Theme?.HexView?.GroupingSize is int groupingSize)
+					// determine formatting
+					using (UseStyle(MatchRule(value, new(
+						Offset: line.Offset + col,
+						Row: line.LineIndex,
+						Column: col
+					))))
 					{
-						if ((col + 1) % groupingSize == 0)
+						// write hex value
+						value.TryFormat(formatBuffer, out _, "X2");
+						writer.Write(formatBuffer[..2]);
+					}
+
+					// separator
+					if (col < data.Length - 1)
+					{
+						writer.Write(' ');
+
+						if (Theme?.HexView?.GroupingSize is int groupingSize)
 						{
-							writer.Write(' ');
+							if ((col + 1) % groupingSize == 0)
+							{
+								writer.Write(' ');
+							}
 						}
 					}
 				}
 			}
+			RenderSpacing(hexViewStyle?.Padding?.Right);
+			RenderVerticalBorder(hexViewStyle?.Border?.Right);
+			RenderSpacing(hexViewStyle?.Margin?.Right);
 		}
-		RenderSpacing(hexViewStyle?.Padding?.Right);
-		RenderVerticalBorder(hexViewStyle?.Border?.Right);
-		RenderSpacing(hexViewStyle?.Margin?.Right);
 
 		// ASCII
 		var asciiViewStyle = Theme?.AsciiView;
-		RenderSpacing(asciiViewStyle?.Margin?.Left);
-		RenderVerticalBorder(asciiViewStyle?.Border?.Left);
-		RenderSpacing(asciiViewStyle?.Padding?.Left);
-		using (UseStyle(asciiViewStyle?.TextStyle))
+		if (asciiViewStyle?.Visible != false)
 		{
-			for (int col = 0; col < data.Length; col++)
+			RenderSpacing(asciiViewStyle?.Margin?.Left);
+			RenderVerticalBorder(asciiViewStyle?.Border?.Left);
+			RenderSpacing(asciiViewStyle?.Padding?.Left);
+			using (UseStyle(asciiViewStyle?.TextStyle))
 			{
-				// get value
-				byte value = data[col];
-
-				// determine formatting
-				using (UseStyle(MatchRule(value, new(
-					Offset: line.Offset + col,
-					Row: line.LineIndex,
-					Column: col
-				))))
+				for (int col = 0; col < data.Length; col++)
 				{
-					// write character or dot
-					if (value >= 32 && value <= 126)
+					// get value
+					byte value = data[col];
+
+					// determine formatting
+					using (UseStyle(MatchRule(value, new(
+						Offset: line.Offset + col,
+						Row: line.LineIndex,
+						Column: col
+					))))
 					{
-						writer.Write((char)value);
-					}
-					else
-					{
-						writer.Write('.');
+						// write character or dot
+						if (value >= 32 && value <= 126)
+						{
+							writer.Write((char)value);
+						}
+						else
+						{
+							writer.Write('.');
+						}
 					}
 				}
 			}
+			RenderSpacing(asciiViewStyle?.Padding?.Right);
+			RenderVerticalBorder(asciiViewStyle?.Border?.Right);
+			RenderSpacing(asciiViewStyle?.Margin?.Right);
 		}
-		RenderSpacing(asciiViewStyle?.Padding?.Right);
-		RenderVerticalBorder(asciiViewStyle?.Border?.Right);
-		RenderSpacing(asciiViewStyle?.Margin?.Right);
 	}
 
 	private ConsoleStyle? MatchRule(byte value, ValueFormattingRule.Context context)

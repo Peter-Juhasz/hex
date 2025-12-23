@@ -122,7 +122,8 @@ internal record class AddressMarginStyle(
 	ConsoleStyle? TextStyle = null,
 	FullBorderStyle? Border = null,
 	Spacing? Padding = null,
-	Spacing? Margin = null
+	Spacing? Margin = null,
+	bool Visible = true
 );
 
 internal record class HexViewStyle(
@@ -130,14 +131,16 @@ internal record class HexViewStyle(
 	FullBorderStyle? Border = null,
 	Spacing? Padding = null,
 	Spacing? Margin = null,
-	int? GroupingSize = null
+	int? GroupingSize = null,
+	bool Visible = true
 );
 
 internal record class AsciiViewStyle(
 	ConsoleStyle? TextStyle = null,
 	FullBorderStyle? Border = null,
 	Spacing? Padding = null,
-	Spacing? Margin = null
+	Spacing? Margin = null,
+	bool Visible = true
 );
 
 internal record class Spacing(
