@@ -1,20 +1,101 @@
 ﻿namespace HexEditor.ViewModel;
 
 internal record class ConsoleTheme(
-	IReadOnlyList<ConsoleFormattingRule> FormattingRules,
-	AddressAreaStyle? AddressBar = null,
+	IReadOnlyList<ValueFormattingRule> FormattingRules,
+	AddressMarginStyle? AddressBar = null,
 	HexViewStyle? HexView = null,
 	AsciiViewStyle? AsciiView = null,
-	ConsoleStyle? DefaultStyle = null
+	ConsoleStyle? DefaultStyle = null,
+	int? Columns = null,
+	int? Rows = null
 );
 
-internal record class ConsoleFormattingRule(
-	byte LowValue,
-	byte HighValue,
-	ConsoleStyle Style
+internal record class ValueFormattingRule(
+	ConsoleStyle Style,
+	byte? MinimumValue = null,
+	byte? MaximumValue = null,
+	long? MinimumOffset = null,
+	long? MaximumOffset = null,
+	int? MinimumColumn = null,
+	int? MaximumColumn = null,
+	int? MinimumRow = null,
+	int? MaximumRow = null
 )
 {
-	public bool IsMatch(byte value) => value >= LowValue && value <= HighValue;
+	public bool IsMatch(byte value, Context context)
+	{
+		if (MinimumValue != null)
+		{
+			if (value < MinimumValue)
+			{
+				return false;
+			}
+		}
+
+		if (MaximumValue != null)
+		{
+			if (value > MaximumValue)
+			{
+				return false;
+			}
+		}
+
+		if (MinimumOffset != null)
+		{
+			if (context.Offset < MinimumOffset)
+			{
+				return false;
+			}
+		}
+
+		if (MaximumOffset != null)
+		{
+			if (context.Offset > MaximumOffset)
+			{
+				return false;
+			}
+		}
+
+		if (MinimumColumn != null)
+		{
+			if (context.Column < MinimumColumn)
+			{
+				return false;
+			}
+		}
+
+		if (MaximumColumn != null)
+		{
+			if (context.Column > MaximumColumn)
+			{
+				return false;
+			}
+		}
+
+		if (MinimumRow != null)
+		{
+			if (context.Row < MinimumRow)
+			{
+				return false;
+			}
+		}
+
+		if (MaximumRow != null)
+		{
+			if (context.Row > MaximumRow)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public record struct Context(
+		long Offset,
+		long Row,
+		int Column
+	);
 }
 
 internal record class ConsoleStyle(
@@ -37,7 +118,7 @@ internal record class BorderStyle(
 	BorderPattern? Pattern = null
 ) : ConsoleStyle(ForegroundColor, BackgroundColor);
 
-internal record class AddressAreaStyle(
+internal record class AddressMarginStyle(
 	ConsoleStyle? TextStyle = null,
 	FullBorderStyle? Border = null,
 	Spacing? Padding = null,
@@ -93,8 +174,8 @@ internal static class Themes
 		),
 		FormattingRules:
 		[
-			new ConsoleFormattingRule(0x00, 0x1F, new(ForegroundColor: ConsoleColor.DarkGray)),
-			new ConsoleFormattingRule(0x20, 0x7E, new(ForegroundColor: ConsoleColor.White)),
+			new ValueFormattingRule(MinimumValue: 0x00, MaximumValue: 0x1F, Style: new(ForegroundColor: ConsoleColor.DarkGray)),
+			new ValueFormattingRule(MinimumValue: 0x20, MaximumValue: 0x7E, Style: new(ForegroundColor: ConsoleColor.White)),
 		]
 	);
 }

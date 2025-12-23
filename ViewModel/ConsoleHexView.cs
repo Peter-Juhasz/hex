@@ -2,12 +2,11 @@
 
 namespace HexEditor.ViewModel;
 
-public partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
+internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 {
 	private int Columns = -1;
 	private int Rows = -1;
 
-	private int GroupingSize = 4;
 	private int AddressLength = viewBuffer.DataBuffer.Length <= 0xFFFFFFFF ? 8 : 16;
 
 	private ConsoleTheme? Theme = Themes.Dark;
@@ -77,6 +76,17 @@ public partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		Rows = newRows;
 
 		return LoadAndInvalidateAsync(cancellationToken);
+	}
+
+	public Task ApplyThemeAsync(ConsoleTheme? newTheme, CancellationToken cancellationToken)
+	{
+		Theme = newTheme;
+
+		return ResizeAsync(
+			newColumns: newTheme?.Columns ?? CalculateBytesPerLine(Console.WindowWidth),
+			newRows: newTheme?.Rows ?? Console.WindowHeight,
+			cancellationToken
+		);
 	}
 
 	private async Task LoadAndInvalidateAsync(CancellationToken cancellationToken)

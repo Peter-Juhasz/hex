@@ -1,6 +1,6 @@
 ﻿namespace HexEditor.ViewModel;
 
-public partial class ConsoleHexView
+internal partial class ConsoleHexView
 {
 	private int CalculateBytesPerLine(int windowWidth)
 	{
@@ -33,7 +33,7 @@ public partial class ConsoleHexView
 		return (int)MathF.Floor(usableWidth / (
 			1 + // Space
 			2 + // Hex byte
-			(1f / GroupingSize) + // Extra spaces for grouping
+			(Theme?.HexView?.GroupingSize is int grouping ? 1f / grouping : 0) + // Extra spaces for grouping
 			1 // ASCII representation
 		));
 	}
@@ -59,6 +59,11 @@ public partial class ConsoleHexView
 				if (TryGetLine(lineIndex, out var line))
 				{
 					RenderLine(line);
+
+					if (lineIndex < LastVisibleLineIndex)
+					{
+						Console.WriteLine();
+					}
 				}
 			}
 		}
@@ -107,7 +112,11 @@ public partial class ConsoleHexView
 				byte value = data[col];
 
 				// determine formatting
-				using (UseStyle(MatchRule(value)))
+				using (UseStyle(MatchRule(value, new(
+					Offset: line.Offset + col,
+					Row: line.LineIndex,
+					Column: col
+				))))
 				{
 					// write hex value
 					value.TryFormat(formatBuffer, out _, "X2");
@@ -119,9 +128,12 @@ public partial class ConsoleHexView
 				{
 					writer.Write(' ');
 
-					if ((col + 1) % GroupingSize == 0)
+					if (Theme?.HexView?.GroupingSize is int groupingSize)
 					{
-						writer.Write(' ');
+						if ((col + 1) % groupingSize == 0)
+						{
+							writer.Write(' ');
+						}
 					}
 				}
 			}
@@ -143,7 +155,11 @@ public partial class ConsoleHexView
 				byte value = data[col];
 
 				// determine formatting
-				using (UseStyle(MatchRule(value)))
+				using (UseStyle(MatchRule(value, new(
+					Offset: line.Offset + col,
+					Row: line.LineIndex,
+					Column: col
+				))))
 				{
 					// write character or dot
 					if (value >= 32 && value <= 126)
@@ -160,23 +176,23 @@ public partial class ConsoleHexView
 		RenderSpacing(asciiViewStyle?.Padding?.Right);
 		RenderVerticalBorder(asciiViewStyle?.Border?.Right);
 		RenderSpacing(asciiViewStyle?.Margin?.Right);
-
-		writer.Write(Environment.NewLine);
 	}
 
-	private ConsoleStyle? MatchRule(byte value)
+	private ConsoleStyle? MatchRule(byte value, ValueFormattingRule.Context context)
 	{
 		if (Theme?.FormattingRules == null)
 		{
 			return null;
 		}
+
 		foreach (var rule in Theme.FormattingRules)
 		{
-			if (rule.IsMatch(value))
+			if (rule.IsMatch(value, context))
 			{
 				return rule.Style;
 			}
 		}
+
 		return null;
 	}
 

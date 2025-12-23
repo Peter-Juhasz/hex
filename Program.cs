@@ -47,7 +47,7 @@ root.SetAction(async (context, ct) =>
 	}
 	else
 	{
-		await view.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight - 1, ct);
+		await view.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight, ct);
 	}
 
 	if (!interactive)
