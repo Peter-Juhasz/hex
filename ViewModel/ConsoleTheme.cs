@@ -2,12 +2,13 @@
 
 internal record class ConsoleTheme(
 	IReadOnlyList<ValueFormattingRule> FormattingRules,
-	AddressMarginStyle? AddressBar = null,
+	AddressMarginStyle? AddressMargin = null,
 	HexViewStyle? HexView = null,
 	AsciiViewStyle? AsciiView = null,
 	ConsoleStyle? DefaultStyle = null,
 	int? Columns = null,
-	int? Rows = null
+	int? Rows = null,
+	ScrollbarStyle? Scrollbar = null
 );
 
 internal record class ValueFormattingRule(
@@ -153,15 +154,28 @@ internal record class FullBorderStyle(
 	BorderStyle? Right = null
 );
 
+internal record class ScrollbarStyle(
+	ConsoleStyle? TrackStyle = null,
+	ConsoleStyle? ThumbStyle = null,
+	Spacing? Margin = null
+);
+
 internal static class Themes
 {
 	public static readonly ConsoleTheme Dark = new(
-		AddressBar: new(
+		AddressMargin: new(
 			Border: new(
 				Right: new(
 					Pattern: BorderPattern.Dotted
 				)
 			)
+		),
+		HexView: new(
+			Padding: new(Left: 1, Right: 1),
+			GroupingSize: 4
+		),
+		Scrollbar: new(
+			Margin: new(Left: 1)
 		),
 		AsciiView: new(
 			Border: new(
@@ -171,14 +185,10 @@ internal static class Themes
 			),
 			Padding: new(Left: 1)
 		),
-		HexView: new(
-			Padding: new(Left: 1, Right: 1),
-			GroupingSize: 4
-		),
 		FormattingRules:
 		[
-			new ValueFormattingRule(MinimumValue: 0x00, MaximumValue: 0x1F, Style: new(ForegroundColor: ConsoleColor.DarkGray)),
-			new ValueFormattingRule(MinimumValue: 0x20, MaximumValue: 0x7E, Style: new(ForegroundColor: ConsoleColor.White)),
+			new(MinimumValue: 0x00, MaximumValue: 0x1F, Style: new(ForegroundColor: ConsoleColor.DarkGray)),
+			new(MinimumValue: 0x20, MaximumValue: 0x7E, Style: new(ForegroundColor: ConsoleColor.White)),
 		]
 	);
 }

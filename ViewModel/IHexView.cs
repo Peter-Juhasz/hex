@@ -4,7 +4,7 @@ namespace HexEditor.ViewModel;
 
 public interface IHexView
 {
-	bool TryGetLine(long index, [NotNullWhen(true)] out IViewLine? line);
+	bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row);
 
-	int LineCount { get; }
+	int RowCount { get; }
 }

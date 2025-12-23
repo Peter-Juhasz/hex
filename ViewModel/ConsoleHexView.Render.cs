@@ -2,18 +2,18 @@
 
 internal partial class ConsoleHexView
 {
-	private int CalculateBytesPerLine(int windowWidth)
+	private int CalculateBytesPerRow(int windowWidth)
 	{
 		var usableWidth = windowWidth - (
 			// Address
-			(Theme?.AddressBar?.Visible == false ? 0 : (
-				(Theme?.AddressBar?.Margin?.Left ?? 0) +
-				(Theme?.AddressBar?.Border?.Left != null ? 1 : 0) +
-				(Theme?.AddressBar?.Padding?.Left ?? 0) +
+			(Theme?.AddressMargin?.Visible == false ? 0 : (
+				(Theme?.AddressMargin?.Margin?.Left ?? 0) +
+				(Theme?.AddressMargin?.Border?.Left != null ? 1 : 0) +
+				(Theme?.AddressMargin?.Padding?.Left ?? 0) +
 				AddressLength +
-				(Theme?.AddressBar?.Padding?.Right ?? 0) +
-				(Theme?.AddressBar?.Border?.Right != null ? 1 : 0) +
-				(Theme?.AddressBar?.Margin?.Right ?? 0)
+				(Theme?.AddressMargin?.Padding?.Right ?? 0) +
+				(Theme?.AddressMargin?.Border?.Right != null ? 1 : 0) +
+				(Theme?.AddressMargin?.Margin?.Right ?? 0)
 			)) +
 
 			// Hex
@@ -34,6 +34,13 @@ internal partial class ConsoleHexView
 				(Theme?.AsciiView?.Padding?.Right ?? 0) +
 				(Theme?.AsciiView?.Border?.Right != null ? 1 : 0) +
 				(Theme?.AsciiView?.Margin?.Right ?? 0)
+			)) +
+
+			// scrollbar
+			(Theme?.Scrollbar == null ? 0 : (
+				(Theme?.Scrollbar?.Margin?.Left ?? 0) +
+				1 + // Scrollbar width
+				(Theme?.Scrollbar?.Margin?.Right ?? 0)
 			))
 		);
 		return (int)MathF.Floor(usableWidth / (
@@ -64,16 +71,50 @@ internal partial class ConsoleHexView
 
 		using (UseStyle(Theme?.DefaultStyle))
 		{
-			for (long lineIndex = FirstVisibleLineIndex; lineIndex <= LastVisibleLineIndex; lineIndex++)
+			for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
 			{
-				if (TryGetLine(lineIndex, out var line))
-				{
-					RenderLine(line);
+				var dataRowIndex = FirstVisibleRowIndex + screenRowIndex;
 
-					if (lineIndex < LastVisibleLineIndex)
+				// Data row
+				if (dataRowIndex <= LastVisibleRowIndex)
+				{
+					if (TryGetRow(dataRowIndex, out var row))
 					{
-						Console.WriteLine();
+						RenderRow(row);
 					}
+				}
+				else
+				{
+					RenderEmptyRow();
+				}
+
+				// Scrollbar
+				if (Theme?.Scrollbar != null)
+				{
+					RenderSpacing(Theme.Scrollbar.Margin?.Left);
+
+					if (screenRowIndex >= VerticalScrollbarThumbScreenRowStartIndex && screenRowIndex <= VerticalScrollbarThumbScreenRowStartIndex + VerticalScrollbarThumbScreenRowHeight)
+					{
+						using (UseStyle(Theme.Scrollbar.ThumbStyle))
+						{
+							Console.Write('█');
+						}
+					}
+					else
+					{
+						using (UseStyle(Theme.Scrollbar.TrackStyle))
+						{
+							Console.Write('|');
+						}
+					}
+
+					RenderSpacing(Theme.Scrollbar.Margin?.Right);
+				}
+
+				// new line
+				if (screenRowIndex < Rows - 1)
+				{
+					Console.WriteLine();
 				}
 			}
 		}
@@ -81,14 +122,14 @@ internal partial class ConsoleHexView
 		Console.ResetColor();
 	}
 
-	private void RenderLine(IViewLine line)
+	private void RenderRow(IViewRow row)
 	{
 		var writer = Console.Out;
 
 		Span<char> formatBuffer = stackalloc char[16];
 
 		// Address
-		var addressStyle = Theme?.AddressBar;
+		var addressStyle = Theme?.AddressMargin;
 		if (addressStyle?.Visible != false)
 		{
 			RenderSpacing(addressStyle?.Margin?.Left);
@@ -96,7 +137,7 @@ internal partial class ConsoleHexView
 			RenderSpacing(addressStyle?.Padding?.Left);
 			using (UseStyle(addressStyle?.TextStyle))
 			{
-				line.Offset.TryFormat(formatBuffer, out _, AddressLength switch
+				row.Offset.TryFormat(formatBuffer, out _, AddressLength switch
 				{
 					2 => "X2",
 					4 => "X4",
@@ -110,7 +151,7 @@ internal partial class ConsoleHexView
 			RenderSpacing(addressStyle?.Padding?.Right);
 		}
 
-		var data = line.Data;
+		var data = row.Data;
 
 		// Hex
 		var hexViewStyle = Theme?.HexView;
@@ -121,15 +162,16 @@ internal partial class ConsoleHexView
 			RenderSpacing(hexViewStyle?.Padding?.Left);
 			using (UseStyle(Theme?.HexView?.TextStyle))
 			{
-				for (int col = 0; col < data.Length; col++)
+				int col;
+				for (col = 0; col < data.Length; col++)
 				{
 					// get value
 					byte value = data[col];
 
 					// determine formatting
 					using (UseStyle(MatchRule(value, new(
-						Offset: line.Offset + col,
-						Row: line.LineIndex,
+						Offset: row.Offset + col,
+						Row: row.RowIndex,
 						Column: col
 					))))
 					{
@@ -152,6 +194,17 @@ internal partial class ConsoleHexView
 						}
 					}
 				}
+
+				// fill remaining space
+				if (data.Length < Columns)
+				{
+					var writtenCharacters = CalculateHexRenderLength(data.Length);
+					var totalRenderLength = CalculateHexRenderLength(Columns);
+
+					Span<char> emptyBuffer = stackalloc char[totalRenderLength - writtenCharacters];
+					emptyBuffer.Fill(' ');
+					writer.Write(emptyBuffer);
+				}
 			}
 			RenderSpacing(hexViewStyle?.Padding?.Right);
 			RenderVerticalBorder(hexViewStyle?.Border?.Right);
@@ -167,15 +220,16 @@ internal partial class ConsoleHexView
 			RenderSpacing(asciiViewStyle?.Padding?.Left);
 			using (UseStyle(asciiViewStyle?.TextStyle))
 			{
-				for (int col = 0; col < data.Length; col++)
+				int col;
+				for (col = 0; col < data.Length; col++)
 				{
 					// get value
 					byte value = data[col];
 
 					// determine formatting
 					using (UseStyle(MatchRule(value, new(
-						Offset: line.Offset + col,
-						Row: line.LineIndex,
+						Offset: row.Offset + col,
+						Row: row.RowIndex,
 						Column: col
 					))))
 					{
@@ -190,12 +244,88 @@ internal partial class ConsoleHexView
 						}
 					}
 				}
+
+				// fill remaining space
+				if (data.Length < Columns)
+				{
+					Span<char> emptyBuffer = stackalloc char[Columns - data.Length];
+					emptyBuffer.Fill(' ');
+					writer.Write(emptyBuffer);
+				}
 			}
 			RenderSpacing(asciiViewStyle?.Padding?.Right);
 			RenderVerticalBorder(asciiViewStyle?.Border?.Right);
 			RenderSpacing(asciiViewStyle?.Margin?.Right);
 		}
 	}
+
+	private void RenderEmptyRow()
+	{
+		var writer = Console.Out;
+
+		Span<char> formatBuffer = stackalloc char[16];
+
+		// Address
+		var addressStyle = Theme?.AddressMargin;
+		if (addressStyle?.Visible != false)
+		{
+			RenderSpacing(addressStyle?.Margin?.Left);
+			RenderVerticalBorder(addressStyle?.Border?.Left);
+			RenderSpacing(addressStyle?.Padding?.Left);
+			using (UseStyle(addressStyle?.TextStyle))
+			{
+				Span<char> emptyAddress = stackalloc char[AddressLength];
+				emptyAddress.Fill(' ');
+				writer.Write(emptyAddress);
+			}
+			RenderSpacing(addressStyle?.Margin?.Right);
+			RenderVerticalBorder(addressStyle?.Border?.Right);
+			RenderSpacing(addressStyle?.Padding?.Right);
+		}
+
+		// Hex
+		var hexViewStyle = Theme?.HexView;
+		if (hexViewStyle?.Visible != false)
+		{
+			RenderSpacing(hexViewStyle?.Margin?.Left);
+			RenderVerticalBorder(hexViewStyle?.Border?.Left);
+			RenderSpacing(hexViewStyle?.Padding?.Left);
+			using (UseStyle(Theme?.HexView?.TextStyle))
+			{
+				var totalRenderLength = CalculateHexRenderLength(Columns);
+				Span<char> emptyBuffer = stackalloc char[totalRenderLength];
+				emptyBuffer.Fill(' ');
+				writer.Write(emptyBuffer);
+			}
+			RenderSpacing(hexViewStyle?.Padding?.Right);
+			RenderVerticalBorder(hexViewStyle?.Border?.Right);
+			RenderSpacing(hexViewStyle?.Margin?.Right);
+		}
+
+		// ASCII
+		var asciiViewStyle = Theme?.AsciiView;
+		if (asciiViewStyle?.Visible != false)
+		{
+			RenderSpacing(asciiViewStyle?.Margin?.Left);
+			RenderVerticalBorder(asciiViewStyle?.Border?.Left);
+			RenderSpacing(asciiViewStyle?.Padding?.Left);
+			using (UseStyle(asciiViewStyle?.TextStyle))
+			{
+				Span<char> emptyBuffer = stackalloc char[Columns];
+				emptyBuffer.Fill(' ');
+				writer.Write(emptyBuffer);
+			}
+			RenderSpacing(asciiViewStyle?.Padding?.Right);
+			RenderVerticalBorder(asciiViewStyle?.Border?.Right);
+			RenderSpacing(asciiViewStyle?.Margin?.Right);
+		}
+	}
+
+	private int CalculateHexRenderLength(int bytes) =>
+		bytes * 2 + // Hex digits
+		(bytes - 1) + // Spaces between bytes
+		(Theme?.HexView?.GroupingSize is int groupingSize ? (bytes - 1) / groupingSize : 0) // Extra spaces for grouping
+	;
 
 	private ConsoleStyle? MatchRule(byte value, ValueFormattingRule.Context context)
 	{
@@ -239,11 +369,11 @@ internal partial class ConsoleHexView
 		{
 			Console.Write(style.Pattern switch
 			{
-				BorderPattern.Dotted => ":",
-				BorderPattern.Dashes => "¦",
-				BorderPattern.Solid  => "|",
-				BorderPattern.Double => "║",
-				BorderPattern.Full   => "█",
+				BorderPattern.Dotted => ':',
+				BorderPattern.Dashes => '¦',
+				BorderPattern.Solid => '|',
+				BorderPattern.Double => '║',
+				BorderPattern.Full => '█',
 				_ => throw new ArgumentOutOfRangeException()
 			});
 		}

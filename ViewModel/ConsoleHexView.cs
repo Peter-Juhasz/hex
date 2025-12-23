@@ -9,48 +9,53 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	private int AddressLength = viewBuffer.DataBuffer.Length <= 0xFFFFFFFF ? 8 : 16;
 
+	private int VerticalScrollbarThumbScreenRowHeight = -1;
+	private int VerticalScrollbarThumbScreenRowStartIndex = -1;
+
 	private ConsoleTheme? Theme = Themes.Dark;
 
-	public bool TryGetLine(long index, [NotNullWhen(true)] out IViewLine? line)
+	public bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row)
 	{
 		var bytesPerLine = Columns;
 		var offset = index * bytesPerLine;
 		if (offset >= viewBuffer.DataBuffer.Length)
 		{
-			line = null;
+			row = null;
 			return false;
 		}
 
 		var length = (int)Math.Min(bytesPerLine, viewBuffer.DataBuffer.Length - offset);
 		if (!viewBuffer.TryRead(offset, length, out var data))
 		{
-			line = null;
+			row = null;
 			return false;
 		}
 
-		line = new ViewLine(this, index, offset, length, data);
+		row = new ViewRow(this, index, offset, length, data);
 		return true;
 	}
 
-	public int LineCount => (int)((viewBuffer.DataBuffer.Length + Columns - 1) / Columns);
+	public int RowCount => (int)((viewBuffer.DataBuffer.Length + Columns - 1) / Columns);
 
-	private long _lineIndex = 0;
+	private long _rowIndex = 0;
 
-	public long FirstVisibleLineIndex => _lineIndex;
+	public long FirstVisibleRowIndex => _rowIndex;
 
-	public long LastVisibleLineIndex => _lineIndex + VisibleLineCount - 1;
+	public long LastVisibleRowIndex => _rowIndex + VisibleRowCount - 1;
 
-	public long FirstVisibleOffset => _lineIndex * Columns;
+	public long FirstVisibleOffset => _rowIndex * Columns;
 
 	public long LastVisibleOffset => FirstVisibleOffset + Math.Min(viewBuffer.DataBuffer.Length - FirstVisibleOffset, Rows * Columns);
 
-	public int VisibleLineCount => Math.Min((int)(LineCount - _lineIndex), Rows);
+	public int VisibleRowCount => Math.Min((int)(RowCount - _rowIndex), Rows);
 
 	public int VisibleByteCount => (int)(LastVisibleOffset - FirstVisibleOffset);
 
-	public int VisibleBytesPerScreen => VisibleLineCount * Columns;
+	public int VisibleBytesPerScreen => VisibleRowCount * Columns;
 
-	public int LastPageIndex => LineCount / Rows * Rows;
+	public int RowsPerScreen => Rows;
+
+	public int LastPageIndex => RowCount / Rows * Rows;
 
 	public Task ResizeWindowAsync(int newWindowWidth, int newWindowHeight, CancellationToken cancellationToken)
 	{
@@ -58,7 +63,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowHeight);
 
 		var newRows = newWindowHeight;
-		var newColumns = CalculateBytesPerLine(newWindowWidth);
+		var newColumns = CalculateBytesPerRow(newWindowWidth);
 		return ResizeAsync(newColumns: newColumns, newRows: newRows, cancellationToken);
 	}
 
@@ -67,13 +72,11 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newColumns);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newRows);
 
-		if (newColumns == Columns && newRows == Rows)
-		{
-			return Task.CompletedTask;
-		}
-
 		Columns = newColumns;
 		Rows = newRows;
+
+		VerticalScrollbarThumbScreenRowHeight = Math.Max(1, (int)((RowsPerScreen / (double)RowCount) * RowsPerScreen));
+		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)RowCount) * RowsPerScreen);
 
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
@@ -83,7 +86,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		Theme = newTheme;
 
 		return ResizeAsync(
-			newColumns: newTheme?.Columns ?? CalculateBytesPerLine(Console.WindowWidth),
+			newColumns: newTheme?.Columns ?? CalculateBytesPerRow(Console.WindowWidth),
 			newRows: newTheme?.Rows ?? Console.WindowHeight,
 			cancellationToken
 		);
@@ -97,73 +100,79 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	public Task PageDownAsync(CancellationToken cancellationToken)
 	{
-		if (VisibleLineCount < Rows)
+		if (VisibleRowCount < Rows)
 		{
 			return Task.CompletedTask;
 		}
 
-		_lineIndex += Rows;
+		ScrollTo(_rowIndex + Rows);
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task PageUpAsync(CancellationToken cancellationToken)
 	{
-		if (LineCount < Rows)
+		if (RowCount < Rows)
 		{
 			return Task.CompletedTask;
 		}
 
-		if (_lineIndex == 0)
+		if (_rowIndex == 0)
 		{
 			return Task.CompletedTask;
 		}
 
-		_lineIndex = Math.Max(0, _lineIndex - Rows);
+		ScrollTo(Math.Max(0, _rowIndex - Rows));
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task ScrollUpAsync(CancellationToken cancellationToken)
 	{
-		if (_lineIndex == 0)
+		if (_rowIndex == 0)
 		{
 			return Task.CompletedTask;
 		}
 
-		_lineIndex = Math.Max(0, _lineIndex - 1);
+		ScrollTo(Math.Max(0, _rowIndex - 1));
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task ScrollDownAsync(CancellationToken cancellationToken)
 	{
-		if (VisibleLineCount < Rows)
+		if (VisibleRowCount < Rows)
 		{
 			return Task.CompletedTask;
 		}
 
-		_lineIndex++;
+		ScrollTo(_rowIndex + 1);
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task GoToFirstPageAsync(CancellationToken cancellationToken)
 	{
-		if (_lineIndex == 0)
+		if (_rowIndex == 0)
 		{
 			return Task.CompletedTask;
 		}
 
-		_lineIndex = 0;
+		ScrollTo(0);
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
 
 	public Task GoToLastPageAsync(CancellationToken cancellationToken)
 	{
 		var lastPageIndex = LastPageIndex;
-		if (_lineIndex == lastPageIndex)
+		if (_rowIndex == lastPageIndex)
 		{
 			return Task.CompletedTask;
 		}
 
-		_lineIndex = lastPageIndex;
+		ScrollTo(lastPageIndex);
 		return LoadAndInvalidateAsync(cancellationToken);
+	}
+
+	private void ScrollTo(long lineIndex)
+	{
+		_rowIndex = lineIndex;
+		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)RowCount) * RowsPerScreen);
 	}
 }

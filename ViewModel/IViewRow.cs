@@ -1,10 +1,10 @@
 ﻿namespace HexEditor.ViewModel;
 
-public interface IViewLine
+public interface IViewRow
 {
 	IHexView View { get; }
 
-	long LineIndex { get; }
+	long RowIndex { get; }
 
 	long Offset { get; }
 
@@ -13,11 +13,11 @@ public interface IViewLine
 	ReadOnlySpan<byte> Data { get; }
 }
 
-public class ViewLine(IHexView view, long lineIndex, long offset, int length, ReadOnlyMemory<byte> dataView) : IViewLine
+public class ViewRow(IHexView view, long rowIndex, long offset, int length, ReadOnlyMemory<byte> dataView) : IViewRow
 {
 	public IHexView View { get; } = view;
 
-	public long LineIndex { get; } = lineIndex;
+	public long RowIndex { get; } = rowIndex;
 
 	public long Offset { get; } = offset;
 
