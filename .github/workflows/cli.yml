@@ -7,13 +7,13 @@ env:
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
     paths:
       - .github/workflows/cli.yml
       - src/HexEditor.Cli/**
       - src/HexEditor.Core/**
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
     paths:
       - .github/workflows/cli.yml
       - src/HexEditor.Cli/**
