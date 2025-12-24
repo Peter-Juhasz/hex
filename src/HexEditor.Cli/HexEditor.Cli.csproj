@@ -24,4 +24,8 @@
 		<PackageReference Include="System.CommandLine" Version="*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\HexEditor.Core\HexEditor.Core.csproj" />
+  </ItemGroup>
+
 </Project>

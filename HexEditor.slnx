@@ -1,3 +1,4 @@
 <Solution>
-  <Project Path="HexEditor.csproj" />
+  <Project Path="src/HexEditor.Cli/HexEditor.Cli.csproj" />
+  <Project Path="src/HexEditor.Core/HexEditor.Core.csproj" Id="d40d49f4-f29d-485a-aa33-a2c7a372da01" />
 </Solution>
