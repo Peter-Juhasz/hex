@@ -67,7 +67,7 @@ jobs:
       uses: actions/attest-build-provenance@v3
       with:
         subject-path: |
-          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/**.exe
+          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/**
     - name: Archive production artifacts
       uses: actions/upload-artifact@v6
       with:
