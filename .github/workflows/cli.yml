@@ -25,10 +25,10 @@ permissions:
   attestations: write
 
 jobs:
-  build:
-
+  build-win:
     runs-on: windows-latest
-
+    env:
+      RUNTIME_IDENTIFIER: win-x64
     steps:
     - uses: actions/checkout@v6
     - name: Setup .NET
@@ -41,7 +41,7 @@ jobs:
       run: dotnet nuget locals all --clear
     - name: Restore dependencies
       working-directory: ./src/${{ env.PROJECT_NAME }}
-      run: dotnet restore --verbosity normal
+      run: dotnet restore --runtime ${{ env.RUNTIME_IDENTIFIER }} --verbosity normal
     - name: Audit Vulnerable
       working-directory: ./src/${{ env.PROJECT_NAME }}
       run: dotnet list package --vulnerable --include-transitive
@@ -50,13 +50,13 @@ jobs:
       run: dotnet list package --deprecated --include-transitive
     - name: Build
       working-directory: ./src/${{ env.PROJECT_NAME }}
-      run: dotnet build --no-restore -c ${{ env.BUILD_CONFIGURATION }} /property:WarningLevel=0
+      run: dotnet build --no-restore --runtime ${{ env.RUNTIME_IDENTIFIER }} -c ${{ env.BUILD_CONFIGURATION }} /property:WarningLevel=0
     # - name: Test
     #   working-directory: ./src/${{ env.PROJECT_NAME }}
     #   run: dotnet test --no-build --verbosity normal -c ${{ env.BUILD_CONFIGURATION }}
     - name: Publish
       working-directory: ./src/${{ env.PROJECT_NAME }}
-      run: dotnet publish --no-build -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal /property:WarningLevel=0
+      run: dotnet publish --no-build --runtime ${{ env.RUNTIME_IDENTIFIER }} -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal /property:WarningLevel=0
       
     - name: Attest
       uses: actions/attest-build-provenance@v3
