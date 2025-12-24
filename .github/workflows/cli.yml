@@ -1,0 +1,73 @@
+﻿name: CLI
+
+env:
+  PROJECT_NAME: 'HexEditor.Cli'
+  DOTNET_VERSION: '10'
+  BUILD_CONFIGURATION: 'Release'
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - .github/workflows/cli.yml
+      - src/HexEditor.Cli/**
+      - src/HexEditor.Core/**
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - .github/workflows/cli.yml
+      - src/HexEditor.Cli/**
+      - src/HexEditor.Core/**
+    
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}.x
+        dotnet-quality: ga
+    - name: Clear packages cache
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet nuget locals all --clear
+    - name: Restore dependencies
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet restore --verbosity normal
+    - name: Audit Vulnerable
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet list package --vulnerable --include-transitive
+    - name: Audit Deprecated
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet list package --deprecated --include-transitive
+    - name: Build
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet build --no-restore -c ${{ env.BUILD_CONFIGURATION }} /property:WarningLevel=0
+    # - name: Test
+    #   working-directory: ./src/${{ env.PROJECT_NAME }}
+    #   run: dotnet test --no-build --verbosity normal -c ${{ env.BUILD_CONFIGURATION }}
+    - name: Publish
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet publish --no-build -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal /property:WarningLevel=0
+      
+    - name: Attest
+      uses: actions/attest-build-provenance@v3
+      with:
+        subject-path: |
+          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/**.dll
+          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/**.exe
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: app
+        path: ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/
+        if-no-files-found: error
+        include-hidden-files: true
