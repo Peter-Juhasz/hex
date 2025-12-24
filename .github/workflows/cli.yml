@@ -68,11 +68,11 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.rid }}
-        path: ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/
+        path: ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/${{ matrix.rid }}/publish/
         if-no-files-found: error
         include-hidden-files: true
     - name: Attest
       uses: actions/attest-build-provenance@v3
       with:
         subject-path: |
-          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/**
+          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/${{ matrix.rid }}/publish/**
