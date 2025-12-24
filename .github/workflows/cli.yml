@@ -56,7 +56,7 @@ jobs:
     #   run: dotnet test --no-build --verbosity normal -c ${{ env.BUILD_CONFIGURATION }}
     - name: Publish
       working-directory: ./src/${{ env.PROJECT_NAME }}
-      run: dotnet publish --no-build --runtime ${{ env.RUNTIME_IDENTIFIER }} -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal /property:WarningLevel=0
+      run: dotnet publish --runtime ${{ env.RUNTIME_IDENTIFIER }} -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal /property:WarningLevel=0
       
     - name: Attest
       uses: actions/attest-build-provenance@v3
