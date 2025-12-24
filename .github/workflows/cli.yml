@@ -25,10 +25,15 @@ permissions:
   attestations: write
 
 jobs:
-  build-win:
-    runs-on: windows-latest
-    env:
-      RUNTIME_IDENTIFIER: win-x64
+  build:
+    strategy:
+      matrix:
+        include:
+          - rid: win-x64
+            runsOn: windows-latest
+          - rid: linux-x64
+            runsOn: ubuntu-latest
+    runs-on: ${{ matrix.runsOn }}
     steps:
     - uses: actions/checkout@v6
     - name: Setup .NET
@@ -41,7 +46,7 @@ jobs:
       run: dotnet nuget locals all --clear
     - name: Restore dependencies
       working-directory: ./src/${{ env.PROJECT_NAME }}
-      run: dotnet restore --runtime ${{ env.RUNTIME_IDENTIFIER }} --verbosity normal
+      run: dotnet restore --runtime ${{ matrix.rid }} --verbosity normal
     - name: Audit Vulnerable
       working-directory: ./src/${{ env.PROJECT_NAME }}
       run: dotnet list package --vulnerable --include-transitive
@@ -50,24 +55,23 @@ jobs:
       run: dotnet list package --deprecated --include-transitive
     - name: Build
       working-directory: ./src/${{ env.PROJECT_NAME }}
-      run: dotnet build --no-restore --runtime ${{ env.RUNTIME_IDENTIFIER }} -c ${{ env.BUILD_CONFIGURATION }} /property:WarningLevel=0
+      run: dotnet build --no-restore --runtime ${{ matrix.rid }} -c ${{ env.BUILD_CONFIGURATION }} /property:WarningLevel=0
     # - name: Test
     #   working-directory: ./src/${{ env.PROJECT_NAME }}
     #   run: dotnet test --no-build --verbosity normal -c ${{ env.BUILD_CONFIGURATION }}
     - name: Publish
       working-directory: ./src/${{ env.PROJECT_NAME }}
-      run: dotnet publish --runtime ${{ env.RUNTIME_IDENTIFIER }} -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal /property:WarningLevel=0
+      run: dotnet publish --runtime ${{ matrix.rid }} -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal /property:WarningLevel=0
       
     - name: Attest
       uses: actions/attest-build-provenance@v3
       with:
         subject-path: |
-          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/**.dll
           ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/**.exe
     - name: Archive production artifacts
       uses: actions/upload-artifact@v6
       with:
-        name: app
+        name: ${{ matrix.rid }}
         path: ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/publish/
         if-no-files-found: error
         include-hidden-files: true
