@@ -10,7 +10,7 @@ internal partial class ConsoleHexView
 				(Theme?.AddressMargin?.Margin?.Left ?? 0) +
 				(Theme?.AddressMargin?.Border?.Left != null ? 1 : 0) +
 				(Theme?.AddressMargin?.Padding?.Left ?? 0) +
-				AddressLength +
+				Math.Max(MinimumAddressLength, Theme?.AddressMargin?.MinimumWidth ?? 0) +
 				(Theme?.AddressMargin?.Padding?.Right ?? 0) +
 				(Theme?.AddressMargin?.Border?.Right != null ? 1 : 0) +
 				(Theme?.AddressMargin?.Margin?.Right ?? 0)
@@ -51,7 +51,7 @@ internal partial class ConsoleHexView
 			1 + // Space
 			(Theme?.HexView?.Visible == false ? 0 : (
 				2 + // Hex byte
-				(Theme?.HexView?.GroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
+				(Theme?.HexView?.ColumnGroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
 			)) +
 			(Theme?.AsciiView?.Visible == false ? 0 : (
 				1 // ASCII representation
@@ -130,6 +130,8 @@ internal partial class ConsoleHexView
 		Console.ResetColor();
 	}
 
+	private static readonly string[] HexFormatStrings = [ "X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16" ];
+
 	private void RenderRow(IViewRow row)
 	{
 		var writer = Console.Out;
@@ -145,14 +147,9 @@ internal partial class ConsoleHexView
 			RenderSpacing(addressStyle?.Padding?.Left);
 			using (UseStyle(addressStyle?.TextStyle))
 			{
-				row.Offset.TryFormat(formatBuffer, out _, AddressLength switch
-				{
-					2 => "X2",
-					4 => "X4",
-					8 => "X8",
-					_ => "X16"
-				});
-				writer.Write(formatBuffer[..AddressLength]);
+				var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
+				row.Offset.TryFormat(formatBuffer, out _, HexFormatStrings[addressLength]);
+				writer.Write(formatBuffer[..addressLength]);
 			}
 			RenderSpacing(addressStyle?.Margin?.Right);
 			RenderVerticalBorder(addressStyle?.Border?.Right);
@@ -193,7 +190,7 @@ internal partial class ConsoleHexView
 					{
 						writer.Write(' ');
 
-						if (Theme?.HexView?.GroupingSize is int groupingSize)
+						if (Theme?.HexView?.ColumnGroupingSize is int groupingSize)
 						{
 							if ((col + 1) % groupingSize == 0)
 							{
@@ -282,7 +279,7 @@ internal partial class ConsoleHexView
 			RenderSpacing(addressStyle?.Padding?.Left);
 			using (UseStyle(addressStyle?.TextStyle))
 			{
-				Span<char> emptyAddress = stackalloc char[AddressLength];
+				Span<char> emptyAddress = stackalloc char[MinimumAddressLength];
 				emptyAddress.Fill(' ');
 				writer.Write(emptyAddress);
 			}
@@ -332,7 +329,7 @@ internal partial class ConsoleHexView
 	private int CalculateHexRenderLength(int bytes) =>
 		bytes * 2 + // Hex digits
 		(bytes - 1) + // Spaces between bytes
-		(Theme?.HexView?.GroupingSize is int groupingSize ? (bytes - 1) / groupingSize : 0) // Extra spaces for grouping
+		(Theme?.HexView?.ColumnGroupingSize is int groupingSize ? (bytes - 1) / groupingSize : 0) // Extra spaces for grouping
 	;
 
 	private ConsoleStyle? MatchRule(byte value, ValueFormattingRule.Context context)

@@ -136,7 +136,7 @@ internal record class HexViewStyle(
 	FullBorderStyle? Border = null,
 	Spacing? Padding = null,
 	Spacing? Margin = null,
-	int? GroupingSize = null,
+	int? ColumnGroupingSize = null,
 	bool Visible = true
 );
 
@@ -176,7 +176,7 @@ internal static class Themes
 		),
 		HexView: new(
 			Padding: new(Left: 1, Right: 1),
-			GroupingSize: 4
+			ColumnGroupingSize: 4
 		),
 		Scrollbar: new(
 			Margin: new(Left: 1)

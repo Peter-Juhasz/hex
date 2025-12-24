@@ -7,7 +7,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 	private int Columns = -1;
 	private int Rows = -1;
 
-	private int AddressLength = viewBuffer.DataBuffer.Length <= 0xFFFFFFFF ? 8 : 16;
+	private int MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.DataBuffer.Length);
 
 	private int VerticalScrollbarThumbScreenRowHeight = -1;
 	private int VerticalScrollbarThumbScreenRowStartIndex = -1;
@@ -35,7 +35,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		return true;
 	}
 
-	public int RowCount => (int)((viewBuffer.DataBuffer.Length + Columns - 1) / Columns);
+	public int TotalRowCount => (int)((viewBuffer.DataBuffer.Length + Columns - 1) / Columns);
 
 	private long _rowIndex = 0;
 
@@ -47,15 +47,15 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	public long LastVisibleOffset => FirstVisibleOffset + Math.Min(viewBuffer.DataBuffer.Length - FirstVisibleOffset, Rows * Columns);
 
-	public int VisibleRowCount => Math.Min((int)(RowCount - _rowIndex), Rows);
+	public int VisibleRowCount => Math.Min((int)(TotalRowCount - _rowIndex), Rows);
 
 	public int VisibleByteCount => (int)(LastVisibleOffset - FirstVisibleOffset);
 
-	public int VisibleBytesPerScreen => VisibleRowCount * Columns;
+	public int BytesPerScreen => VisibleRowCount * Columns;
 
 	public int RowsPerScreen => Rows;
 
-	public int LastPageIndex => Math.Max(0, (RowCount - 1) / Rows);
+	public int LastPageIndex => Math.Max(0, (TotalRowCount - 1) / Rows);
 
 	public int LastPageRowIndex => LastPageIndex * Rows;
 
@@ -77,8 +77,8 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		Columns = newColumns;
 		Rows = newRows;
 
-		VerticalScrollbarThumbScreenRowHeight = Math.Max(1, (int)((RowsPerScreen / (double)RowCount) * RowsPerScreen));
-		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)RowCount) * RowsPerScreen);
+		VerticalScrollbarThumbScreenRowHeight = Math.Max(1, (int)((RowsPerScreen / (double)TotalRowCount) * RowsPerScreen));
+		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)TotalRowCount) * RowsPerScreen);
 
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
@@ -112,7 +112,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	public Task PageUpAsync(CancellationToken cancellationToken)
 	{
-		if (RowCount < Rows)
+		if (TotalRowCount < Rows)
 		{
 			return Task.CompletedTask;
 		}
@@ -168,7 +168,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	public Task ScrollToRowAsync(long rowIndex, CancellationToken cancellationToken)
 	{
-		if (rowIndex < 0 || rowIndex >= RowCount)
+		if (rowIndex < 0 || rowIndex >= TotalRowCount)
 		{
 			throw new ArgumentOutOfRangeException(nameof(rowIndex));
 		}
@@ -179,7 +179,9 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 		}
 
 		_rowIndex = rowIndex;
-		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)RowCount) * RowsPerScreen);
+		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)TotalRowCount) * RowsPerScreen);
 		return LoadAndInvalidateAsync(cancellationToken);
 	}
+
+	private static int CalculateRequiredAddressLengthInCharacters(long dataLength) => (int)Math.Ceiling(Math.Log(dataLength + 1, 16));
 }
