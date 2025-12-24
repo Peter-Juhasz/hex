@@ -10,7 +10,8 @@ internal record class ConsoleTheme(
 	ConsoleStyle? DefaultStyle = null,
 	int? Columns = null,
 	int? Rows = null,
-	ScrollbarStyle? Scrollbar = null
+	ScrollbarStyle? Scrollbar = null,
+	Spacing? Padding = null
 );
 
 internal record class ValueFormattingRule(

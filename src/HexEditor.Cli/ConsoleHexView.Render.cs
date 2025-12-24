@@ -41,7 +41,11 @@ internal partial class ConsoleHexView
 				(Theme?.Scrollbar?.Margin?.Left ?? 0) +
 				1 + // Scrollbar width
 				(Theme?.Scrollbar?.Margin?.Right ?? 0)
-			))
+			)) +
+
+			// Padding
+			(Theme?.Padding?.Left ?? 0) +
+			(Theme?.Padding?.Right ?? 0)
 		);
 		return (int)MathF.Floor(usableWidth / (
 			1 + // Space
@@ -74,6 +78,8 @@ internal partial class ConsoleHexView
 			for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
 			{
 				var dataRowIndex = FirstVisibleRowIndex + screenRowIndex;
+
+				RenderSpacing(Theme?.Padding?.Left);
 
 				// Data row
 				if (dataRowIndex <= LastVisibleRowIndex)
@@ -110,6 +116,8 @@ internal partial class ConsoleHexView
 
 					RenderSpacing(Theme.Scrollbar.Margin?.Right);
 				}
+
+				RenderSpacing(Theme?.Padding?.Right);
 
 				// new line
 				if (screenRowIndex < Rows - 1)
@@ -347,15 +355,14 @@ internal partial class ConsoleHexView
 
 	private static void RenderSpacing(int? length)
 	{
-		if (length == null)
+		if (length is null or 0)
 		{
 			return;
 		}
 
-		for (int i = 0; i < length; i++)
-		{
-			Console.Write(' ');
-		}
+		Span<char> buffer = stackalloc char[length.Value];
+		buffer.Fill(' ');
+		Console.Write(buffer);
 	}
 
 	private static void RenderVerticalBorder(BorderStyle? style)
@@ -382,6 +389,7 @@ internal partial class ConsoleHexView
 	private static StyleState UseStyle(ConsoleStyle? style)
 	{
 		var captured = CaptureStyle();
+
 		if (style == null)
 		{
 			return captured;
