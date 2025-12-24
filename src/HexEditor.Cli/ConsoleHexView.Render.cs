@@ -6,54 +6,54 @@ internal partial class ConsoleHexView
 	{
 		var usableWidth = windowWidth - (
 			// Address
-			(Theme?.AddressMargin?.Visible == false ? 0 : (
-				(Theme?.AddressMargin?.Margin?.Left ?? 0) +
-				(Theme?.AddressMargin?.Border?.Left != null ? 1 : 0) +
-				(Theme?.AddressMargin?.Padding?.Left ?? 0) +
-				Math.Max(MinimumAddressLength, Theme?.AddressMargin?.MinimumWidth ?? 0) +
-				(Theme?.AddressMargin?.Padding?.Right ?? 0) +
-				(Theme?.AddressMargin?.Border?.Right != null ? 1 : 0) +
-				(Theme?.AddressMargin?.Margin?.Right ?? 0)
+			(_theme?.AddressMargin?.Visible == false ? 0 : (
+				(_theme?.AddressMargin?.Margin?.Left ?? 0) +
+				(_theme?.AddressMargin?.Border?.Left != null ? 1 : 0) +
+				(_theme?.AddressMargin?.Padding?.Left ?? 0) +
+				Math.Max(MinimumAddressLength, _theme?.AddressMargin?.MinimumWidth ?? 0) +
+				(_theme?.AddressMargin?.Padding?.Right ?? 0) +
+				(_theme?.AddressMargin?.Border?.Right != null ? 1 : 0) +
+				(_theme?.AddressMargin?.Margin?.Right ?? 0)
 			)) +
 
 			// Hex
-			(Theme?.HexView?.Visible == false ? 0 : (
-				(Theme?.HexView?.Margin?.Left ?? 0) +
-				(Theme?.HexView?.Border?.Left != null ? 1 : 0) +
-				(Theme?.HexView?.Padding?.Left ?? 0) +
-				(Theme?.HexView?.Padding?.Right ?? 0) +
-				(Theme?.HexView?.Border?.Right != null ? 1 : 0) +
-				(Theme?.HexView?.Margin?.Right ?? 0)
+			(_theme?.HexView?.Visible == false ? 0 : (
+				(_theme?.HexView?.Margin?.Left ?? 0) +
+				(_theme?.HexView?.Border?.Left != null ? 1 : 0) +
+				(_theme?.HexView?.Padding?.Left ?? 0) +
+				(_theme?.HexView?.Padding?.Right ?? 0) +
+				(_theme?.HexView?.Border?.Right != null ? 1 : 0) +
+				(_theme?.HexView?.Margin?.Right ?? 0)
 			)) +
 
 			// ASCII
-			(Theme?.AsciiView?.Visible == false ? 0 : (
-				(Theme?.AsciiView?.Margin?.Left ?? 0) +
-				(Theme?.AsciiView?.Border?.Left != null ? 1 : 0) +
-				(Theme?.AsciiView?.Padding?.Left ?? 0) +
-				(Theme?.AsciiView?.Padding?.Right ?? 0) +
-				(Theme?.AsciiView?.Border?.Right != null ? 1 : 0) +
-				(Theme?.AsciiView?.Margin?.Right ?? 0)
+			(_theme?.AsciiView?.Visible == false ? 0 : (
+				(_theme?.AsciiView?.Margin?.Left ?? 0) +
+				(_theme?.AsciiView?.Border?.Left != null ? 1 : 0) +
+				(_theme?.AsciiView?.Padding?.Left ?? 0) +
+				(_theme?.AsciiView?.Padding?.Right ?? 0) +
+				(_theme?.AsciiView?.Border?.Right != null ? 1 : 0) +
+				(_theme?.AsciiView?.Margin?.Right ?? 0)
 			)) +
 
 			// scrollbar
-			(Theme?.Scrollbar == null ? 0 : (
-				(Theme?.Scrollbar?.Margin?.Left ?? 0) +
+			(_theme?.Scrollbar == null ? 0 : (
+				(_theme?.Scrollbar?.Margin?.Left ?? 0) +
 				1 + // Scrollbar width
-				(Theme?.Scrollbar?.Margin?.Right ?? 0)
+				(_theme?.Scrollbar?.Margin?.Right ?? 0)
 			)) +
 
 			// Padding
-			(Theme?.Padding?.Left ?? 0) +
-			(Theme?.Padding?.Right ?? 0)
+			(_theme?.Padding?.Left ?? 0) +
+			(_theme?.Padding?.Right ?? 0)
 		);
 		return (int)MathF.Floor(usableWidth / (
 			1 + // Space
-			(Theme?.HexView?.Visible == false ? 0 : (
+			(_theme?.HexView?.Visible == false ? 0 : (
 				2 + // Hex byte
-				(Theme?.HexView?.ColumnGroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
+				(_theme?.HexView?.ColumnGroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
 			)) +
-			(Theme?.AsciiView?.Visible == false ? 0 : (
+			(_theme?.AsciiView?.Visible == false ? 0 : (
 				1 // ASCII representation
 			))
 		));
@@ -73,13 +73,13 @@ internal partial class ConsoleHexView
 			return;
 		}
 
-		using (UseStyle(Theme?.DefaultStyle))
+		using (UseStyle(_theme?.DefaultStyle))
 		{
 			for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
 			{
 				var dataRowIndex = FirstVisibleRowIndex + screenRowIndex;
 
-				RenderSpacing(Theme?.Padding?.Left);
+				RenderSpacing(_theme?.Padding?.Left);
 
 				// Data row
 				if (dataRowIndex <= LastVisibleRowIndex)
@@ -95,29 +95,29 @@ internal partial class ConsoleHexView
 				}
 
 				// Scrollbar
-				if (Theme?.Scrollbar != null)
+				if (_theme?.Scrollbar != null)
 				{
-					RenderSpacing(Theme.Scrollbar.Margin?.Left);
+					RenderSpacing(_theme.Scrollbar.Margin?.Left);
 
 					if (screenRowIndex >= VerticalScrollbarThumbScreenRowStartIndex && screenRowIndex <= VerticalScrollbarThumbScreenRowStartIndex + VerticalScrollbarThumbScreenRowHeight)
 					{
-						using (UseStyle(Theme.Scrollbar.ThumbStyle))
+						using (UseStyle(_theme.Scrollbar.ThumbStyle))
 						{
 							Console.Write('█');
 						}
 					}
 					else
 					{
-						using (UseStyle(Theme.Scrollbar.TrackStyle))
+						using (UseStyle(_theme.Scrollbar.TrackStyle))
 						{
 							Console.Write('|');
 						}
 					}
 
-					RenderSpacing(Theme.Scrollbar.Margin?.Right);
+					RenderSpacing(_theme.Scrollbar.Margin?.Right);
 				}
 
-				RenderSpacing(Theme?.Padding?.Right);
+				RenderSpacing(_theme?.Padding?.Right);
 
 				// new line
 				if (screenRowIndex < Rows - 1)
@@ -139,7 +139,7 @@ internal partial class ConsoleHexView
 		Span<char> formatBuffer = stackalloc char[16];
 
 		// Address
-		var addressStyle = Theme?.AddressMargin;
+		var addressStyle = _theme?.AddressMargin;
 		if (addressStyle?.Visible != false)
 		{
 			RenderSpacing(addressStyle?.Margin?.Left);
@@ -159,13 +159,13 @@ internal partial class ConsoleHexView
 		var data = row.Data;
 
 		// Hex
-		var hexViewStyle = Theme?.HexView;
+		var hexViewStyle = _theme?.HexView;
 		if (hexViewStyle?.Visible != false)
 		{
 			RenderSpacing(hexViewStyle?.Margin?.Left);
 			RenderVerticalBorder(hexViewStyle?.Border?.Left);
 			RenderSpacing(hexViewStyle?.Padding?.Left);
-			using (UseStyle(Theme?.HexView?.TextStyle))
+			using (UseStyle(_theme?.HexView?.TextStyle))
 			{
 				int col;
 				for (col = 0; col < data.Length; col++)
@@ -190,7 +190,7 @@ internal partial class ConsoleHexView
 					{
 						writer.Write(' ');
 
-						if (Theme?.HexView?.ColumnGroupingSize is int groupingSize)
+						if (_theme?.HexView?.ColumnGroupingSize is int groupingSize)
 						{
 							if ((col + 1) % groupingSize == 0)
 							{
@@ -217,7 +217,7 @@ internal partial class ConsoleHexView
 		}
 
 		// ASCII
-		var asciiViewStyle = Theme?.AsciiView;
+		var asciiViewStyle = _theme?.AsciiView;
 		if (asciiViewStyle?.Visible != false)
 		{
 			RenderSpacing(asciiViewStyle?.Margin?.Left);
@@ -268,10 +268,8 @@ internal partial class ConsoleHexView
 	{
 		var writer = Console.Out;
 
-		Span<char> formatBuffer = stackalloc char[16];
-
 		// Address
-		var addressStyle = Theme?.AddressMargin;
+		var addressStyle = _theme?.AddressMargin;
 		if (addressStyle?.Visible != false)
 		{
 			RenderSpacing(addressStyle?.Margin?.Left);
@@ -289,13 +287,13 @@ internal partial class ConsoleHexView
 		}
 
 		// Hex
-		var hexViewStyle = Theme?.HexView;
+		var hexViewStyle = _theme?.HexView;
 		if (hexViewStyle?.Visible != false)
 		{
 			RenderSpacing(hexViewStyle?.Margin?.Left);
 			RenderVerticalBorder(hexViewStyle?.Border?.Left);
 			RenderSpacing(hexViewStyle?.Padding?.Left);
-			using (UseStyle(Theme?.HexView?.TextStyle))
+			using (UseStyle(_theme?.HexView?.TextStyle))
 			{
 				var totalRenderLength = CalculateHexRenderLength(Columns);
 				Span<char> emptyBuffer = stackalloc char[totalRenderLength];
@@ -308,7 +306,7 @@ internal partial class ConsoleHexView
 		}
 
 		// ASCII
-		var asciiViewStyle = Theme?.AsciiView;
+		var asciiViewStyle = _theme?.AsciiView;
 		if (asciiViewStyle?.Visible != false)
 		{
 			RenderSpacing(asciiViewStyle?.Margin?.Left);
@@ -329,17 +327,17 @@ internal partial class ConsoleHexView
 	private int CalculateHexRenderLength(int bytes) =>
 		bytes * 2 + // Hex digits
 		(bytes - 1) + // Spaces between bytes
-		(Theme?.HexView?.ColumnGroupingSize is int groupingSize ? (bytes - 1) / groupingSize : 0) // Extra spaces for grouping
+		(_theme?.HexView?.ColumnGroupingSize is int groupingSize ? (bytes - 1) / groupingSize : 0) // Extra spaces for grouping
 	;
 
 	private ConsoleStyle? MatchRule(byte value, ValueFormattingRule.Context context)
 	{
-		if (Theme?.FormattingRules == null)
+		if (_rules == null)
 		{
 			return null;
 		}
 
-		foreach (var rule in Theme.FormattingRules)
+		foreach (var rule in _rules)
 		{
 			if (rule.IsMatch(value, context))
 			{

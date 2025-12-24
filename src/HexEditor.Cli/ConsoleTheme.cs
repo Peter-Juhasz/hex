@@ -3,7 +3,7 @@
 namespace HexEditor.ViewModel;
 
 internal record class ConsoleTheme(
-	IReadOnlyList<ValueFormattingRule> FormattingRules,
+	IReadOnlyCollection<ValueFormattingRule> FormattingRules,
 	AddressMarginStyle? AddressMargin = null,
 	HexViewStyle? HexView = null,
 	AsciiViewStyle? AsciiView = null,

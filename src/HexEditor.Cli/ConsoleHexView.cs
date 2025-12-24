@@ -2,19 +2,29 @@
 
 namespace HexEditor.ViewModel;
 
-internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
+internal partial class ConsoleHexView : IHexView
 {
-	private int Columns = -1;
+    public ConsoleHexView(IViewBuffer viewBuffer)
+    {
+        this.viewBuffer = viewBuffer;
+        MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.DataBuffer.Length);
+		SetThemeCore(Themes.Dark);
+    }
+
+    private int Columns = -1;
 	private int Rows = -1;
 
-	private int MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.DataBuffer.Length);
+	private int MinimumAddressLength;
 
-	private int VerticalScrollbarThumbScreenRowHeight = -1;
+    private int VerticalScrollbarThumbScreenRowHeight = -1;
 	private int VerticalScrollbarThumbScreenRowStartIndex = -1;
 
-	private ConsoleTheme? Theme = Themes.Dark;
+	private ConsoleTheme? _theme;
+	private ValueFormattingRule[]? _rules = null;
 
-	public bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row)
+	public ConsoleTheme? Theme => _theme;
+
+    public bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row)
 	{
 		var bytesPerRow = Columns;
 		var offset = index * bytesPerRow;
@@ -38,8 +48,9 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 	public int TotalRowCount => (int)((viewBuffer.DataBuffer.Length + Columns - 1) / Columns);
 
 	private long _rowIndex = 0;
+    private readonly IViewBuffer viewBuffer;
 
-	public long FirstVisibleRowIndex => _rowIndex;
+    public long FirstVisibleRowIndex => _rowIndex;
 
 	public long LastVisibleRowIndex => _rowIndex + VisibleRowCount - 1;
 
@@ -84,17 +95,27 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 	}
 
 	public Task ApplyThemeAsync(ConsoleTheme? newTheme, CancellationToken cancellationToken)
-	{
-		Theme = newTheme;
+    {
+        SetThemeCore(newTheme);
 
-		return ResizeAsync(
-			newColumns: newTheme?.Columns ?? CalculateBytesPerRow(Console.WindowWidth),
-			newRows: newTheme?.Rows ?? Console.WindowHeight,
-			cancellationToken
-		);
-	}
+        return ResizeAsync(
+            newColumns: newTheme?.Columns ?? CalculateBytesPerRow(Console.WindowWidth),
+            newRows: newTheme?.Rows ?? Console.WindowHeight,
+            cancellationToken
+        );
+    }
 
-	private async Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
+    private void SetThemeCore(ConsoleTheme? newTheme)
+    {
+        _theme = newTheme;
+		_rules = newTheme switch
+		{
+			{ FormattingRules: { Count: > 0 } rules } => rules.ToArray(),
+			_ => null
+        };
+    }
+
+    private async Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
 	{
 		await viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
 		Render();
