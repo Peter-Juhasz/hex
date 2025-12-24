@@ -8,6 +8,7 @@
 	<PublishAot>true</PublishAot>
 	<InvariantGlobalization>true</InvariantGlobalization>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<AssemblyName>hex</AssemblyName>
   </PropertyGroup>
   
 	<PropertyGroup>
