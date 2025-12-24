@@ -1,4 +1,6 @@
-﻿namespace HexEditor.ViewModel;
+﻿using System.Text.Json.Serialization;
+
+namespace HexEditor.ViewModel;
 
 internal record class ConsoleTheme(
 	IReadOnlyList<ValueFormattingRule> FormattingRules,
@@ -124,7 +126,8 @@ internal record class AddressMarginStyle(
 	FullBorderStyle? Border = null,
 	Spacing? Padding = null,
 	Spacing? Margin = null,
-	bool Visible = true
+	bool Visible = true,
+	int? MinimumWidth = 8
 );
 
 internal record class HexViewStyle(
@@ -192,3 +195,15 @@ internal static class Themes
 		]
 	);
 }
+
+
+[JsonSerializable(typeof(ConsoleTheme))]
+[JsonSourceGenerationOptions(
+	PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+	DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+	WriteIndented = false,
+	UseStringEnumConverter = true,
+	IgnoreReadOnlyFields = true,
+	IncludeFields = false
+)]
+internal partial class ConsoleThemeJsonSerializerContext : JsonSerializerContext { }

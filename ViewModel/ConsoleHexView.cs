@@ -16,15 +16,15 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	public bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row)
 	{
-		var bytesPerLine = Columns;
-		var offset = index * bytesPerLine;
+		var bytesPerRow = Columns;
+		var offset = index * bytesPerRow;
 		if (offset >= viewBuffer.DataBuffer.Length)
 		{
 			row = null;
 			return false;
 		}
 
-		var length = (int)Math.Min(bytesPerLine, viewBuffer.DataBuffer.Length - offset);
+		var length = (int)Math.Min(bytesPerRow, viewBuffer.DataBuffer.Length - offset);
 		if (!viewBuffer.TryRead(offset, length, out var data))
 		{
 			row = null;
@@ -55,7 +55,9 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 
 	public int RowsPerScreen => Rows;
 
-	public int LastPageIndex => RowCount / Rows * Rows;
+	public int LastPageIndex => Math.Max(0, (RowCount - 1) / Rows);
+
+	public int LastPageRowIndex => LastPageIndex * Rows;
 
 	public Task ResizeWindowAsync(int newWindowWidth, int newWindowHeight, CancellationToken cancellationToken)
 	{
@@ -105,8 +107,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 			return Task.CompletedTask;
 		}
 
-		ScrollTo(_rowIndex + Rows);
-		return LoadAndInvalidateAsync(cancellationToken);
+		return ScrollToRowAsync(_rowIndex + Rows, cancellationToken);
 	}
 
 	public Task PageUpAsync(CancellationToken cancellationToken)
@@ -121,19 +122,12 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 			return Task.CompletedTask;
 		}
 
-		ScrollTo(Math.Max(0, _rowIndex - Rows));
-		return LoadAndInvalidateAsync(cancellationToken);
+		return ScrollToPageAsync(Math.Max(0, _rowIndex - Rows), cancellationToken);
 	}
 
 	public Task ScrollUpAsync(CancellationToken cancellationToken)
 	{
-		if (_rowIndex == 0)
-		{
-			return Task.CompletedTask;
-		}
-
-		ScrollTo(Math.Max(0, _rowIndex - 1));
-		return LoadAndInvalidateAsync(cancellationToken);
+		return ScrollToRowAsync(Math.Max(0, _rowIndex - 1), cancellationToken);
 	}
 
 	public Task ScrollDownAsync(CancellationToken cancellationToken)
@@ -143,8 +137,7 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 			return Task.CompletedTask;
 		}
 
-		ScrollTo(_rowIndex + 1);
-		return LoadAndInvalidateAsync(cancellationToken);
+		return ScrollToRowAsync(_rowIndex + 1, cancellationToken);
 	}
 
 	public Task GoToFirstPageAsync(CancellationToken cancellationToken)
@@ -154,25 +147,39 @@ internal partial class ConsoleHexView(IViewBuffer viewBuffer) : IHexView
 			return Task.CompletedTask;
 		}
 
-		ScrollTo(0);
-		return LoadAndInvalidateAsync(cancellationToken);
+		return ScrollToPageAsync(0, cancellationToken);
 	}
 
 	public Task GoToLastPageAsync(CancellationToken cancellationToken)
 	{
-		var lastPageIndex = LastPageIndex;
-		if (_rowIndex == lastPageIndex)
+		return ScrollToPageAsync(LastPageIndex, cancellationToken);
+	}
+
+	public Task ScrollToPageAsync(long pageIndex, CancellationToken cancellationToken)
+	{
+		if (pageIndex < 0 || pageIndex > LastPageIndex)
+		{
+			throw new ArgumentOutOfRangeException(nameof(pageIndex));
+		}
+
+		var targetRowIndex = pageIndex * Rows;
+		return ScrollToRowAsync(targetRowIndex, cancellationToken);
+	}
+
+	public Task ScrollToRowAsync(long rowIndex, CancellationToken cancellationToken)
+	{
+		if (rowIndex < 0 || rowIndex >= RowCount)
+		{
+			throw new ArgumentOutOfRangeException(nameof(rowIndex));
+		}
+
+		if (_rowIndex == rowIndex)
 		{
 			return Task.CompletedTask;
 		}
 
-		ScrollTo(lastPageIndex);
-		return LoadAndInvalidateAsync(cancellationToken);
-	}
-
-	private void ScrollTo(long lineIndex)
-	{
-		_rowIndex = lineIndex;
+		_rowIndex = rowIndex;
 		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)RowCount) * RowsPerScreen);
+		return LoadAndInvalidateAsync(cancellationToken);
 	}
 }
