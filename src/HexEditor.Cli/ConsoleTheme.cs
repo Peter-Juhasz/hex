@@ -145,7 +145,8 @@ internal record class AsciiViewStyle(
 	FullBorderStyle? Border = null,
 	Spacing? Padding = null,
 	Spacing? Margin = null,
-	bool Visible = true
+	bool Visible = true,
+	int? ColumnGroupingSize = null
 );
 
 internal record class Spacing(

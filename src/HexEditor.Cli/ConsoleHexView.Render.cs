@@ -54,7 +54,8 @@ internal partial class ConsoleHexView
 				(_theme?.HexView?.ColumnGroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
 			)) +
 			(_theme?.AsciiView?.Visible == false ? 0 : (
-				1 // ASCII representation
+				1 + // ASCII representation
+				(_theme?.AsciiView?.ColumnGroupingSize is int grouping2 ? 1f / grouping2 : 0) // Extra spaces for grouping
 			))
 		));
 	}
@@ -246,6 +247,18 @@ internal partial class ConsoleHexView
 						else
 						{
 							writer.Write('.');
+						}
+					}
+
+					// separator
+					if (col < data.Length - 1)
+					{
+						if (_theme?.AsciiView?.ColumnGroupingSize is int groupingSize)
+						{
+							if ((col + 1) % groupingSize == 0)
+							{
+								writer.Write(' ');
+							}
 						}
 					}
 				}

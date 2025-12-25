@@ -3,13 +3,6 @@ using HexEditor.ViewModel;
 using System.CommandLine;
 using System.Text.Json;
 
-#if DEBUG
-if (args is [])
-{
-	args = [@"E:\rock2.mid", "--interactive"];
-}
-#endif
-
 using var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
 
