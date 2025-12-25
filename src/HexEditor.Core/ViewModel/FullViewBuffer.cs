@@ -8,7 +8,7 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 
 	public IBinaryBuffer DataBuffer => dataBuffer;
 
-	public bool TryRead(long offset, int length, out ReadOnlyMemory<byte> data)
+	public bool TryRead(long offset, int length, out ReadOnlyMemory<byte> data) 
 	{
 		if (_viewBuffer == null)
 		{
@@ -28,6 +28,6 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 		}
 
 		_viewBuffer = new byte[dataBuffer.Length];
-		return dataBuffer.CopyToAsync(_viewBuffer, 0, dataBuffer.Length, cancellationToken).AsTask();
+		return dataBuffer.CopyToAsync(_viewBuffer, 0, (int)dataBuffer.Length, cancellationToken).AsTask();
 	}
 }

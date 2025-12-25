@@ -6,11 +6,11 @@ public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryBuffer
 
 	long IBinaryBuffer.Length { get; }
 
-	public ValueTask CopyToAsync(Memory<byte> destination, long offset, long length, CancellationToken cancellationToken)
+	public ValueTask CopyToAsync(Memory<byte> destination, long offset, int length, CancellationToken cancellationToken)
 	{
 		ArgumentOutOfRangeException.ThrowIfGreaterThan(length, destination.Length);
 
-		if (!TryRead(destination.Span, offset, (int)length))
+		if (!TryRead(destination.Span, offset, length))
 		{
 			throw new ArgumentOutOfRangeException(nameof(offset));
 		}

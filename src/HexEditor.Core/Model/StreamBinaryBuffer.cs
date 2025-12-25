@@ -4,14 +4,14 @@ public class StreamBinaryBuffer(Stream stream) : IBinaryBuffer
 {
 	public long Length => stream.Length;
 
-	public async ValueTask CopyToAsync(Memory<byte> destination, long offset, long length, CancellationToken cancellationToken)
+	public async ValueTask CopyToAsync(Memory<byte> destination, long offset, int length, CancellationToken cancellationToken)
 	{
 		if (offset < 0 || offset + length > stream.Length)
 		{
 			throw new ArgumentOutOfRangeException(nameof(offset));
 		}
 
-		var buffer = destination[..(int)length];
+		var buffer = destination[..length];
 		stream.Seek(offset, SeekOrigin.Begin);
 		await stream.ReadExactlyAsync(buffer, cancellationToken);
 	}

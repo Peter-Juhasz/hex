@@ -19,7 +19,7 @@ public class SafeFileHandleBinaryBuffer(SafeFileHandle handle) : IBinaryBuffer
 		}
 	}
 
-	public async ValueTask CopyToAsync(Memory<byte> destination, long offset, long length, CancellationToken cancellationToken)
+	public async ValueTask CopyToAsync(Memory<byte> destination, long offset, int length, CancellationToken cancellationToken)
 	{
 		var read = await RandomAccess.ReadAsync(handle, destination, offset, cancellationToken);
 		if (read < length)
