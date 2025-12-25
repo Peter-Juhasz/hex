@@ -128,7 +128,8 @@ internal record class AddressMarginStyle(
 	Spacing? Padding = null,
 	Spacing? Margin = null,
 	bool Visible = true,
-	int? MinimumWidth = 8
+	int? MinimumWidth = 8,
+	bool ShowSuffix = false
 );
 
 internal record class HexViewStyle(

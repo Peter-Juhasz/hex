@@ -11,6 +11,7 @@ internal partial class ConsoleHexView
 				(_theme?.AddressMargin?.Border?.Left != null ? 1 : 0) +
 				(_theme?.AddressMargin?.Padding?.Left ?? 0) +
 				Math.Max(MinimumAddressLength, _theme?.AddressMargin?.MinimumWidth ?? 0) +
+				(_theme?.AddressMargin?.ShowSuffix == true ? 1 : 0) +
 				(_theme?.AddressMargin?.Padding?.Right ?? 0) +
 				(_theme?.AddressMargin?.Border?.Right != null ? 1 : 0) +
 				(_theme?.AddressMargin?.Margin?.Right ?? 0)
@@ -151,6 +152,11 @@ internal partial class ConsoleHexView
 				var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
 				row.Offset.TryFormat(formatBuffer, out _, HexFormatStrings[addressLength]);
 				writer.Write(formatBuffer[..addressLength]);
+
+				if (addressStyle?.ShowSuffix == true)
+				{
+					writer.Write('h');
+				}
 			}
 			RenderSpacing(addressStyle?.Margin?.Right);
 			RenderVerticalBorder(addressStyle?.Border?.Right);
