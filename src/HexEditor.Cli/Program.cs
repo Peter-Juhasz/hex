@@ -48,13 +48,14 @@ root.SetAction(async (context, ct) =>
 	var view = new ConsoleHexView(viewBuffer);
 
 	// resize view
+	var (consoleWidth, consoleHeight) = (Console.WindowWidth, Console.WindowHeight);
 	if (columns != null && rows != null)
 	{
 		await view.ResizeAsync(columns.Value, rows.Value, cancellationToken);
 	}
 	else
 	{
-		await view.ResizeWindowAsync(Console.WindowWidth, Console.WindowHeight, ct);
+		await view.ResizeWindowAsync(consoleWidth, consoleHeight, ct);
 	}
 
 	// apply theme
@@ -70,6 +71,7 @@ root.SetAction(async (context, ct) =>
 
 	while (true)
 	{
+		// read key
 		var key = Console.ReadKey(intercept: true);
 		switch (key.Key)
 		{
@@ -100,6 +102,14 @@ root.SetAction(async (context, ct) =>
 			case ConsoleKey.Escape:
 				cts.Cancel();
 				return;
+		}
+
+		// resize check
+		var (newConsoleWidth, newConsoleHeight) = (Console.WindowWidth, Console.WindowHeight);
+		if (newConsoleWidth != consoleWidth || newConsoleHeight != consoleHeight)
+		{
+			(consoleWidth, consoleHeight) = (newConsoleWidth, newConsoleHeight);
+			await view.ResizeWindowAsync(consoleWidth, consoleHeight, ct);
 		}
 	}
 });
