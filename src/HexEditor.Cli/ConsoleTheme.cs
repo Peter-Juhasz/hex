@@ -125,8 +125,8 @@ internal record class BorderStyle(
 internal record class AddressMarginStyle(
 	ConsoleStyle? TextStyle = null,
 	FullBorderStyle? Border = null,
-	Spacing? Padding = null,
-	Spacing? Margin = null,
+	HorizontalSpacing? Padding = null,
+	HorizontalSpacing? Margin = null,
 	bool Visible = true,
 	int? MinimumWidth = 8,
 	bool ShowSuffix = false
@@ -135,8 +135,8 @@ internal record class AddressMarginStyle(
 internal record class HexViewStyle(
 	ConsoleStyle? TextStyle = null,
 	FullBorderStyle? Border = null,
-	Spacing? Padding = null,
-	Spacing? Margin = null,
+	HorizontalSpacing? Padding = null,
+	HorizontalSpacing? Margin = null,
 	int? ColumnGroupingSize = null,
 	bool Visible = true
 );
@@ -144,15 +144,22 @@ internal record class HexViewStyle(
 internal record class AsciiViewStyle(
 	ConsoleStyle? TextStyle = null,
 	FullBorderStyle? Border = null,
-	Spacing? Padding = null,
-	Spacing? Margin = null,
+	HorizontalSpacing? Padding = null,
+	HorizontalSpacing? Margin = null,
 	bool Visible = true,
 	int? ColumnGroupingSize = null
 );
 
-internal record class Spacing(
+internal record class HorizontalSpacing(
 	int Left = 0,
 	int Right = 0
+);
+
+internal record class Spacing(
+	int Left = 0,
+	int Right = 0,
+	int Top = 0,
+	int Bottom = 0
 );
 
 internal record class FullBorderStyle(
@@ -163,7 +170,7 @@ internal record class FullBorderStyle(
 internal record class ScrollbarStyle(
 	ConsoleStyle? TrackStyle = null,
 	ConsoleStyle? ThumbStyle = null,
-	Spacing? Margin = null
+	HorizontalSpacing? Margin = null
 );
 
 internal static class Themes

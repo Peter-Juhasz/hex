@@ -75,7 +75,10 @@ internal partial class ConsoleHexView : IHexView
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowWidth);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowHeight);
 
-		var newRows = newWindowHeight;
+		var newRows = newWindowHeight - (
+			(_theme?.Padding?.Top ?? 0) +
+			(_theme?.Padding?.Bottom ?? 0)
+		);
 		var newColumns = CalculateBytesPerRow(newWindowWidth);
 		return ResizeAsync(newColumns: newColumns, newRows: newRows, cancellationToken);
 	}
@@ -143,7 +146,8 @@ internal partial class ConsoleHexView : IHexView
 			return Task.CompletedTask;
 		}
 
-		return ScrollToPageAsync(Math.Max(0, _rowIndex - Rows), cancellationToken);
+		var currentPageIndex = _rowIndex / Rows;
+		return ScrollToPageAsync(Math.Max(0, currentPageIndex - 1), cancellationToken);
 	}
 
 	public Task ScrollUpAsync(CancellationToken cancellationToken)

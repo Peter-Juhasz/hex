@@ -77,6 +77,16 @@ internal partial class ConsoleHexView
 
 		using (UseStyle(_theme?.DefaultStyle))
 		{
+			// top padding
+			if (_theme?.Padding?.Top is int topPadding)
+			{
+				for (int i = 0; i < topPadding; i++)
+				{
+					Console.WriteLine();
+				}
+			}
+
+			// data rows
 			for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
 			{
 				var dataRowIndex = FirstVisibleRowIndex + screenRowIndex;
@@ -123,6 +133,15 @@ internal partial class ConsoleHexView
 
 				// new line
 				if (screenRowIndex < Rows - 1)
+				{
+					Console.WriteLine();
+				}
+			}
+
+			// bottom padding
+			if (_theme?.Padding?.Bottom is int bottomPadding)
+			{
+				for (int i = 0; i < bottomPadding; i++)
 				{
 					Console.WriteLine();
 				}
