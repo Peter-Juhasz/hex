@@ -86,6 +86,15 @@ internal partial class ConsoleHexView
 				}
 			}
 
+			// column headers
+			if (_theme?.HexView?.Visible != false && _theme?.HexView?.Header?.Visible == true)
+			{
+				RenderSpacing(_theme?.Padding?.Left);
+				RenderHeader();
+				RenderSpacing(_theme?.Padding?.Right);
+				Console.WriteLine();
+			}
+
 			// data rows
 			for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
 			{
@@ -106,7 +115,7 @@ internal partial class ConsoleHexView
 					RenderEmptyRow();
 				}
 
-				// Scrollbar
+				// scrollbar
 				if (_theme?.Scrollbar != null)
 				{
 					RenderSpacing(_theme.Scrollbar.Margin?.Left);
@@ -149,6 +158,73 @@ internal partial class ConsoleHexView
 		}
 
 		Console.ResetColor();
+	}
+
+	private void RenderHeader()
+	{
+		var addressStyle = _theme?.AddressMargin;
+		if (addressStyle?.Visible != false)
+		{
+			RenderSpacing(addressStyle?.Margin?.Left);
+			RenderVerticalBorder(addressStyle?.Border?.Left);
+			RenderSpacing(addressStyle?.Padding?.Left);
+			using (UseStyle(addressStyle?.TextStyle))
+			{
+				var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
+				RenderSpacing(addressLength);
+			}
+			RenderSpacing(addressStyle?.Margin?.Right);
+			RenderVerticalBorder(addressStyle?.Border?.Right);
+			RenderSpacing(addressStyle?.Padding?.Right);
+		}
+
+		var hexViewStyle = _theme?.HexView;
+		if (hexViewStyle?.Visible != false)
+		{
+			RenderSpacing(hexViewStyle?.Margin?.Left);
+			RenderVerticalBorder(hexViewStyle?.Border?.Left);
+			RenderSpacing(hexViewStyle?.Padding?.Left);
+			using (UseStyle(_theme?.HexView?.TextStyle))
+			using (UseStyle(_theme?.HexView?.Header?.Style))
+			{
+				Span<char> formatBuffer = stackalloc char[2];
+				for (int col = 0; col < Columns; col++)
+				{
+					col.TryFormat(formatBuffer, out _, "X2");
+					Console.Write(formatBuffer[..2]);
+					// separator
+					if (col < Columns - 1)
+					{
+						Console.Write(' ');
+						if (_theme?.HexView?.ColumnGroupingSize is int groupingSize)
+						{
+							if ((col + 1) % groupingSize == 0)
+							{
+								Console.Write(' ');
+							}
+						}
+					}
+				}
+			}
+			RenderSpacing(hexViewStyle?.Padding?.Right);
+			RenderVerticalBorder(hexViewStyle?.Border?.Right);
+			RenderSpacing(hexViewStyle?.Margin?.Right);
+		}
+
+		var asciiViewStyle = _theme?.AsciiView;
+		if (asciiViewStyle?.Visible != false)
+		{
+			RenderSpacing(asciiViewStyle?.Margin?.Left);
+			RenderVerticalBorder(asciiViewStyle?.Border?.Left);
+			RenderSpacing(asciiViewStyle?.Padding?.Left);
+			using (UseStyle(asciiViewStyle?.TextStyle))
+			{
+				RenderSpacing(Columns);
+			}
+			RenderSpacing(asciiViewStyle?.Padding?.Right);
+			RenderVerticalBorder(asciiViewStyle?.Border?.Right);
+			RenderSpacing(asciiViewStyle?.Margin?.Right);
+		}
 	}
 
 	private static readonly string[] HexFormatStrings = [ "X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16" ];

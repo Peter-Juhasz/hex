@@ -138,6 +138,12 @@ internal record class HexViewStyle(
 	HorizontalSpacing? Padding = null,
 	HorizontalSpacing? Margin = null,
 	int? ColumnGroupingSize = null,
+	bool Visible = true,
+	HexColumnHeaderStyle? Header = null
+);
+
+internal record class HexColumnHeaderStyle(
+	ConsoleStyle? Style = null,
 	bool Visible = true
 );
 
