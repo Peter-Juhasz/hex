@@ -102,7 +102,7 @@ internal partial class ConsoleHexView
 
 				RenderSpacing(_theme?.Padding?.Left);
 
-				// Data row
+				// data row
 				if (dataRowIndex <= LastVisibleRowIndex)
 				{
 					if (TryGetRow(dataRowIndex, out var row))
@@ -391,7 +391,8 @@ internal partial class ConsoleHexView
 			RenderSpacing(addressStyle?.Padding?.Left);
 			using (UseStyle(addressStyle?.TextStyle))
 			{
-				Span<char> emptyAddress = stackalloc char[MinimumAddressLength];
+				var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
+				Span<char> emptyAddress = stackalloc char[addressLength];
 				emptyAddress.Fill(' ');
 				writer.Write(emptyAddress);
 			}
@@ -428,7 +429,9 @@ internal partial class ConsoleHexView
 			RenderSpacing(asciiViewStyle?.Padding?.Left);
 			using (UseStyle(asciiViewStyle?.TextStyle))
 			{
-				Span<char> emptyBuffer = stackalloc char[Columns];
+				Span<char> emptyBuffer = stackalloc char[Columns + 
+					(_theme?.AsciiView?.ColumnGroupingSize is int groupingSize ? (Columns - 1) / groupingSize : 0)
+				];
 				emptyBuffer.Fill(' ');
 				writer.Write(emptyBuffer);
 			}
@@ -485,7 +488,8 @@ internal partial class ConsoleHexView
 		{
 			Console.Write(style.Pattern switch
 			{
-				BorderPattern.Dotted => ':',
+				BorderPattern.Dot => '.',
+				BorderPattern.DotDot => ':',
 				BorderPattern.Dashes => '¦',
 				BorderPattern.Solid => '|',
 				BorderPattern.Double => '║',

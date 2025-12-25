@@ -11,7 +11,8 @@ internal record class ConsoleTheme(
 	int? Columns = null,
 	int? Rows = null,
 	ScrollbarStyle? Scrollbar = null,
-	Spacing? Padding = null
+	Spacing? Padding = null,
+	int? RowGroupingSize = null
 );
 
 internal record class ValueFormattingRule(
@@ -109,7 +110,8 @@ internal record class ConsoleStyle(
 
 internal enum BorderPattern
 {
-	Dotted,
+	Dot,
+	DotDot,
 	Dashes,
 	Solid,
 	Double,
@@ -185,7 +187,7 @@ internal static class Themes
 		AddressMargin: new(
 			Border: new(
 				Right: new(
-					Pattern: BorderPattern.Dotted
+					Pattern: BorderPattern.DotDot
 				)
 			)
 		),
@@ -209,6 +211,39 @@ internal static class Themes
 			new(MinimumValue: 0x00, MaximumValue: 0x1F, Style: new(ForegroundColor: ConsoleColor.DarkGray)),
 			new(MinimumValue: 0x20, MaximumValue: 0x7E, Style: new(ForegroundColor: ConsoleColor.White)),
 		]
+	);
+
+	public static readonly ConsoleTheme Midnight = new(
+		Columns: 20,
+		AddressMargin: new(
+			Border: new(
+			),
+			TextStyle: new(BackgroundColor: ConsoleColor.DarkBlue)
+		),
+		HexView: new(
+			Padding: new(Left: 3, Right: 3),
+			ColumnGroupingSize: 5
+		),
+		Scrollbar: new(
+			Margin: new(Left: 1)
+		),
+		AsciiView: new(
+			Border: new(
+				Left: new(
+					Pattern: BorderPattern.Dashes
+				)
+			),
+			Padding: new(Left: 1),
+			ColumnGroupingSize: 5
+		),
+		FormattingRules:
+		[
+			new(MinimumValue: 0x00, MaximumValue: 0x1F, Style: new(ForegroundColor: ConsoleColor.DarkGray)),
+			new(MinimumValue: 0x20, MaximumValue: 0x7E, Style: new(ForegroundColor: ConsoleColor.Yellow)),
+			new(MinimumValue: 0x80, MaximumValue: 0xFF, Style: new(ForegroundColor: ConsoleColor.Red)),
+		],
+		Padding: new(2, 2, 2, 2),
+		RowGroupingSize: 5
 	);
 }
 

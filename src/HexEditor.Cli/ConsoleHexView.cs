@@ -75,12 +75,12 @@ internal partial class ConsoleHexView : IHexView
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowWidth);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowHeight);
 
-		var newRows = newWindowHeight - (
+		var newRows = _theme?.Rows ?? newWindowHeight - (
 			(_theme?.Padding?.Top ?? 0) +
 			(_theme?.HexView?.Header?.Visible == true ? 1 : 0) +
 			(_theme?.Padding?.Bottom ?? 0)
 		);
-		var newColumns = CalculateBytesPerRow(newWindowWidth);
+		var newColumns = _theme?.Columns ?? CalculateBytesPerRow(newWindowWidth);
 		return ResizeAsync(newColumns: newColumns, newRows: newRows, cancellationToken);
 	}
 
