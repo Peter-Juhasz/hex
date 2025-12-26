@@ -194,10 +194,12 @@ internal partial class ConsoleHexView
 				{
 					using (UseStyle(_theme?.HexView?.Header?.Style))
 					{
+						var format = (_theme?.HexView?.Header?.LetterCasing ?? _theme?.HexView?.LetterCasing) == LetterCasing.Lower ? "x2" : "X2";
+						
 						Span<char> formatBuffer = stackalloc char[2];
 						for (int col = 0; col < Columns; col++)
 						{
-							col.TryFormat(formatBuffer, out _, "X2");
+							col.TryFormat(formatBuffer, out _, format);
 							Console.Write(formatBuffer[..2]);
 							// separator
 							if (col < Columns - 1)
@@ -236,9 +238,11 @@ internal partial class ConsoleHexView
 				{
 					using (UseStyle(_theme?.AsciiView?.Header?.Style))
 					{
-						for (int col = 0; col < Columns; col++)
+						var digits = _theme?.AsciiView?.Header?.LetterCasing == LetterCasing.Lower ? LowercaseHexDigits : UppercaseHexDigits;
+
+                        for (int col = 0; col < Columns; col++)
 						{
-							Console.Write(UppercaseHexDigits[col % 16]);
+							Console.Write(digits[col % 16]);
 
 							// separator
 							if (col < Columns - 1)
@@ -265,7 +269,8 @@ internal partial class ConsoleHexView
 		}
 	}
 
-	private static readonly string[] HexFormatStrings = [ "X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16" ];
+	private static readonly string[] UppercaseHexFormatStrings = [ "X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16" ];
+	private static readonly string[] LowercaseHexFormatStrings = [ "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16" ];
 
 	private void RenderRow(IViewRow row)
 	{
@@ -282,8 +287,10 @@ internal partial class ConsoleHexView
 			RenderSpacing(addressStyle?.Padding?.Left);
 			using (UseStyle(addressStyle?.TextStyle))
 			{
-				var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
-				row.Offset.TryFormat(formatBuffer, out _, HexFormatStrings[addressLength]);
+				var hexFormatStrings = (addressStyle?.LetterCasing == LetterCasing.Lower) ? LowercaseHexFormatStrings : UppercaseHexFormatStrings;
+
+                var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
+				row.Offset.TryFormat(formatBuffer, out _, hexFormatStrings[addressLength]);
 				writer.Write(formatBuffer[..addressLength]);
 
 				if (addressStyle?.ShowSuffix == true)
@@ -307,8 +314,10 @@ internal partial class ConsoleHexView
 			RenderSpacing(hexViewStyle?.Padding?.Left);
 			using (UseStyle(_theme?.HexView?.TextStyle))
 			{
+				var format =  _theme?.HexView?.LetterCasing == LetterCasing.Lower ? "x2" : "X2";
+				
 				int col;
-				for (col = 0; col < data.Length; col++)
+                for (col = 0; col < data.Length; col++)
 				{
 					// get value
 					byte value = data[col];
@@ -321,7 +330,7 @@ internal partial class ConsoleHexView
 					))))
 					{
 						// write hex value
-						value.TryFormat(formatBuffer, out _, "X2");
+						value.TryFormat(formatBuffer, out _, format);
 						writer.Write(formatBuffer[..2]);
 					}
 

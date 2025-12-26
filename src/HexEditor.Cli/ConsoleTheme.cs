@@ -131,7 +131,8 @@ internal record class AddressMarginStyle(
 	HorizontalSpacing? Margin = null,
 	bool Visible = true,
 	int? MinimumWidth = 8,
-	bool ShowSuffix = false
+	bool ShowSuffix = false,
+	LetterCasing LetterCasing = LetterCasing.Upper
 );
 
 internal record class HexViewStyle(
@@ -141,12 +142,14 @@ internal record class HexViewStyle(
 	HorizontalSpacing? Margin = null,
 	int? ColumnGroupingSize = null,
 	bool Visible = true,
-	HexColumnHeaderStyle? Header = null
+	HexColumnHeaderStyle? Header = null,
+    LetterCasing LetterCasing = LetterCasing.Upper
 );
 
 internal record class HexColumnHeaderStyle(
 	ConsoleStyle? Style = null,
-	bool Visible = true
+	bool Visible = true,
+    LetterCasing LetterCasing = LetterCasing.Upper
 );
 
 internal record class AsciiViewStyle(
@@ -161,7 +164,8 @@ internal record class AsciiViewStyle(
 
 internal record class AsciiColumnHeaderStyle(
     ConsoleStyle? Style = null,
-    bool Visible = true
+    bool Visible = true,
+    LetterCasing LetterCasing = LetterCasing.Upper
 );
 
 internal record class HorizontalSpacing(
@@ -186,6 +190,12 @@ internal record class ScrollbarStyle(
 	ConsoleStyle? ThumbStyle = null,
 	HorizontalSpacing? Margin = null
 );
+
+internal enum LetterCasing
+{
+	Upper,
+	Lower
+}
 
 internal static class Themes
 {
