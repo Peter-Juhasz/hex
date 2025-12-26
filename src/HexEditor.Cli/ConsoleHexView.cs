@@ -77,7 +77,7 @@ internal partial class ConsoleHexView : IHexView
 
 		var newRows = _theme?.Rows ?? newWindowHeight - (
 			(_theme?.Padding?.Top ?? 0) +
-			(_theme?.HexView?.Header?.Visible == true ? 1 : 0) +
+			(_theme?.HexView?.Header?.Visible ?? _theme?.AsciiView?.Header?.Visible == true ? 1 : 0) +
 			(_theme?.Padding?.Bottom ?? 0)
 		);
 		var newColumns = _theme?.Columns ?? CalculateBytesPerRow(newWindowWidth);

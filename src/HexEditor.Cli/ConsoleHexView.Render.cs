@@ -2,7 +2,10 @@
 
 internal partial class ConsoleHexView
 {
-	private int CalculateBytesPerRow(int windowWidth)
+	private const string UppercaseHexDigits = "0123456789ABCDEF";
+	private const string LowercaseHexDigits = "0123456789abcdef";
+
+    private int CalculateBytesPerRow(int windowWidth)
 	{
 		var usableWidth = windowWidth - (
 			// Address
@@ -87,7 +90,8 @@ internal partial class ConsoleHexView
 			}
 
 			// column headers
-			if (_theme?.HexView?.Visible != false && _theme?.HexView?.Header?.Visible == true)
+			if ((_theme?.HexView?.Visible != false && _theme?.HexView?.Header?.Visible == true) ||
+				(_theme?.AsciiView?.Visible != false && _theme?.AsciiView?.Header?.Visible == true))
 			{
 				RenderSpacing(_theme?.Padding?.Left);
 				RenderHeader();
@@ -185,26 +189,35 @@ internal partial class ConsoleHexView
 			RenderVerticalBorder(hexViewStyle?.Border?.Left);
 			RenderSpacing(hexViewStyle?.Padding?.Left);
 			using (UseStyle(_theme?.HexView?.TextStyle))
-			using (UseStyle(_theme?.HexView?.Header?.Style))
 			{
-				Span<char> formatBuffer = stackalloc char[2];
-				for (int col = 0; col < Columns; col++)
+				if (_theme?.HexView?.Header?.Visible == true)
 				{
-					col.TryFormat(formatBuffer, out _, "X2");
-					Console.Write(formatBuffer[..2]);
-					// separator
-					if (col < Columns - 1)
+					using (UseStyle(_theme?.HexView?.Header?.Style))
 					{
-						Console.Write(' ');
-						if (_theme?.HexView?.ColumnGroupingSize is int groupingSize)
+						Span<char> formatBuffer = stackalloc char[2];
+						for (int col = 0; col < Columns; col++)
 						{
-							if ((col + 1) % groupingSize == 0)
+							col.TryFormat(formatBuffer, out _, "X2");
+							Console.Write(formatBuffer[..2]);
+							// separator
+							if (col < Columns - 1)
 							{
 								Console.Write(' ');
+								if (_theme?.HexView?.ColumnGroupingSize is int groupingSize)
+								{
+									if ((col + 1) % groupingSize == 0)
+									{
+										Console.Write(' ');
+									}
+								}
 							}
 						}
 					}
 				}
+				else
+				{
+					RenderSpacing(CalculateHexRenderLength(Columns));
+                }
 			}
 			RenderSpacing(hexViewStyle?.Padding?.Right);
 			RenderVerticalBorder(hexViewStyle?.Border?.Right);
@@ -219,7 +232,32 @@ internal partial class ConsoleHexView
 			RenderSpacing(asciiViewStyle?.Padding?.Left);
 			using (UseStyle(asciiViewStyle?.TextStyle))
 			{
-				RenderSpacing(Columns);
+				if (_theme?.AsciiView?.Header?.Visible == true)
+				{
+					using (UseStyle(_theme?.AsciiView?.Header?.Style))
+					{
+						for (int col = 0; col < Columns; col++)
+						{
+							Console.Write(UppercaseHexDigits[col % 16]);
+
+							// separator
+							if (col < Columns - 1)
+							{
+								if (_theme?.AsciiView?.ColumnGroupingSize is int groupingSize)
+								{
+									if ((col + 1) % groupingSize == 0)
+									{
+										Console.Write(' ');
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					RenderSpacing(Columns);
+                }
 			}
 			RenderSpacing(asciiViewStyle?.Padding?.Right);
 			RenderVerticalBorder(asciiViewStyle?.Border?.Right);

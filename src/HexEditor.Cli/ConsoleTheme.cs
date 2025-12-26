@@ -155,7 +155,13 @@ internal record class AsciiViewStyle(
 	HorizontalSpacing? Padding = null,
 	HorizontalSpacing? Margin = null,
 	bool Visible = true,
-	int? ColumnGroupingSize = null
+	int? ColumnGroupingSize = null,
+    AsciiColumnHeaderStyle? Header = null
+);
+
+internal record class AsciiColumnHeaderStyle(
+    ConsoleStyle? Style = null,
+    bool Visible = true
 );
 
 internal record class HorizontalSpacing(
@@ -204,7 +210,9 @@ internal static class Themes
 					Pattern: BorderPattern.Solid
 				)
 			),
-			Padding: new(Left: 1)
+			Padding: new(Left: 1),
+			ColumnGroupingSize: 4,
+			Header: new(Visible: true)
 		),
 		FormattingRules:
 		[
