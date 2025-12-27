@@ -19,20 +19,20 @@ public class SafeFileHandleBinaryBuffer(SafeFileHandle handle) : IBinaryBuffer
 		}
 	}
 
-	public async ValueTask CopyToAsync(Memory<byte> destination, long offset, int length, CancellationToken cancellationToken)
-	{
-		var read = await RandomAccess.ReadAsync(handle, destination, offset, cancellationToken);
-		if (read < length)
+	public async ValueTask CopyToAsync(MemoryBinarySpan span, Memory<byte> destination, CancellationToken cancellationToken)
+    {
+		var read = await RandomAccess.ReadAsync(handle, destination, span.StartOffset, cancellationToken);
+		if (read < span.Length)
 		{
-			throw new ArgumentOutOfRangeException(nameof(offset));
+			throw new ArgumentOutOfRangeException(nameof(span));
 		}
 	}
 
-	public bool TryRead(Span<byte> buffer, long offset, int length)
+	public bool TryRead(Span<byte> buffer, MemoryBinarySpan span)
 	{
 		if (!handle.IsAsync)
 		{
-			var read = RandomAccess.Read(handle, buffer, offset);
+			var read = RandomAccess.Read(handle, buffer, span.StartOffset);
 			return read != -1;
 		}
 

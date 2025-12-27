@@ -2,9 +2,7 @@
 
 public interface IBinaryBuffer : IAsyncDisposable
 {
-	bool TryRead(Span<byte> buffer, long offset, int length);
-
-	ValueTask CopyToAsync(Memory<byte> destination, long offset, int length, CancellationToken cancellationToken);
+	ValueTask CopyToAsync(MemoryBinarySpan span, Memory<byte> destination, CancellationToken cancellationToken);
 
 	long Length { get; }
 

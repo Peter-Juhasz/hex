@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using HexEditor.Model;
+using System.Diagnostics.CodeAnalysis;
 
 namespace HexEditor.ViewModel;
 
@@ -6,7 +7,7 @@ internal partial class ConsoleHexView : IHexView
 {
     public ConsoleHexView(IViewBuffer viewBuffer)
     {
-        this.viewBuffer = viewBuffer;
+        _viewBuffer = viewBuffer;
         MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.DataBuffer.Length);
 		SetThemeCore(Themes.Dark);
     }
@@ -41,27 +42,28 @@ internal partial class ConsoleHexView : IHexView
 
 		var bytesPerRow = Columns;
 		var offset = index * bytesPerRow;
-		if (offset >= viewBuffer.DataBuffer.Length)
+		if (offset >= _viewBuffer.DataBuffer.Length)
 		{
 			row = null;
 			return false;
 		}
 
-		var length = (int)Math.Min(bytesPerRow, viewBuffer.DataBuffer.Length - offset);
-		if (!viewBuffer.TryRead(offset, length, out var data))
+		var length = (int)Math.Min(bytesPerRow, _viewBuffer.DataBuffer.Length - offset);
+		var rowSpan = new MemoryBinarySpan(offset, length);
+		if (!_viewBuffer.TryRead(rowSpan, out var data))
 		{
 			row = null;
 			return false;
 		}
 
-		row = new ViewRow(this, index, offset, length, data);
+		row = new ViewRow(this, index, rowSpan, data);
 		return true;
 	}
 
 	public long TotalRowCount => _totalRowCount;
 
     private long _rowIndex = 0;
-    private readonly IViewBuffer viewBuffer;
+    private readonly IViewBuffer _viewBuffer;
 
     public long FirstVisibleRowIndex => _rowIndex;
 
@@ -83,7 +85,7 @@ internal partial class ConsoleHexView : IHexView
         }
     }
 
-    public long LastVisibleOffset => FirstVisibleOffset + Math.Min(viewBuffer.DataBuffer.Length - FirstVisibleOffset, Rows * Columns);
+    public long LastVisibleOffset => FirstVisibleOffset + Math.Min(_viewBuffer.DataBuffer.Length - FirstVisibleOffset, Rows * Columns);
 
 	public int VisibleRowCount => Math.Min((int)(TotalRowCount - _rowIndex), Rows);
 
@@ -97,7 +99,9 @@ internal partial class ConsoleHexView : IHexView
 
 	public long LastPageRowIndex => LastPageIndex * Rows;
 
-	public Task ResizeWindowAsync(int newWindowWidth, int newWindowHeight, CancellationToken cancellationToken)
+	public MemoryBinarySpan VisibleSpan => new(FirstVisibleOffset, VisibleByteCount);
+
+    public Task ResizeWindowAsync(int newWindowWidth, int newWindowHeight, CancellationToken cancellationToken)
 	{
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowWidth);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowHeight);
@@ -147,13 +151,25 @@ internal partial class ConsoleHexView : IHexView
         };
     }
 
-    private async Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
+    private Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
 	{
-		await viewBuffer.LoadChunkAsync(FirstVisibleOffset, VisibleByteCount, cancellationToken);
-		Render();
+		var task = _viewBuffer.LoadChunkAsync(VisibleSpan, cancellationToken);
+		if (task.IsCompletedSuccessfully)
+		{
+			Render();
+			return Task.CompletedTask;
+        }
+
+		return WaitAndRenderCoreAsync(task);
 	}
 
-	public Task PageDownAsync(CancellationToken cancellationToken)
+    private async Task WaitAndRenderCoreAsync(Task task)
+    {
+        await task;
+        Render();
+    }
+
+    public Task PageDownAsync(CancellationToken cancellationToken)
 	{
 		if (VisibleRowCount < Rows)
 		{

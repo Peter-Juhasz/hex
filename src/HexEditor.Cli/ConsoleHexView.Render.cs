@@ -66,7 +66,7 @@ internal partial class ConsoleHexView
 
 	private long CalculateTotalRows(int bytesPerRow)
 	{
-		var totalRows = viewBuffer.DataBuffer.Length / bytesPerRow;
+		var totalRows = _viewBuffer.DataBuffer.Length / bytesPerRow;
 
 		if (_theme?.RowGroupingSize is int groupingSize && groupingSize > 0)
 		{
@@ -86,7 +86,7 @@ internal partial class ConsoleHexView
 
 		Console.Clear();
 
-		if (viewBuffer.DataBuffer.Length == 0)
+		if (_viewBuffer.DataBuffer.Length == 0)
 		{
 			return;
 		}
@@ -307,7 +307,7 @@ internal partial class ConsoleHexView
 				var hexFormatStrings = (addressStyle?.LetterCasing == LetterCasing.Lower) ? LowercaseHexFormatStrings : UppercaseHexFormatStrings;
 
                 var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
-				row.Offset.TryFormat(formatBuffer, out _, hexFormatStrings[addressLength]);
+				row.Span.StartOffset.TryFormat(formatBuffer, out _, hexFormatStrings[addressLength]);
 				writer.Write(formatBuffer[..addressLength]);
 
 				if (addressStyle?.ShowSuffix == true)
@@ -341,7 +341,7 @@ internal partial class ConsoleHexView
 
 					// determine formatting
 					using (UseStyle(MatchRule(value, new(
-						Offset: row.Offset + col,
+						Offset: row.Span.StartOffset + col,
 						Row: row.RowIndex,
 						Column: col
 					))))
@@ -399,7 +399,7 @@ internal partial class ConsoleHexView
 
 					// determine formatting
 					using (UseStyle(MatchRule(value, new(
-						Offset: row.Offset + col,
+						Offset: row.Span.StartOffset + col,
 						Row: row.RowIndex,
 						Column: col
 					))))

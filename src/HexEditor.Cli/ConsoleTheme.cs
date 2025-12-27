@@ -17,6 +17,7 @@ internal record class ConsoleTheme(
 
 internal record class ValueFormattingRule(
 	ConsoleStyle Style,
+	string? ClassificationType = null,
 	byte? MinimumValue = null,
 	byte? MaximumValue = null,
 	long? MinimumOffset = null,

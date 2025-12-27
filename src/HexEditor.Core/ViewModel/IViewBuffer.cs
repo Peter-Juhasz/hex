@@ -6,9 +6,9 @@ public interface IViewBuffer
 {
 	IBinaryBuffer DataBuffer { get; }
 
-	bool TryRead(long offset, int length, out ReadOnlyMemory<byte> data);
+	bool TryRead(MemoryBinarySpan span, out ReadOnlyMemory<byte> data);
 
-	Task LoadChunkAsync(long offset, int length, CancellationToken cancellationToken);
+	Task LoadChunkAsync(MemoryBinarySpan span, CancellationToken cancellationToken);
 }
 
 public static partial class Extensions
@@ -17,7 +17,7 @@ public static partial class Extensions
 	{
 		public bool TryReadByte(long offset, out byte value)
 		{
-			if (@this.TryRead(offset, 1, out var data))
+			if (@this.TryRead(new(offset, 1), out var data))
 			{
 				value = data.Span[0];
 				return true;
@@ -29,7 +29,7 @@ public static partial class Extensions
 
 		public bool TryCopyTo(long offset, Span<byte> destination)
 		{
-			if (@this.TryRead(offset, destination.Length, out var data))
+			if (@this.TryRead(new(offset, destination.Length), out var data))
 			{
 				data.Span.CopyTo(destination);
 				return true;
@@ -41,14 +41,14 @@ public static partial class Extensions
 		public bool TryRead(Range range, out ReadOnlyMemory<byte> data)
 		{
 			var (offset, length) = range.GetOffsetAndLength((int)@this.DataBuffer.Length);
-			return @this.TryRead(offset, length, out data);
+			return @this.TryRead(new(offset, length), out data);
 		}
 
 
 		public Task LoadChunkAsync(Range range, CancellationToken cancellationToken)
 		{
 			var (offset, length) = range.GetOffsetAndLength((int)@this.DataBuffer.Length);
-			return @this.LoadChunkAsync(offset, length, cancellationToken);
+			return @this.LoadChunkAsync(new(offset, length), cancellationToken);
 		}
 	}
 }

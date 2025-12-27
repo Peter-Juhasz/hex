@@ -8,7 +8,7 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 
 	public IBinaryBuffer DataBuffer => dataBuffer;
 
-	public bool TryRead(long offset, int length, out ReadOnlyMemory<byte> data) 
+	public bool TryRead(MemoryBinarySpan span, out ReadOnlyMemory<byte> data) 
 	{
 		if (_viewBuffer == null)
 		{
@@ -16,11 +16,11 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 			return false;
 		}
 
-		data = new ReadOnlyMemory<byte>(_viewBuffer, (int)offset, length);
+		data = new ReadOnlyMemory<byte>(_viewBuffer, (int)span.StartOffset, span.Length);
 		return true;
 	}
 
-	public Task LoadChunkAsync(long offset, int length, CancellationToken cancellationToken)
+	public Task LoadChunkAsync(MemoryBinarySpan span, CancellationToken cancellationToken)
 	{
 		if (_viewBuffer != null)
 		{
@@ -28,6 +28,6 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 		}
 
 		_viewBuffer = new byte[dataBuffer.Length];
-		return dataBuffer.CopyToAsync(_viewBuffer, 0, (int)dataBuffer.Length, cancellationToken).AsTask();
+		return dataBuffer.CopyToAsync(span, _viewBuffer, cancellationToken).AsTask();
 	}
 }

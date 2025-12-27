@@ -8,7 +8,7 @@ public class LazyViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 
 	private ViewBufferChunk? _loadedChunk;
 
-	public bool TryRead(long offset, int length, out ReadOnlyMemory<byte> data)
+	public bool TryRead(MemoryBinarySpan span, out ReadOnlyMemory<byte> data)
 	{
 		var chunk = _loadedChunk;
 		if (chunk == null)
@@ -17,9 +17,9 @@ public class LazyViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 			return false;
 		}
 
-		if (chunk.Offset <= offset && chunk.Offset + chunk.Data.Length >= offset + length)
+		if (chunk.Offset <= span.StartOffset && chunk.Offset + chunk.Data.Length >= span.EndOffset)
 		{
-			data = new ReadOnlyMemory<byte>(chunk.Data, (int)(offset - chunk.Offset), length);
+			data = new ReadOnlyMemory<byte>(chunk.Data, (int)(span.StartOffset - chunk.Offset), span.Length);
 			return true;
 		}
 		
@@ -27,15 +27,16 @@ public class LazyViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 		return false;
 	}
 
-	public async Task LoadChunkAsync(long offset, int length, CancellationToken cancellationToken)
+	public async Task LoadChunkAsync(MemoryBinarySpan span, CancellationToken cancellationToken)
 	{
-		if (_loadedChunk != null && _loadedChunk.Offset <= offset && _loadedChunk.Offset + _loadedChunk.Data.Length >= offset + length)
+		if (_loadedChunk != null && _loadedChunk.Offset <= span.StartOffset && _loadedChunk.Offset + _loadedChunk.Data.Length >= span.EndOffset)
 		{
 			return;
 		}
-		var buffer = new byte[length];
-		await dataBuffer.CopyToAsync(buffer, offset, length, cancellationToken);
-		_loadedChunk = new ViewBufferChunk(offset, buffer);
+
+		var buffer = new byte[span.Length];
+		await dataBuffer.CopyToAsync(span, buffer, cancellationToken);
+		_loadedChunk = new ViewBufferChunk(span.StartOffset, buffer);
 	}
 
 	private record class ViewBufferChunk(long Offset, byte[] Data);
