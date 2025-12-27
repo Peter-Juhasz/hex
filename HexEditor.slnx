@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="src/HexEditor.Cli/HexEditor.Cli.csproj" />
   <Project Path="src/HexEditor.Core/HexEditor.Core.csproj" Id="d40d49f4-f29d-485a-aa33-a2c7a372da01" />
+  <Project Path="src/HexEditor.Formats/HexEditor.Formats.csproj" Id="c5bfe4c1-376b-41f8-aa1c-80d15cef2516" />
 </Solution>

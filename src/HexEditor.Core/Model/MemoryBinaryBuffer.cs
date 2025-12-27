@@ -2,9 +2,7 @@
 
 public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryBuffer
 {
-	public int Length => buffer.Length;
-
-	long IBinaryBuffer.Length { get; }
+	public long Length => buffer.Length;
 
 	public ValueTask CopyToAsync(MemoryBinarySpan span, Memory<byte> destination, CancellationToken cancellationToken)
     {
