@@ -13,8 +13,9 @@ internal partial class ConsoleHexView : IHexView
 
     private int Columns = -1;
 	private int Rows = -1;
+	private long _totalRowCount = -1;
 
-	private int MinimumAddressLength;
+    private int MinimumAddressLength;
 
     private int VerticalScrollbarThumbScreenRowHeight = -1;
 	private int VerticalScrollbarThumbScreenRowStartIndex = -1;
@@ -26,6 +27,18 @@ internal partial class ConsoleHexView : IHexView
 
     public bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row)
 	{
+		// adjust index with grouping
+		if (_theme?.RowGroupingSize is int groupingSize)
+		{
+			if ((index + 1) % (groupingSize + 1) == 0)
+			{
+				row = null;
+				return false;
+			}
+
+			index -= index / (groupingSize + 1);
+		}
+
 		var bytesPerRow = Columns;
 		var offset = index * bytesPerRow;
 		if (offset >= viewBuffer.DataBuffer.Length)
@@ -45,18 +58,32 @@ internal partial class ConsoleHexView : IHexView
 		return true;
 	}
 
-	public int TotalRowCount => (int)((viewBuffer.DataBuffer.Length + Columns - 1) / Columns);
+	public long TotalRowCount => _totalRowCount;
 
-	private long _rowIndex = 0;
+    private long _rowIndex = 0;
     private readonly IViewBuffer viewBuffer;
 
     public long FirstVisibleRowIndex => _rowIndex;
 
 	public long LastVisibleRowIndex => _rowIndex + VisibleRowCount - 1;
 
-	public long FirstVisibleOffset => _rowIndex * Columns;
+    public long FirstVisibleOffset
+    {
+        get
+        {
+			var dataRowIndex = _rowIndex;
 
-	public long LastVisibleOffset => FirstVisibleOffset + Math.Min(viewBuffer.DataBuffer.Length - FirstVisibleOffset, Rows * Columns);
+			if (_theme?.RowGroupingSize is int groupingSize)
+			{
+				var groupsBefore = dataRowIndex / (groupingSize);
+				dataRowIndex -= groupsBefore;
+            }
+
+            return dataRowIndex * Columns;
+        }
+    }
+
+    public long LastVisibleOffset => FirstVisibleOffset + Math.Min(viewBuffer.DataBuffer.Length - FirstVisibleOffset, Rows * Columns);
 
 	public int VisibleRowCount => Math.Min((int)(TotalRowCount - _rowIndex), Rows);
 
@@ -66,9 +93,9 @@ internal partial class ConsoleHexView : IHexView
 
 	public int RowsPerScreen => Rows;
 
-	public int LastPageIndex => Math.Max(0, (TotalRowCount - 1) / Rows);
+	public long LastPageIndex => Math.Max(0, (TotalRowCount - 1) / Rows);
 
-	public int LastPageRowIndex => LastPageIndex * Rows;
+	public long LastPageRowIndex => LastPageIndex * Rows;
 
 	public Task ResizeWindowAsync(int newWindowWidth, int newWindowHeight, CancellationToken cancellationToken)
 	{
@@ -91,6 +118,7 @@ internal partial class ConsoleHexView : IHexView
 
 		Columns = newColumns;
 		Rows = newRows;
+		_totalRowCount = CalculateTotalRows(newRows);
 
 		VerticalScrollbarThumbScreenRowHeight = Math.Max(1, (int)((RowsPerScreen / (double)TotalRowCount) * RowsPerScreen));
 		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)TotalRowCount) * RowsPerScreen);

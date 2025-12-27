@@ -64,6 +64,19 @@ internal partial class ConsoleHexView
 		));
 	}
 
+	private long CalculateTotalRows(int bytesPerRow)
+	{
+		var totalRows = viewBuffer.DataBuffer.Length / bytesPerRow;
+
+		if (_theme?.RowGroupingSize is int groupingSize && groupingSize > 0)
+		{
+			var extraRows = (totalRows - 1) / groupingSize;
+			totalRows += extraRows;
+		}
+
+		return totalRows;
+	}
+
 	public void Render()
 	{
 		if (Columns == -1)
@@ -99,20 +112,24 @@ internal partial class ConsoleHexView
 				Console.WriteLine();
 			}
 
-			// data rows
+			// render rows
 			for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
 			{
-				var dataRowIndex = FirstVisibleRowIndex + screenRowIndex;
+				var virtualRowIndex = FirstVisibleRowIndex + screenRowIndex;
 
-				RenderSpacing(_theme?.Padding?.Left);
+                RenderSpacing(_theme?.Padding?.Left);
 
-				// data row
-				if (dataRowIndex <= LastVisibleRowIndex)
+				// row
+				if (virtualRowIndex <= LastVisibleRowIndex)
 				{
-					if (TryGetRow(dataRowIndex, out var row))
+					if (TryGetRow(virtualRowIndex, out var row))
 					{
 						RenderRow(row);
 					}
+					else
+					{
+						RenderEmptyRow();
+                    }
 				}
 				else
 				{

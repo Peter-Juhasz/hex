@@ -6,5 +6,5 @@ public interface IHexView
 {
 	bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row);
 
-	int TotalRowCount { get; }
+	long TotalRowCount { get; }
 }

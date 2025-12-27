@@ -200,6 +200,7 @@ internal enum LetterCasing
 internal static class Themes
 {
 	public static readonly ConsoleTheme Dark = new(
+		RowGroupingSize: 4,
 		AddressMargin: new(
 			Border: new(
 				Right: new(
