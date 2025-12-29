@@ -3,6 +3,8 @@
 public readonly record struct LongSpan(long StartOffset, long Length)
 {
     public long EndOffset => StartOffset + Length;
+
+	public static explicit operator MemorySpan(LongSpan span) => new(span.StartOffset, (int)span.Length);
 }
 
 public readonly record struct MemorySpan(long StartOffset, int Length)
