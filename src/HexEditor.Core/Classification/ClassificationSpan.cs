@@ -2,4 +2,4 @@
 
 namespace HexEditor.Classification;
 
-public readonly record struct ClassificationSpan(BinarySpan Span, string Type);
+public readonly record struct ClassificationSpan(LongSpan Span, string Type);

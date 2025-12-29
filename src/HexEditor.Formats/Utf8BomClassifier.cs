@@ -7,9 +7,9 @@ namespace HexEditor.Formats;
 
 public sealed class Utf8BomClassifier : IClassifier
 {
-    private static readonly ImmutableArray<ClassificationSpan> _utf8BomClassification = [new ClassificationSpan(new BinarySpan(0, 3), "encoding.utf8.bom")];
+    private static readonly ImmutableArray<ClassificationSpan> _utf8BomClassification = [new ClassificationSpan(new LongSpan(0, 3), "encoding.utf8.bom")];
 
-    public ValueTask<ImmutableArray<ClassificationSpan>> GetClassificationsAsync(IViewBuffer buffer, BinarySpan span, CancellationToken cancellationToken)
+    public ValueTask<ImmutableArray<ClassificationSpan>> GetClassificationsAsync(IViewBuffer buffer, LongSpan span, CancellationToken cancellationToken)
     {
         if (span.StartOffset < 3 && buffer.DataBuffer.Length >= 3)
         {

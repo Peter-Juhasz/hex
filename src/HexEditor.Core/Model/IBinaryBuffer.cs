@@ -2,7 +2,7 @@
 
 public interface IBinaryBuffer : IAsyncDisposable
 {
-	ValueTask CopyToAsync(MemoryBinarySpan span, Memory<byte> destination, CancellationToken cancellationToken);
+	ValueTask CopyToAsync(MemorySpan span, Memory<byte> destination, CancellationToken cancellationToken);
 
 	long Length { get; }
 

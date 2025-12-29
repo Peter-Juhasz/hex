@@ -6,9 +6,9 @@ public interface IViewBuffer
 {
 	IBinaryBuffer DataBuffer { get; }
 
-	bool TryRead(MemoryBinarySpan span, out ReadOnlyMemory<byte> data);
+	bool TryRead(MemorySpan span, out ReadOnlyMemory<byte> data);
 
-	Task LoadChunkAsync(MemoryBinarySpan span, CancellationToken cancellationToken);
+	Task LoadChunkAsync(MemorySpan span, CancellationToken cancellationToken);
 }
 
 public static partial class Extensions

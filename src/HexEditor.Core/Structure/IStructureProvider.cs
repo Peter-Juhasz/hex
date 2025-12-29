@@ -5,5 +5,5 @@ namespace HexEditor.Structure;
 
 public interface IStructureProvider
 {
-    ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(MemoryBinarySpan span, CancellationToken cancellationToken);
+    ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(MemorySpan span, CancellationToken cancellationToken);
 }

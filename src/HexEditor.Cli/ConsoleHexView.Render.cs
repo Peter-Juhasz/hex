@@ -7,59 +7,61 @@ internal partial class ConsoleHexView
 
     private int CalculateBytesPerRow(int windowWidth)
 	{
+		var theme = _theme;
+
 		var usableWidth = windowWidth - (
 			// Address
-			(_theme?.AddressMargin?.Visible == false ? 0 : (
-				(_theme?.AddressMargin?.Margin?.Left ?? 0) +
-				(_theme?.AddressMargin?.Border?.Left != null ? 1 : 0) +
-				(_theme?.AddressMargin?.Padding?.Left ?? 0) +
-				Math.Max(MinimumAddressLength, _theme?.AddressMargin?.MinimumWidth ?? 0) +
-				(_theme?.AddressMargin?.ShowSuffix == true ? 1 : 0) +
-				(_theme?.AddressMargin?.Padding?.Right ?? 0) +
-				(_theme?.AddressMargin?.Border?.Right != null ? 1 : 0) +
-				(_theme?.AddressMargin?.Margin?.Right ?? 0)
+			(theme?.AddressMargin?.Visible == false ? 0 : (
+				(theme?.AddressMargin?.Margin?.Left ?? 0) +
+				(theme?.AddressMargin?.Border?.Left != null ? 1 : 0) +
+				(theme?.AddressMargin?.Padding?.Left ?? 0) +
+				Math.Max(MinimumAddressLength, theme?.AddressMargin?.MinimumWidth ?? 0) +
+				(theme?.AddressMargin?.ShowSuffix == true ? 1 : 0) +
+				(theme?.AddressMargin?.Padding?.Right ?? 0) +
+				(theme?.AddressMargin?.Border?.Right != null ? 1 : 0) +
+				(theme?.AddressMargin?.Margin?.Right ?? 0)
 			)) +
 
 			// Hex
-			(_theme?.HexView?.Visible == false ? 0 : (
-				(_theme?.HexView?.Margin?.Left ?? 0) +
-				(_theme?.HexView?.Border?.Left != null ? 1 : 0) +
-				(_theme?.HexView?.Padding?.Left ?? 0) +
-				(_theme?.HexView?.Padding?.Right ?? 0) +
-				(_theme?.HexView?.Border?.Right != null ? 1 : 0) +
-				(_theme?.HexView?.Margin?.Right ?? 0)
+			(theme?.HexView?.Visible == false ? 0 : (
+				(theme?.HexView?.Margin?.Left ?? 0) +
+				(theme?.HexView?.Border?.Left != null ? 1 : 0) +
+				(theme?.HexView?.Padding?.Left ?? 0) +
+				(theme?.HexView?.Padding?.Right ?? 0) +
+				(theme?.HexView?.Border?.Right != null ? 1 : 0) +
+				(theme?.HexView?.Margin?.Right ?? 0)
 			)) +
 
 			// ASCII
-			(_theme?.AsciiView?.Visible == false ? 0 : (
-				(_theme?.AsciiView?.Margin?.Left ?? 0) +
-				(_theme?.AsciiView?.Border?.Left != null ? 1 : 0) +
-				(_theme?.AsciiView?.Padding?.Left ?? 0) +
-				(_theme?.AsciiView?.Padding?.Right ?? 0) +
-				(_theme?.AsciiView?.Border?.Right != null ? 1 : 0) +
-				(_theme?.AsciiView?.Margin?.Right ?? 0)
+			(theme?.AsciiView?.Visible == false ? 0 : (
+				(theme?.AsciiView?.Margin?.Left ?? 0) +
+				(theme?.AsciiView?.Border?.Left != null ? 1 : 0) +
+				(theme?.AsciiView?.Padding?.Left ?? 0) +
+				(theme?.AsciiView?.Padding?.Right ?? 0) +
+				(theme?.AsciiView?.Border?.Right != null ? 1 : 0) +
+				(theme?.AsciiView?.Margin?.Right ?? 0)
 			)) +
 
 			// scrollbar
-			(_theme?.Scrollbar == null ? 0 : (
-				(_theme?.Scrollbar?.Margin?.Left ?? 0) +
+			(theme?.Scrollbar == null ? 0 : (
+				(theme?.Scrollbar?.Margin?.Left ?? 0) +
 				1 + // Scrollbar width
-				(_theme?.Scrollbar?.Margin?.Right ?? 0)
+				(theme?.Scrollbar?.Margin?.Right ?? 0)
 			)) +
 
 			// Padding
-			(_theme?.Padding?.Left ?? 0) +
-			(_theme?.Padding?.Right ?? 0)
+			(theme?.Padding?.Left ?? 0) +
+			(theme?.Padding?.Right ?? 0)
 		);
 		return (int)MathF.Floor(usableWidth / (
 			1 + // Space
-			(_theme?.HexView?.Visible == false ? 0 : (
+			(theme?.HexView?.Visible == false ? 0 : (
 				2 + // Hex byte
-				(_theme?.HexView?.ColumnGroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
+				(theme?.HexView?.ColumnGroupingSize is int grouping ? 1f / grouping : 0) // Extra spaces for grouping
 			)) +
-			(_theme?.AsciiView?.Visible == false ? 0 : (
+			(theme?.AsciiView?.Visible == false ? 0 : (
 				1 + // ASCII representation
-				(_theme?.AsciiView?.ColumnGroupingSize is int grouping2 ? 1f / grouping2 : 0) // Extra spaces for grouping
+				(theme?.AsciiView?.ColumnGroupingSize is int grouping2 ? 1f / grouping2 : 0) // Extra spaces for grouping
 			))
 		));
 	}
@@ -289,7 +291,7 @@ internal partial class ConsoleHexView
 	private static readonly string[] UppercaseHexFormatStrings = [ "X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16" ];
 	private static readonly string[] LowercaseHexFormatStrings = [ "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16" ];
 
-	private void RenderRow(IViewRow row)
+	private void RenderRow(IHexViewRow row)
 	{
 		var writer = Console.Out;
 
@@ -342,7 +344,6 @@ internal partial class ConsoleHexView
 					// determine formatting
 					using (UseStyle(MatchRule(value, new(
 						Offset: row.Span.StartOffset + col,
-						Row: row.RowIndex,
 						Column: col
 					))))
 					{
@@ -400,7 +401,6 @@ internal partial class ConsoleHexView
 					// determine formatting
 					using (UseStyle(MatchRule(value, new(
 						Offset: row.Span.StartOffset + col,
-						Row: row.RowIndex,
 						Column: col
 					))))
 					{

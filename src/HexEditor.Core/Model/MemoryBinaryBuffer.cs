@@ -4,9 +4,9 @@ public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryBuffer
 {
 	public long Length => buffer.Length;
 
-	public ValueTask CopyToAsync(MemoryBinarySpan span, Memory<byte> destination, CancellationToken cancellationToken)
+	public ValueTask CopyToAsync(MemorySpan span, Memory<byte> destination, CancellationToken cancellationToken)
     {
-		if (!TryRead(destination.Span, span))
+		if (!TryRead(span, destination.Span))
 		{
 			throw new ArgumentOutOfRangeException(nameof(span));
 		}
@@ -14,7 +14,7 @@ public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryBuffer
 		return ValueTask.CompletedTask;
 	}
 
-	public bool TryRead(Span<byte> destination, MemoryBinarySpan span)
+	public bool TryRead(MemorySpan span, Span<byte> destination)
 	{
 		if (span.EndOffset > int.MaxValue)
 		{

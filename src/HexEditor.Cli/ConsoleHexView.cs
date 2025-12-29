@@ -12,6 +12,8 @@ internal partial class ConsoleHexView : IHexView
 		SetThemeCore(Themes.Dark);
     }
 
+	private const double RowHeight = 1d;
+
     private int Columns = -1;
 	private int Rows = -1;
 	private long _totalRowCount = -1;
@@ -26,7 +28,11 @@ internal partial class ConsoleHexView : IHexView
 
 	public ConsoleTheme? Theme => _theme;
 
-    public bool TryGetRow(long index, [NotNullWhen(true)] out IViewRow? row)
+	public double ViewportHeight => Console.BufferHeight;
+
+	public double ViewportWidth => Console.BufferWidth;
+
+	public bool TryGetRow(long index, [NotNullWhen(true)] out IHexViewRow? row)
 	{
 		// adjust index with grouping
 		if (_theme?.RowGroupingSize is int groupingSize)
@@ -49,14 +55,15 @@ internal partial class ConsoleHexView : IHexView
 		}
 
 		var length = (int)Math.Min(bytesPerRow, _viewBuffer.DataBuffer.Length - offset);
-		var rowSpan = new MemoryBinarySpan(offset, length);
+		var rowSpan = new MemorySpan(offset, length);
 		if (!_viewBuffer.TryRead(rowSpan, out var data))
 		{
 			row = null;
 			return false;
 		}
 
-		row = new ViewRow(this, index, rowSpan, data);
+		// TODO: add padding to calculation
+		row = new ViewRow(this, new(X: 0, Y: index, Width: Console.BufferWidth, Height: RowHeight), rowSpan, data);
 		return true;
 	}
 
@@ -99,12 +106,15 @@ internal partial class ConsoleHexView : IHexView
 
 	public long LastPageRowIndex => LastPageIndex * Rows;
 
-	public MemoryBinarySpan VisibleSpan => new(FirstVisibleOffset, VisibleByteCount);
+	public MemorySpan VisibleSpan => new(FirstVisibleOffset, VisibleByteCount);
 
-    public Task ResizeWindowAsync(int newWindowWidth, int newWindowHeight, CancellationToken cancellationToken)
+    public Task ResizeWindowAsync(double viewportWidth, double viewportHeight, CancellationToken cancellationToken)
 	{
-		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowWidth);
-		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newWindowHeight);
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(viewportWidth);
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(viewportHeight);
+
+		var newWindowWidth = (int)Math.Floor(viewportWidth);
+		var newWindowHeight = (int)Math.Floor(viewportHeight);
 
 		var newRows = _theme?.Rows ?? newWindowHeight - (
 			(_theme?.Padding?.Top ?? 0) +
@@ -135,8 +145,8 @@ internal partial class ConsoleHexView : IHexView
         SetThemeCore(newTheme);
 
         return ResizeAsync(
-            newColumns: newTheme?.Columns ?? CalculateBytesPerRow(Console.WindowWidth),
-            newRows: newTheme?.Rows ?? Console.WindowHeight,
+            newColumns: newTheme?.Columns ?? CalculateBytesPerRow(Console.BufferWidth),
+            newRows: newTheme?.Rows ?? Console.BufferHeight,
             cancellationToken
         );
     }
@@ -195,12 +205,12 @@ internal partial class ConsoleHexView : IHexView
 		return ScrollToPageAsync(Math.Max(0, currentPageIndex - 1), cancellationToken);
 	}
 
-	public Task ScrollUpAsync(CancellationToken cancellationToken)
+	public Task ScrollUpByRowAsync(CancellationToken cancellationToken)
 	{
 		return ScrollToRowAsync(Math.Max(0, _rowIndex - 1), cancellationToken);
 	}
 
-	public Task ScrollDownAsync(CancellationToken cancellationToken)
+	public Task ScrollDownByRowAsync(CancellationToken cancellationToken)
 	{
 		if (VisibleRowCount < Rows)
 		{

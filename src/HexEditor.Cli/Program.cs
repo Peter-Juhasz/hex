@@ -48,7 +48,7 @@ root.SetAction(async (context, ct) =>
 	var view = new ConsoleHexView(viewBuffer);
 
 	// resize view
-	var (consoleWidth, consoleHeight) = (Console.WindowWidth, Console.WindowHeight);
+	var (consoleWidth, consoleHeight) = (Console.BufferWidth, Console.BufferHeight);
 	if (columns != null && rows != null)
 	{
 		await view.ResizeAsync(columns.Value, rows.Value, cancellationToken);
@@ -92,11 +92,11 @@ root.SetAction(async (context, ct) =>
 				break;
 
 			case ConsoleKey.DownArrow when key.Modifiers is ConsoleModifiers.Control:
-				await view.ScrollDownAsync(ct);
+				await view.ScrollDownByRowAsync(ct);
 				break;
 
 			case ConsoleKey.UpArrow when key.Modifiers is ConsoleModifiers.Control:
-				await view.ScrollUpAsync(ct);
+				await view.ScrollUpByRowAsync(ct);
 				break;
 
 			case ConsoleKey.Escape:

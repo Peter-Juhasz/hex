@@ -8,7 +8,7 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 
 	public IBinaryBuffer DataBuffer => dataBuffer;
 
-	public bool TryRead(MemoryBinarySpan span, out ReadOnlyMemory<byte> data) 
+	public bool TryRead(MemorySpan span, out ReadOnlyMemory<byte> data) 
 	{
 		if (_viewBuffer == null)
 		{
@@ -20,7 +20,7 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 		return true;
 	}
 
-	public Task LoadChunkAsync(MemoryBinarySpan span, CancellationToken cancellationToken)
+	public Task LoadChunkAsync(MemorySpan span, CancellationToken cancellationToken)
 	{
 		if (_viewBuffer != null)
 		{

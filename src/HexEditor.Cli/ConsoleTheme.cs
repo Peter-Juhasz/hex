@@ -23,9 +23,7 @@ internal record class ValueFormattingRule(
 	long? MinimumOffset = null,
 	long? MaximumOffset = null,
 	int? MinimumColumn = null,
-	int? MaximumColumn = null,
-	int? MinimumRow = null,
-	int? MaximumRow = null
+	int? MaximumColumn = null
 )
 {
 	public bool IsMatch(byte value, Context context)
@@ -78,28 +76,11 @@ internal record class ValueFormattingRule(
 			}
 		}
 
-		if (MinimumRow != null)
-		{
-			if (context.Row < MinimumRow)
-			{
-				return false;
-			}
-		}
-
-		if (MaximumRow != null)
-		{
-			if (context.Row > MaximumRow)
-			{
-				return false;
-			}
-		}
-
 		return true;
 	}
 
 	public record struct Context(
 		long Offset,
-		long Row,
 		int Column
 	);
 }
