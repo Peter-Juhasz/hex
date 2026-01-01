@@ -204,8 +204,7 @@ internal static class Themes
 				)
 			),
 			Padding: new(Left: 1),
-			ColumnGroupingSize: 4,
-			Header: new(Visible: true)
+			ColumnGroupingSize: 4
 		),
 		FormattingRules:
 		[

@@ -7,24 +7,24 @@ public interface IHexViewRow
 {
 	IHexView View { get; }
 
-	MemorySpan Span { get; }
+	MemorySpan Extent { get; }
 
 	ReadOnlySpan<byte> Data { get; }
 
-	ViewportBounds Bounds { get; }
+	ViewportBounds VisualBounds { get; }
 
 	ImmutableArray<FormattedSpan> FormattedRuns { get; }
 }
 
-public class ViewRow(IHexView view, ViewportBounds bounds, MemorySpan span, ReadOnlyMemory<byte> dataView) : IHexViewRow
+public class ViewRow(IHexView view, ViewportBounds bounds, MemorySpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedSpan> formattedRuns) : IHexViewRow
 {
 	public IHexView View { get; } = view;
 
-	public MemorySpan Span { get; } = span;
+	public MemorySpan Extent { get; } = span;
 
 	public ReadOnlySpan<byte> Data => dataView.Span;
 
-	public ViewportBounds Bounds { get; } = bounds;
+	public ViewportBounds VisualBounds { get; } = bounds;
 
-	public ImmutableArray<FormattedSpan> FormattedRuns => throw new NotImplementedException();
+	public ImmutableArray<FormattedSpan> FormattedRuns { get; } = formattedRuns;
 }

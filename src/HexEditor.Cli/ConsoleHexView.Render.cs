@@ -5,7 +5,7 @@ internal partial class ConsoleHexView
 	private const string UppercaseHexDigits = "0123456789ABCDEF";
 	private const string LowercaseHexDigits = "0123456789abcdef";
 
-    private int CalculateBytesPerRow(int windowWidth)
+	private int CalculateBytesPerRow(int windowWidth)
 	{
 		var theme = _theme;
 
@@ -119,7 +119,7 @@ internal partial class ConsoleHexView
 			{
 				var virtualRowIndex = FirstVisibleRowIndex + screenRowIndex;
 
-                RenderSpacing(_theme?.Padding?.Left);
+				RenderSpacing(_theme?.Padding?.Left);
 
 				// row
 				if (virtualRowIndex <= LastVisibleRowIndex)
@@ -131,7 +131,7 @@ internal partial class ConsoleHexView
 					else
 					{
 						RenderEmptyRow();
-                    }
+					}
 				}
 				else
 				{
@@ -214,7 +214,7 @@ internal partial class ConsoleHexView
 					using (UseStyle(_theme?.HexView?.Header?.Style))
 					{
 						var format = (_theme?.HexView?.Header?.LetterCasing ?? _theme?.HexView?.LetterCasing) == LetterCasing.Lower ? "x2" : "X2";
-						
+
 						Span<char> formatBuffer = stackalloc char[2];
 						for (int col = 0; col < Columns; col++)
 						{
@@ -238,7 +238,7 @@ internal partial class ConsoleHexView
 				else
 				{
 					RenderSpacing(CalculateHexRenderLength(Columns));
-                }
+				}
 			}
 			RenderSpacing(hexViewStyle?.Padding?.Right);
 			RenderVerticalBorder(hexViewStyle?.Border?.Right);
@@ -259,7 +259,7 @@ internal partial class ConsoleHexView
 					{
 						var digits = _theme?.AsciiView?.Header?.LetterCasing == LetterCasing.Lower ? LowercaseHexDigits : UppercaseHexDigits;
 
-                        for (int col = 0; col < Columns; col++)
+						for (int col = 0; col < Columns; col++)
 						{
 							Console.Write(digits[col % 16]);
 
@@ -280,7 +280,7 @@ internal partial class ConsoleHexView
 				else
 				{
 					RenderSpacing(Columns);
-                }
+				}
 			}
 			RenderSpacing(asciiViewStyle?.Padding?.Right);
 			RenderVerticalBorder(asciiViewStyle?.Border?.Right);
@@ -288,8 +288,8 @@ internal partial class ConsoleHexView
 		}
 	}
 
-	private static readonly string[] UppercaseHexFormatStrings = [ "X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16" ];
-	private static readonly string[] LowercaseHexFormatStrings = [ "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16" ];
+	private static readonly string[] UppercaseHexFormatStrings = ["X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16"];
+	private static readonly string[] LowercaseHexFormatStrings = ["x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16"];
 
 	private void RenderRow(IHexViewRow row)
 	{
@@ -308,8 +308,8 @@ internal partial class ConsoleHexView
 			{
 				var hexFormatStrings = (addressStyle?.LetterCasing == LetterCasing.Lower) ? LowercaseHexFormatStrings : UppercaseHexFormatStrings;
 
-                var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
-				row.Span.StartOffset.TryFormat(formatBuffer, out _, hexFormatStrings[addressLength]);
+				var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
+				row.Extent.StartOffset.TryFormat(formatBuffer, out _, hexFormatStrings[addressLength]);
 				writer.Write(formatBuffer[..addressLength]);
 
 				if (addressStyle?.ShowSuffix == true)
@@ -333,36 +333,34 @@ internal partial class ConsoleHexView
 			RenderSpacing(hexViewStyle?.Padding?.Left);
 			using (UseStyle(_theme?.HexView?.TextStyle))
 			{
-				var format =  _theme?.HexView?.LetterCasing == LetterCasing.Lower ? "x2" : "X2";
-				
-				int col;
-                for (col = 0; col < data.Length; col++)
+				var format = _theme?.HexView?.LetterCasing == LetterCasing.Lower ? "x2" : "X2";
+
+				int col = 0;
+				foreach (var run in row.FormattedRuns)
 				{
-					// get value
-					byte value = data[col];
-
-					// determine formatting
-					using (UseStyle(MatchRule(value, new(
-						Offset: row.Span.StartOffset + col,
-						Column: col
-					))))
+					using (UseStyle(run.Style as ConsoleStyle))
 					{
-						// write hex value
-						value.TryFormat(formatBuffer, out _, format);
-						writer.Write(formatBuffer[..2]);
-					}
-
-					// separator
-					if (col < data.Length - 1)
-					{
-						writer.Write(' ');
-
-						if (_theme?.HexView?.ColumnGroupingSize is int groupingSize)
+						foreach (var value in run.Span.Span)
 						{
-							if ((col + 1) % groupingSize == 0)
+							// write hex value
+							value.TryFormat(formatBuffer, out _, format);
+							writer.Write(formatBuffer[..2]);
+
+							// separator
+							if (col < data.Length - 1)
 							{
 								writer.Write(' ');
+
+								if (_theme?.HexView?.ColumnGroupingSize is int groupingSize)
+								{
+									if ((col + 1) % groupingSize == 0)
+									{
+										writer.Write(' ');
+									}
+								}
 							}
+
+							col++;
 						}
 					}
 				}
@@ -392,38 +390,36 @@ internal partial class ConsoleHexView
 			RenderSpacing(asciiViewStyle?.Padding?.Left);
 			using (UseStyle(asciiViewStyle?.TextStyle))
 			{
-				int col;
-				for (col = 0; col < data.Length; col++)
+				int col = 0;
+				foreach (var run in row.FormattedRuns)
 				{
-					// get value
-					byte value = data[col];
-
-					// determine formatting
-					using (UseStyle(MatchRule(value, new(
-						Offset: row.Span.StartOffset + col,
-						Column: col
-					))))
+					using (UseStyle(run.Style as ConsoleStyle))
 					{
-						// write character or dot
-						if (value >= 32 && value <= 126)
+						foreach (var value in run.Span.Span)
 						{
-							writer.Write((char)value);
-						}
-						else
-						{
-							writer.Write('.');
-						}
-					}
-
-					// separator
-					if (col < data.Length - 1)
-					{
-						if (_theme?.AsciiView?.ColumnGroupingSize is int groupingSize)
-						{
-							if ((col + 1) % groupingSize == 0)
+							// write character or dot
+							if (value >= 32 && value <= 126)
 							{
-								writer.Write(' ');
+								writer.Write((char)value);
 							}
+							else
+							{
+								writer.Write('.');
+							}
+
+							// separator
+							if (col < data.Length - 1)
+							{
+								if (_theme?.AsciiView?.ColumnGroupingSize is int groupingSize)
+								{
+									if ((col + 1) % groupingSize == 0)
+									{
+										writer.Write(' ');
+									}
+								}
+							}
+
+							col++;
 						}
 					}
 				}
@@ -493,7 +489,7 @@ internal partial class ConsoleHexView
 			RenderSpacing(asciiViewStyle?.Padding?.Left);
 			using (UseStyle(asciiViewStyle?.TextStyle))
 			{
-				Span<char> emptyBuffer = stackalloc char[Columns + 
+				Span<char> emptyBuffer = stackalloc char[Columns +
 					(_theme?.AsciiView?.ColumnGroupingSize is int groupingSize ? (Columns - 1) / groupingSize : 0)
 				];
 				emptyBuffer.Fill(' ');

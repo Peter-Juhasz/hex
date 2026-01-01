@@ -63,7 +63,8 @@ internal partial class ConsoleHexView : IHexView
 		}
 
 		// TODO: add padding to calculation
-		row = new ViewRow(this, new(X: 0, Y: index, Width: Console.BufferWidth, Height: RowHeight), rowSpan, data);
+		var formatted = Format(rowSpan);
+		row = new ViewRow(this, new(X: 0, Y: index, Width: Console.BufferWidth, Height: RowHeight), rowSpan, data, formatted);
 		return true;
 	}
 
