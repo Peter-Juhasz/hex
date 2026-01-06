@@ -1,18 +1,20 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Classification;
+using HexEditor.Model;
 using System.Collections.Immutable;
 
 namespace HexEditor.ViewModel;
 
 internal partial class ConsoleHexView
 {
-	private ImmutableArray<FormattedSpan> Format(MemorySpan span)
+	private ImmutableArray<FormattedSpan> Format(FormatContext context)
 	{
-		if (!_viewBuffer.TryRead(span, out var memory))
+		var span = context.Span;
+		if (span.Length == 0)
 		{
 			return [];
 		}
 
-		if (memory.Length == 0)
+		if (!_viewBuffer.TryRead(span, out var memory))
 		{
 			return [];
 		}
@@ -26,7 +28,9 @@ internal partial class ConsoleHexView
 		{
 			var absoluteOffset = span.StartOffset + relativeOffset;
 			var value = memory.Span[relativeOffset];
-			var style = MatchRule(value, new(Offset: absoluteOffset, Column: relativeOffset));
+
+			// style rules
+			var style = MatchRule(value, new(Offset: absoluteOffset, Column: relativeOffset), context.Rules);
 			if (style != lastStyle)
 			{
 				var length = absoluteOffset - lastOffset;
@@ -47,4 +51,28 @@ internal partial class ConsoleHexView
 
 		return builder.ToImmutableArray();
 	}
+
+	private static ConsoleStyle? MatchRule(byte value, ValueFormattingRule.Context context, ImmutableArray<ValueFormattingRule> rules)
+	{
+		if (rules.IsDefaultOrEmpty)
+		{
+			return null;
+		}
+
+		foreach (var rule in rules)
+		{
+			if (rule.IsMatch(value, context))
+			{
+				return rule.Style;
+			}
+		}
+
+		return null;
+	}
+
+	private readonly record struct FormatContext(
+		MemorySpan Span, 
+		ImmutableArray<ValueFormattingRule> Rules,
+		ImmutableArray<ClassificationSpan> Classifications
+	);
 }

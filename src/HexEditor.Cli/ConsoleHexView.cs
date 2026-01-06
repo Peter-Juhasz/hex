@@ -1,4 +1,5 @@
 ﻿using HexEditor.Model;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 
 namespace HexEditor.ViewModel;
@@ -10,6 +11,8 @@ internal partial class ConsoleHexView : IHexView
         _viewBuffer = viewBuffer;
         MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.DataBuffer.Length);
 		SetThemeCore(Themes.Dark);
+
+		_classificationAggregator = new([], _viewBuffer);
     }
 
 	private const double RowHeight = 1d;
@@ -24,7 +27,7 @@ internal partial class ConsoleHexView : IHexView
 	private int VerticalScrollbarThumbScreenRowStartIndex = -1;
 
 	private ConsoleTheme? _theme;
-	private ValueFormattingRule[]? _rules = null;
+	private ImmutableArray<ValueFormattingRule> _rules = [];
 
 	public ConsoleTheme? Theme => _theme;
 
@@ -62,8 +65,15 @@ internal partial class ConsoleHexView : IHexView
 			return false;
 		}
 
+		_classificationAggregator.TryGetClassifications(rowSpan, out var classifications);
+
+		var formatted = Format(new(
+			Span: rowSpan,
+			Rules: _rules,
+			Classifications: classifications
+		));
+
 		// TODO: add padding to calculation
-		var formatted = Format(rowSpan);
 		row = new ViewRow(this, new(X: 0, Y: index, Width: Console.BufferWidth, Height: RowHeight), rowSpan, data, formatted);
 		return true;
 	}
@@ -157,28 +167,24 @@ internal partial class ConsoleHexView : IHexView
         _theme = newTheme;
 		_rules = newTheme switch
 		{
-			{ FormattingRules: { Count: > 0 } rules } => rules.ToArray(),
-			_ => null
+			{ FormattingRules: { Count: > 0 } rules } => rules.ToImmutableArray(),
+			_ => []
         };
     }
 
-    private Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
+    private async Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
 	{
-		var task = _viewBuffer.LoadChunkAsync(VisibleSpan, cancellationToken);
-		if (task.IsCompletedSuccessfully)
+		var visibleSpan = VisibleSpan;
+		await _viewBuffer.LoadChunkAsync(visibleSpan, cancellationToken);
+		Render();
+
+		var hasChanges = false;
+		hasChanges |= await _classificationAggregator.ClassifyAsync(visibleSpan, cancellationToken);
+		if (hasChanges)
 		{
 			Render();
-			return Task.CompletedTask;
-        }
-
-		return WaitAndRenderCoreAsync(task);
+		}
 	}
-
-    private async Task WaitAndRenderCoreAsync(Task task)
-    {
-        await task;
-        Render();
-    }
 
     public Task PageDownAsync(CancellationToken cancellationToken)
 	{

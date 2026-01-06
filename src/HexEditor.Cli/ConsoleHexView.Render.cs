@@ -507,24 +507,6 @@ internal partial class ConsoleHexView
 		(_theme?.HexView?.ColumnGroupingSize is int groupingSize ? (bytes - 1) / groupingSize : 0) // Extra spaces for grouping
 	;
 
-	private ConsoleStyle? MatchRule(byte value, ValueFormattingRule.Context context)
-	{
-		if (_rules == null)
-		{
-			return null;
-		}
-
-		foreach (var rule in _rules)
-		{
-			if (rule.IsMatch(value, context))
-			{
-				return rule.Style;
-			}
-		}
-
-		return null;
-	}
-
 	private static void RenderSpacing(int? length)
 	{
 		if (length is null or 0)
