@@ -4,20 +4,7 @@ namespace HexEditor.Model;
 
 public class SafeFileHandleBinaryBuffer(SafeFileHandle handle) : IBinaryBuffer
 {
-	private long _length = -1;
-
-	public long Length
-	{
-		get
-		{
-			if (_length == -1)
-			{
-				_length = (int)RandomAccess.GetLength(handle);
-			}
-
-			return _length;
-		}
-	}
+	public long Length { get; } = RandomAccess.GetLength(handle);
 
 	public async ValueTask CopyToAsync(MemorySpan span, Memory<byte> destination, CancellationToken cancellationToken)
     {
