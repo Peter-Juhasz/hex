@@ -9,40 +9,43 @@ namespace HexEditor.Formats;
 
 internal sealed class MidiStructureProvider : IStructureProvider
 {
-	public ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(IViewBuffer buffer, MemorySpan span, CancellationToken cancellationToken)
+	public async ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(IViewBuffer buffer, MemorySpan span, CancellationToken cancellationToken)
 	{
-		if (!buffer.TryRead(new MemorySpan(0, (int)span.EndOffset), out var data)) // we do not expect MIDI files larger than 2GB
+		long startOffset = 0;
+		byte[] headerBytes = new byte[8];
+		var list = new List<StructureSpan>();
+		while (startOffset < span.EndOffset)
 		{
-			return new([]);
-		}
-
-		var startOffset = 0;
-		var remainingBytes = data.Span;
-		using var list = new PooledArrayBuilder<StructureSpan>();
-		while (TryReadChunk(remainingBytes, out var type, out var length))
-		{
-			var fullExtent = 8 + length;
-			var spanSpan = new MemorySpan(startOffset, fullExtent);
-
-			if (span.IntersectsWith(spanSpan))
+			// try read chunk header
+			if (!buffer.TryCopyTo(startOffset, headerBytes))
 			{
-				list.Add(new StructureSpan(
-					Span: spanSpan,
-					Label:
-						type == "MThd"u8 ? "MIDI Header Chunk" :
-						type == "MTrk"u8 ? "MIDI Track Chunk" :
-						Encoding.ASCII.GetString(type)
-				));
+				await buffer.DataBuffer.CopyToAsync(new(startOffset, headerBytes.Length), headerBytes, cancellationToken);
 			}
 
-			startOffset += fullExtent;
-			remainingBytes = remainingBytes[fullExtent..];
+			// parse
+			if (!TryParseChunkHeader(headerBytes, out var type, out var length))
+			{
+				break;
+			}
+
+			// add span
+			var fullExtent = new MemorySpan(startOffset, 8 + length);
+			list.Add(new StructureSpan(
+				Span: fullExtent,
+				Label:
+					type == "MThd"u8 ? "MIDI Header Chunk" :
+					type == "MTrk"u8 ? "MIDI Track Chunk" :
+					Encoding.ASCII.GetString(type)
+			));
+
+			// advance
+			startOffset += fullExtent.Length;
 		}
 
-		return new(list.ToImmutableArray());
+		return list.ToImmutableArray();
 	}
 
-	private static bool TryReadChunk(ReadOnlySpan<byte> bytes, out ReadOnlySpan<byte> type, out int length)
+	private static bool TryParseChunkHeader(ReadOnlySpan<byte> bytes, out ReadOnlySpan<byte> type, out int length)
 	{
 		if (bytes.Length < 8)
 		{
