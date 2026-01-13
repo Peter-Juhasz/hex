@@ -28,8 +28,12 @@ internal partial class ConsoleHexView : IHexView
 
 	private ConsoleTheme? _theme;
 	private ImmutableArray<ValueFormattingRule> _rules = [];
+	private ImmutableArray<IHexViewRow> _visibleRows = [];
 
 	public ConsoleTheme? Theme => _theme;
+
+	public ImmutableArray<IHexViewRow> VisibleRows => _visibleRows;
+	public event EventHandler? VisibleRowsChanged;
 
 	public double ViewportHeight => Console.BufferHeight;
 
@@ -74,7 +78,7 @@ internal partial class ConsoleHexView : IHexView
 		));
 
 		// TODO: add padding to calculation
-		row = new ViewRow(this, new(X: 0, Y: index, Width: Console.BufferWidth, Height: RowHeight), rowSpan, data, formatted);
+		row = new ViewRow(this, new(Left: 0, Top: index, Width: Console.BufferWidth, Height: RowHeight), rowSpan, data, formatted);
 		return true;
 	}
 
@@ -176,13 +180,13 @@ internal partial class ConsoleHexView : IHexView
 	{
 		var visibleSpan = VisibleSpan;
 		await _viewBuffer.LoadChunkAsync(visibleSpan, cancellationToken);
-		Render();
+		Invalidate();
 
 		var hasChanges = false;
 		hasChanges |= await _classificationAggregator.ClassifyAsync(visibleSpan, cancellationToken);
 		if (hasChanges)
 		{
-			Render();
+			Invalidate();
 		}
 	}
 

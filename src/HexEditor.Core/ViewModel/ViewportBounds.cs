@@ -1,8 +1,8 @@
 ﻿namespace HexEditor.ViewModel;
 
 public readonly record struct ViewportBounds(
-	double X,
-	double Y,
+	double Left,
+	double Top,
 	double Width,
 	double Height
 );

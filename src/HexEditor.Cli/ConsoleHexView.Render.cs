@@ -1,4 +1,6 @@
-﻿namespace HexEditor.ViewModel;
+﻿using System.Collections.Immutable;
+
+namespace HexEditor.ViewModel;
 
 internal partial class ConsoleHexView
 {
@@ -79,16 +81,50 @@ internal partial class ConsoleHexView
 		return totalRows;
 	}
 
-	public void Render()
+	public void Invalidate()
+	{
+		_visibleRows = CreateVisibleRows();
+		VisibleRowsChanged?.Invoke(this, EventArgs.Empty);
+		Render();
+	}
+
+	private ImmutableArray<IHexViewRow> CreateVisibleRows()
 	{
 		if (Columns == -1)
 		{
 			throw new InvalidOperationException("View has not been initialized. Call ResizeAsync first.");
 		}
 
+		if (_viewBuffer.DataBuffer.Length == 0)
+		{
+			return [];
+		}
+
+		var rows = new List<IHexViewRow>(RowsPerScreen);
+
+		// render rows
+		for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
+		{
+			var virtualRowIndex = FirstVisibleRowIndex + screenRowIndex;
+			if (virtualRowIndex <= LastVisibleRowIndex)
+			{
+				if (TryGetRow(virtualRowIndex, out var row))
+				{
+					rows.Add(row);
+				}
+			}
+		}
+
+		return rows.ToImmutableArray();
+	}
+
+	public void Render()
+	{
+		var visibleRows = _visibleRows;
+
 		Console.Clear();
 
-		if (_viewBuffer.DataBuffer.Length == 0)
+		if (visibleRows.IsEmpty)
 		{
 			return;
 		}
@@ -115,59 +151,36 @@ internal partial class ConsoleHexView
 			}
 
 			// render rows
-			for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
+			var firstVisibleRowIndex = FirstVisibleRowIndex;
+			var screenRowIndex = 0;
+			foreach (var row in visibleRows)
 			{
-				var virtualRowIndex = FirstVisibleRowIndex + screenRowIndex;
-
-				RenderSpacing(_theme?.Padding?.Left);
-
-				// row
-				if (virtualRowIndex <= LastVisibleRowIndex)
+				// empty row for grouping
+				while ((int)row.VisualBounds.Top - firstVisibleRowIndex > screenRowIndex)
 				{
-					if (TryGetRow(virtualRowIndex, out var row))
-					{
-						RenderRow(row);
-					}
-					else
-					{
-						RenderEmptyRow();
-					}
-				}
-				else
-				{
+					RenderSpacing(_theme?.Padding?.Left);
 					RenderEmptyRow();
+					RenderScrollBar(screenRowIndex);
+					RenderSpacing(_theme?.Padding?.Right);
+					if (screenRowIndex < Rows - 1)
+					{
+						Console.WriteLine();
+					}
+					screenRowIndex++;
 				}
 
-				// scrollbar
-				if (_theme?.Scrollbar != null)
-				{
-					RenderSpacing(_theme.Scrollbar.Margin?.Left);
-
-					if (screenRowIndex >= VerticalScrollbarThumbScreenRowStartIndex && screenRowIndex <= VerticalScrollbarThumbScreenRowStartIndex + VerticalScrollbarThumbScreenRowHeight)
-					{
-						using (UseStyle(_theme.Scrollbar.ThumbStyle))
-						{
-							Console.Write('█');
-						}
-					}
-					else
-					{
-						using (UseStyle(_theme.Scrollbar.TrackStyle))
-						{
-							Console.Write('|');
-						}
-					}
-
-					RenderSpacing(_theme.Scrollbar.Margin?.Right);
-				}
-
+				// render row
+				RenderSpacing(_theme?.Padding?.Left);
+				RenderRow(row);
+				RenderScrollBar(screenRowIndex);
 				RenderSpacing(_theme?.Padding?.Right);
 
-				// new line
 				if (screenRowIndex < Rows - 1)
 				{
 					Console.WriteLine();
 				}
+
+				screenRowIndex++;
 			}
 
 			// bottom padding
@@ -181,6 +194,31 @@ internal partial class ConsoleHexView
 		}
 
 		Console.ResetColor();
+	}
+
+	private void RenderScrollBar(int screenRowIndex)
+	{
+		if (_theme?.Scrollbar != null)
+		{
+			RenderSpacing(_theme.Scrollbar.Margin?.Left);
+
+			if (screenRowIndex >= VerticalScrollbarThumbScreenRowStartIndex && screenRowIndex <= VerticalScrollbarThumbScreenRowStartIndex + VerticalScrollbarThumbScreenRowHeight)
+			{
+				using (UseStyle(_theme.Scrollbar.ThumbStyle))
+				{
+					Console.Write('█');
+				}
+			}
+			else
+			{
+				using (UseStyle(_theme.Scrollbar.TrackStyle))
+				{
+					Console.Write('|');
+				}
+			}
+
+			RenderSpacing(_theme.Scrollbar.Margin?.Right);
+		}
 	}
 
 	private void RenderHeader()

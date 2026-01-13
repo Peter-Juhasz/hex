@@ -1,10 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Immutable;
 
 namespace HexEditor.ViewModel;
 
 public interface IHexView
 {
-	bool TryGetRow(long index, [NotNullWhen(true)] out IHexViewRow? row);
+	ImmutableArray<IHexViewRow> VisibleRows { get; }
 
 	long TotalRowCount { get; }
 
@@ -21,4 +21,6 @@ public interface IHexView
 	Task PageUpAsync(CancellationToken cancellationToken);
 	Task ScrollDownByRowAsync(CancellationToken cancellationToken);
 	Task ScrollUpByRowAsync(CancellationToken cancellationToken);
+
+	public event EventHandler? VisibleRowsChanged;
 }
