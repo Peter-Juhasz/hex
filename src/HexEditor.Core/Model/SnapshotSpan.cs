@@ -1,11 +1,39 @@
 ﻿namespace HexEditor.Model;
 
+public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Position);
+
 public readonly record struct SnapshotSpan(IBinarySnapshot Snapshot, LongSpan Span);
 
 public static partial class Extensions
 {
+	extension(SnapshotSpan)
+	{
+		public static SnapshotSpan Create(SnapshotPoint start, SnapshotPoint end)
+		{
+			if (start.Snapshot != end.Snapshot)
+			{
+				throw new ArgumentException("SnapshotPoints must belong to the same snapshot.");
+			}
+
+			if (start.Position > end.Position)
+			{
+				throw new ArgumentOutOfRangeException(nameof(end), "End position must be greater than or equal to start position.");
+			}
+
+			if (start.Position < 0 || end.Position < 0 || start.Position > start.Snapshot.Length || end.Position > end.Snapshot.Length)
+			{
+				throw new ArgumentOutOfRangeException("SnapshotPoint positions must be within the bounds of the snapshot.");
+			}
+
+			var span = new LongSpan(start.Position, end.Position - start.Position);
+			return new SnapshotSpan(start.Snapshot, span);
+		}
+	}
+
 	extension(SnapshotSpan span)
 	{
+		public SnapshotPoint Start => new(span.Snapshot, span.Span.StartOffset);
+
 		public ValueTask CopyToAsync(Memory<byte> destination, CancellationToken cancellationToken)
 		{
 			if (span.Span.Length > int.MaxValue)
