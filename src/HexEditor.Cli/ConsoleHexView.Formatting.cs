@@ -8,16 +8,13 @@ internal partial class ConsoleHexView
 {
 	private ImmutableArray<FormattedSpan> Format(FormatContext context)
 	{
-		var span = context.Span;
+		var span = context.Span.Span;
 		if (span.Length == 0)
 		{
 			return [];
 		}
 
-		if (!_viewBuffer.TryRead(span, out var memory))
-		{
-			return [];
-		}
+		var memory = context.Data;
 
 		using var builder = new PooledArrayBuilder<FormattedSpan>();
 
@@ -34,7 +31,11 @@ internal partial class ConsoleHexView
 			if (style != lastStyle)
 			{
 				var length = absoluteOffset - lastOffset;
-				var formattedSpan = new FormattedSpan(memory.Slice((int)(lastOffset - span.StartOffset), (int)length), lastStyle);
+				var formattedSpan = new FormattedSpan(
+					Span: context.Span.Slice(lastOffset - span.StartOffset, length),
+					Data: memory.Slice((int)(lastOffset - span.StartOffset), (int)length),
+					Style: lastStyle
+				);
 				builder.Add(formattedSpan);
 
 				lastStyle = style;
@@ -45,7 +46,11 @@ internal partial class ConsoleHexView
 		if (lastOffset != span.Length)
 		{
 			var length = span.EndOffset - lastOffset;
-			var formattedSpan = new FormattedSpan(memory.Slice((int)(lastOffset - span.StartOffset), (int)length), lastStyle);
+			var formattedSpan = new FormattedSpan(
+				Span: context.Span.Slice(lastOffset - span.StartOffset, length),
+				Data: memory.Slice((int)(lastOffset - span.StartOffset), (int)length), 
+				Style: lastStyle
+			);
 			builder.Add(formattedSpan);
 		}
 
@@ -71,7 +76,8 @@ internal partial class ConsoleHexView
 	}
 
 	private readonly record struct FormatContext(
-		MemorySpan Span, 
+		SnapshotSpan Span,
+		ReadOnlyMemory<byte> Data,
 		ImmutableArray<ValueFormattingRule> Rules,
 		ImmutableArray<ClassificationSpan> Classifications
 	);

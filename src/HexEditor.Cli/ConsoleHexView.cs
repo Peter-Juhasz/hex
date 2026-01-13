@@ -1,18 +1,17 @@
 ﻿using HexEditor.Model;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 
 namespace HexEditor.ViewModel;
 
 internal partial class ConsoleHexView : IHexView
 {
-    public ConsoleHexView(IViewBuffer viewBuffer)
+    public ConsoleHexView(IBinarySnapshot viewBuffer)
     {
         _viewBuffer = viewBuffer;
-        MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.DataBuffer.Length);
+        MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.Length);
 		SetThemeCore(Themes.Dark);
 
-		_classificationAggregator = new([], _viewBuffer);
+		_classificationAggregator = new([]);
     }
 
 	private const double RowHeight = 1d;
@@ -39,15 +38,14 @@ internal partial class ConsoleHexView : IHexView
 
 	public double ViewportWidth => Console.BufferWidth;
 
-	public bool TryGetRow(long index, [NotNullWhen(true)] out IHexViewRow? row)
+	public async Task<IHexViewRow?> TryGetRow(long index, CancellationToken cancellationToken)
 	{
 		// adjust index with grouping
 		if (_theme?.RowGroupingSize is int groupingSize)
 		{
 			if ((index + 1) % (groupingSize + 1) == 0)
 			{
-				row = null;
-				return false;
+				return null;
 			}
 
 			index -= index / (groupingSize + 1);
@@ -55,37 +53,35 @@ internal partial class ConsoleHexView : IHexView
 
 		var bytesPerRow = Columns;
 		var offset = index * bytesPerRow;
-		if (offset >= _viewBuffer.DataBuffer.Length)
+		if (offset >= _viewBuffer.Length)
 		{
-			row = null;
-			return false;
+			return null;
 		}
 
-		var length = (int)Math.Min(bytesPerRow, _viewBuffer.DataBuffer.Length - offset);
-		var rowSpan = new MemorySpan(offset, length);
-		if (!_viewBuffer.TryRead(rowSpan, out var data))
-		{
-			row = null;
-			return false;
-		}
+		var length = (int)Math.Min(bytesPerRow, _viewBuffer.Length - offset);
+		var rowSpan = new LongSpan(offset, length);
+		var snapshotSpan = new SnapshotSpan(_viewBuffer, rowSpan);
+		var data = new byte[length];
+		await snapshotSpan.CopyToAsync(data, cancellationToken);
 
-		_classificationAggregator.TryGetClassifications(rowSpan, out var classifications);
+		var classifications = await _classificationAggregator.ClassifyAsync(snapshotSpan, cancellationToken);
 
 		var formatted = Format(new(
-			Span: rowSpan,
+			Span: snapshotSpan,
+			Data: data,
 			Rules: _rules,
 			Classifications: classifications
 		));
 
 		// TODO: add padding to calculation
-		row = new ViewRow(this, new(Left: 0, Top: index, Width: Console.BufferWidth, Height: RowHeight), rowSpan, data, formatted);
-		return true;
+		var row = new ViewRow(this, new(Left: 0, Top: index, Width: Console.BufferWidth, Height: RowHeight), snapshotSpan, data, formatted);
+		return row;
 	}
 
 	public long TotalRowCount => _totalRowCount;
 
     private long _rowIndex = 0;
-    private readonly IViewBuffer _viewBuffer;
+    private readonly IBinarySnapshot _viewBuffer;
 
     public long FirstVisibleRowIndex => _rowIndex;
 
@@ -107,7 +103,7 @@ internal partial class ConsoleHexView : IHexView
         }
     }
 
-    public long LastVisibleOffset => FirstVisibleOffset + Math.Min(_viewBuffer.DataBuffer.Length - FirstVisibleOffset, Rows * Columns);
+    public long LastVisibleOffset => FirstVisibleOffset + Math.Min(_viewBuffer.Length - FirstVisibleOffset, Rows * Columns);
 
 	public int VisibleRowCount => Math.Min((int)(TotalRowCount - _rowIndex), Rows);
 
@@ -121,7 +117,7 @@ internal partial class ConsoleHexView : IHexView
 
 	public long LastPageRowIndex => LastPageIndex * Rows;
 
-	public MemorySpan VisibleSpan => new(FirstVisibleOffset, VisibleByteCount);
+	public SnapshotSpan VisibleSpan => new(_viewBuffer, new(FirstVisibleOffset, VisibleByteCount));
 
     public Task ResizeWindowAsync(double viewportWidth, double viewportHeight, CancellationToken cancellationToken)
 	{
@@ -179,15 +175,7 @@ internal partial class ConsoleHexView : IHexView
     private async Task LoadAndInvalidateAsync(CancellationToken cancellationToken)
 	{
 		var visibleSpan = VisibleSpan;
-		await _viewBuffer.LoadChunkAsync(visibleSpan, cancellationToken);
-		Invalidate();
-
-		var hasChanges = false;
-		hasChanges |= await _classificationAggregator.ClassifyAsync(visibleSpan, cancellationToken);
-		if (hasChanges)
-		{
-			Invalidate();
-		}
+		await InvalidateAsync(cancellationToken);
 	}
 
     public Task PageDownAsync(CancellationToken cancellationToken)

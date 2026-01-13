@@ -8,3 +8,23 @@ public interface IBinarySnapshot
 
 	IBinarySnapshot Apply(BinaryChange change);
 }
+
+public static partial class Extensions
+{
+	extension(IBinarySnapshot snapshot)
+	{
+		public SnapshotPoint Start => new(snapshot, 0);
+
+		public SnapshotSpan Slice(long offset, long length)
+		{
+			if (offset < 0 || length < 0 || offset + length > snapshot.Length)
+			{
+				throw new ArgumentOutOfRangeException();
+			}
+
+			return new SnapshotSpan(snapshot, new LongSpan(offset, length));
+		}
+
+		public SnapshotSpan Slice(long offset) => snapshot.Slice(offset, snapshot.Length - offset);
+	}
+}

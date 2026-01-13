@@ -1,3 +1,5 @@
-﻿namespace HexEditor.ViewModel;
+﻿using HexEditor.Model;
 
-public readonly record struct FormattedSpan(ReadOnlyMemory<byte> Span, object? Style);
+namespace HexEditor.ViewModel;
+
+public readonly record struct FormattedSpan(SnapshotSpan Span, ReadOnlyMemory<byte> Data, object? Style);

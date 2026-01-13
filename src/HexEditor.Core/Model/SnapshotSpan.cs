@@ -34,6 +34,9 @@ public static partial class Extensions
 	{
 		public SnapshotPoint Start => new(span.Snapshot, span.Span.StartOffset);
 
+		public SnapshotSpan Slice(long offset, long length) =>
+			new(span.Snapshot, span.Span.Slice(offset, length));
+
 		public ValueTask CopyToAsync(Memory<byte> destination, CancellationToken cancellationToken)
 		{
 			if (span.Span.Length > int.MaxValue)

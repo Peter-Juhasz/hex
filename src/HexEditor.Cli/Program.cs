@@ -44,8 +44,8 @@ root.SetAction(async (context, ct) =>
 	// open file
 	using var handle = File.OpenHandle(path);
 	await using var binaryBuffer = new SafeFileHandleBinaryBuffer(handle);
-	var viewBuffer = new LazyViewBuffer(binaryBuffer);
-	var view = new ConsoleHexView(viewBuffer);
+	var snapshot = new BinaryDataSourceSnapshot(binaryBuffer);
+	var view = new ConsoleHexView(snapshot);
 
 	// resize view
 	var (consoleWidth, consoleHeight) = (Console.BufferWidth, Console.BufferHeight);

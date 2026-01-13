@@ -70,7 +70,7 @@ internal partial class ConsoleHexView
 
 	private long CalculateTotalRows(int bytesPerRow)
 	{
-		var totalRows = _viewBuffer.DataBuffer.Length / bytesPerRow;
+		var totalRows = _viewBuffer.Length / bytesPerRow;
 
 		if (_theme?.RowGroupingSize is int groupingSize && groupingSize > 0)
 		{
@@ -81,21 +81,21 @@ internal partial class ConsoleHexView
 		return totalRows;
 	}
 
-	public void Invalidate()
+	public async Task InvalidateAsync(CancellationToken cancellationToken)
 	{
-		_visibleRows = CreateVisibleRows();
+		_visibleRows = await CreateVisibleRowsAsync(cancellationToken);
 		VisibleRowsChanged?.Invoke(this, EventArgs.Empty);
 		Render();
 	}
 
-	private ImmutableArray<IHexViewRow> CreateVisibleRows()
+	private async Task<ImmutableArray<IHexViewRow>> CreateVisibleRowsAsync(CancellationToken cancellationToken)
 	{
 		if (Columns == -1)
 		{
 			throw new InvalidOperationException("View has not been initialized. Call ResizeAsync first.");
 		}
 
-		if (_viewBuffer.DataBuffer.Length == 0)
+		if (_viewBuffer.Length == 0)
 		{
 			return [];
 		}
@@ -108,7 +108,8 @@ internal partial class ConsoleHexView
 			var virtualRowIndex = FirstVisibleRowIndex + screenRowIndex;
 			if (virtualRowIndex <= LastVisibleRowIndex)
 			{
-				if (TryGetRow(virtualRowIndex, out var row))
+				var row = await TryGetRow(virtualRowIndex, cancellationToken);
+				if (row != null)
 				{
 					rows.Add(row);
 				}
@@ -347,7 +348,7 @@ internal partial class ConsoleHexView
 				var hexFormatStrings = (addressStyle?.LetterCasing == LetterCasing.Lower) ? LowercaseHexFormatStrings : UppercaseHexFormatStrings;
 
 				var addressLength = Math.Max(MinimumAddressLength, addressStyle?.MinimumWidth ?? 0);
-				row.Extent.StartOffset.TryFormat(formatBuffer, out _, hexFormatStrings[addressLength]);
+				row.Extent.Span.StartOffset.TryFormat(formatBuffer, out _, hexFormatStrings[addressLength]);
 				writer.Write(formatBuffer[..addressLength]);
 
 				if (addressStyle?.ShowSuffix == true)
@@ -378,7 +379,7 @@ internal partial class ConsoleHexView
 				{
 					using (UseStyle(run.Style as ConsoleStyle))
 					{
-						foreach (var value in run.Span.Span)
+						foreach (var value in run.Data.Span)
 						{
 							// write hex value
 							value.TryFormat(formatBuffer, out _, format);
@@ -433,7 +434,7 @@ internal partial class ConsoleHexView
 				{
 					using (UseStyle(run.Style as ConsoleStyle))
 					{
-						foreach (var value in run.Span.Span)
+						foreach (var value in run.Data.Span)
 						{
 							// write character or dot
 							if (value >= 32 && value <= 126)

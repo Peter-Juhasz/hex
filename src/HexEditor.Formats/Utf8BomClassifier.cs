@@ -1,27 +1,23 @@
 ﻿using HexEditor.Classification;
 using HexEditor.Model;
-using HexEditor.ViewModel;
 using System.Collections.Immutable;
 
 namespace HexEditor.Formats;
 
 public sealed class Utf8BomClassifier : IClassifier
 {
-    private static readonly ImmutableArray<ClassificationSpan> _utf8BomClassification = [new ClassificationSpan(new LongSpan(0, 3), "encoding.utf8.bom")];
-
-    public ValueTask<ImmutableArray<ClassificationSpan>> GetClassificationsAsync(IViewBuffer buffer, MemorySpan span, CancellationToken cancellationToken)
+    public async ValueTask<ImmutableArray<ClassificationSpan>> GetClassificationsAsync(SnapshotSpan span, CancellationToken cancellationToken)
     {
-        if (span.StartOffset < 3 && buffer.DataBuffer.Length >= 3)
+        if (span.Span.StartOffset < 3 && span.Snapshot.Length >= 3)
         {
-            if (buffer.TryRead(new(0, 3), out var data))
+            var buffer = new byte[3];
+            await span.Snapshot.CopyToAsync(0, buffer, cancellationToken);
+            if (buffer is [0xEF, 0xBB, 0xBF])
             {
-                if (data.Span[..3] is [0xEF, 0xBB, 0xBF])
-                {
-                    return ValueTask.FromResult(_utf8BomClassification);
-                }
+                return [new(span.Snapshot.Slice(0, 3), "encoding.utf8.bom")];
             }
         }
 
-        return ValueTask.FromResult(ImmutableArray<ClassificationSpan>.Empty);
+		return [];
     }
 }

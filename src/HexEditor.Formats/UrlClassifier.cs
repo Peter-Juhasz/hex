@@ -1,6 +1,5 @@
 ﻿using HexEditor.Classification;
 using HexEditor.Model;
-using HexEditor.ViewModel;
 using System.Buffers;
 using System.Collections.Immutable;
 
@@ -11,15 +10,13 @@ public sealed class UrlClassifier : IClassifier
 	private static readonly SearchValues<byte> UriCharacters = SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.+_?#%=&/"u8);
 	private static readonly SearchValues<byte> ProtocolLetters = SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"u8);
 
-	public ValueTask<ImmutableArray<ClassificationSpan>> GetClassificationsAsync(IViewBuffer buffer, MemorySpan span, CancellationToken cancellationToken)
+	public async ValueTask<ImmutableArray<ClassificationSpan>> GetClassificationsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		if (!buffer.TryRead(span, out var data))
-		{
-			return ValueTask.FromResult(ImmutableArray<ClassificationSpan>.Empty);
-		}
+		var data = new byte[span.Span.Length];
+		await span.CopyToAsync(data, cancellationToken);
 
-		using var builder = new PooledArrayBuilder<ClassificationSpan>();
-		var dataSpan = data.Span;
+		var builder = new List<ClassificationSpan>();
+		var dataSpan = data;
 		foreach (var index in dataSpan.IndexesOf("://"u8))
 		{
 			if (index == 0)
@@ -45,10 +42,10 @@ public sealed class UrlClassifier : IClassifier
 
 			var uriLength = firstInvalidIndex == -1 ? after.Length : firstInvalidIndex;
 
-			var uriSpan = new MemorySpan(StartOffset: span.StartOffset + protocolStart, Length: index + 3 + uriLength - protocolStart);
+			var uriSpan = span.Slice(protocolStart, index + 3 + uriLength - protocolStart);
 			builder.Add(new(uriSpan, "text.url"));
 		}
 
-		return new(builder.ToImmutableArray());
+		return builder.ToImmutableArray();
 	}
 }
