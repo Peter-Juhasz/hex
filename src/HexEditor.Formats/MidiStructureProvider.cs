@@ -1,6 +1,5 @@
 ﻿using HexEditor.Model;
 using HexEditor.Structure;
-using HexEditor.ViewModel;
 using System.Buffers.Binary;
 using System.Collections.Immutable;
 using System.Text;
@@ -9,18 +8,16 @@ namespace HexEditor.Formats;
 
 internal sealed class MidiStructureProvider : IStructureProvider
 {
-	public async ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(IViewBuffer buffer, MemorySpan span, CancellationToken cancellationToken)
+	public async ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
+		var snapshot = span.Snapshot;
 		long startOffset = 0;
 		byte[] headerBytes = new byte[8];
 		var list = new List<StructureSpan>();
-		while (startOffset < span.EndOffset)
+		while (startOffset < span.Span.EndOffset)
 		{
 			// try read chunk header
-			if (!buffer.TryCopyTo(startOffset, headerBytes))
-			{
-				await buffer.DataBuffer.CopyToAsync(startOffset, headerBytes, cancellationToken);
-			}
+			await snapshot.CopyToAsync(startOffset, headerBytes, cancellationToken);
 
 			// parse
 			if (!TryParseChunkHeader(headerBytes, out var type, out var length))
@@ -29,14 +26,17 @@ internal sealed class MidiStructureProvider : IStructureProvider
 			}
 
 			// add span
-			var fullExtent = new MemorySpan(startOffset, 8 + length);
-			list.Add(new StructureSpan(
-				Span: fullExtent,
-				Label:
-					type == "MThd"u8 ? "MIDI Header Chunk" :
-					type == "MTrk"u8 ? "MIDI Track Chunk" :
-					Encoding.ASCII.GetString(type)
-			));
+			var fullExtent = new LongSpan(startOffset, 8 + length);
+			if (fullExtent.IntersectsWith(span.Span))
+			{
+				list.Add(new StructureSpan(
+					Span: fullExtent,
+					Label:
+						type == "MThd"u8 ? "MIDI Header Chunk" :
+						type == "MTrk"u8 ? "MIDI Track Chunk" :
+						Encoding.ASCII.GetString(type)
+				));
+			}
 
 			// advance
 			startOffset += fullExtent.Length;
