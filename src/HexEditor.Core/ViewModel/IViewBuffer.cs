@@ -4,7 +4,7 @@ namespace HexEditor.ViewModel;
 
 public interface IViewBuffer
 {
-	IBinaryBuffer DataBuffer { get; }
+	IBinaryDataSource DataBuffer { get; }
 
 	bool TryRead(MemorySpan span, out ReadOnlyMemory<byte> data);
 

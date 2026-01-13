@@ -1,38 +1,17 @@
 ﻿namespace HexEditor.Model;
 
-public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryBuffer
+public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryDataSource
 {
 	public long Length { get; } = buffer.Length;
 
-	public ValueTask CopyToAsync(MemorySpan span, Memory<byte> destination, CancellationToken cancellationToken)
+	public ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
     {
-		if (!TryRead(span, destination.Span))
-		{
-			throw new ArgumentOutOfRangeException(nameof(span));
-		}
+		if (offset < 0 ) throw new ArgumentOutOfRangeException(nameof(offset));
+
+		if (offset + destination.Length > int.MaxValue) throw new ArgumentOutOfRangeException(nameof(offset));
+
+		buffer.Slice((int)offset, destination.Length).CopyTo(destination);
 
 		return ValueTask.CompletedTask;
-	}
-
-	public bool TryRead(MemorySpan span, Span<byte> destination)
-	{
-		if (span.EndOffset > int.MaxValue)
-		{
-			return false;
-		}
-
-		if (span.EndOffset >= Length)
-		{
-			return false;
-		}
-
-		if (destination.Length < span.Length)
-		{
-			return false;
-		}
-
-		var sourceSpan = buffer.Slice((int)span.StartOffset, span.Length);
-		sourceSpan.Span.CopyTo(destination);
-		return true;
 	}
 }

@@ -2,11 +2,11 @@
 
 namespace HexEditor.ViewModel;
 
-public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
+public class FullViewBuffer(IBinaryDataSource dataBuffer) : IViewBuffer
 {
 	private byte[]? _viewBuffer;
 
-	public IBinaryBuffer DataBuffer => dataBuffer;
+	public IBinaryDataSource DataBuffer => dataBuffer;
 
 	public bool TryRead(MemorySpan span, out ReadOnlyMemory<byte> data) 
 	{
@@ -28,6 +28,6 @@ public class FullViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 		}
 
 		_viewBuffer = new byte[dataBuffer.Length];
-		return dataBuffer.CopyToAsync(span, _viewBuffer, cancellationToken).AsTask();
+		return dataBuffer.CopyToAsync(span.StartOffset, _viewBuffer, cancellationToken).AsTask();
 	}
 }

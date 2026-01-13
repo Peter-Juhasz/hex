@@ -19,7 +19,7 @@ internal sealed class MidiStructureProvider : IStructureProvider
 			// try read chunk header
 			if (!buffer.TryCopyTo(startOffset, headerBytes))
 			{
-				await buffer.DataBuffer.CopyToAsync(new(startOffset, headerBytes.Length), headerBytes, cancellationToken);
+				await buffer.DataBuffer.CopyToAsync(startOffset, headerBytes, cancellationToken);
 			}
 
 			// parse

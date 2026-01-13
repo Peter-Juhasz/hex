@@ -2,9 +2,9 @@
 
 namespace HexEditor.ViewModel;
 
-public class LazyViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
+public class LazyViewBuffer(IBinaryDataSource dataBuffer) : IViewBuffer
 {
-	public IBinaryBuffer DataBuffer => dataBuffer;
+	public IBinaryDataSource DataBuffer => dataBuffer;
 
 	private ViewBufferChunk? _loadedChunk;
 
@@ -35,7 +35,7 @@ public class LazyViewBuffer(IBinaryBuffer dataBuffer) : IViewBuffer
 		}
 
 		var buffer = new byte[span.Length];
-		await dataBuffer.CopyToAsync(span, buffer, cancellationToken);
+		await dataBuffer.CopyToAsync(span.StartOffset, buffer, cancellationToken);
 		_loadedChunk = new ViewBufferChunk(span.StartOffset, buffer);
 	}
 

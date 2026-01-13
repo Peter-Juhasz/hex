@@ -2,28 +2,17 @@
 
 namespace HexEditor.Model;
 
-public class SafeFileHandleBinaryBuffer(SafeFileHandle handle) : IBinaryBuffer
+public class SafeFileHandleBinaryBuffer(SafeFileHandle handle) : IBinaryDataSource
 {
 	public long Length { get; } = RandomAccess.GetLength(handle);
 
-	public async ValueTask CopyToAsync(MemorySpan span, Memory<byte> destination, CancellationToken cancellationToken)
+	public async ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
     {
-		var read = await RandomAccess.ReadAsync(handle, destination, span.StartOffset, cancellationToken);
-		if (read < span.Length)
+		var read = await RandomAccess.ReadAsync(handle, destination, offset, cancellationToken);
+		if (read < destination.Length)
 		{
-			throw new ArgumentOutOfRangeException(nameof(span));
+			throw new ArgumentOutOfRangeException(nameof(destination));
 		}
-	}
-
-	public bool TryRead(MemorySpan span, Span<byte> buffer)
-	{
-		if (!handle.IsAsync)
-		{
-			var read = RandomAccess.Read(handle, buffer, span.StartOffset);
-			return read != -1;
-		}
-
-		return false;
 	}
 
 	public ValueTask DisposeAsync()

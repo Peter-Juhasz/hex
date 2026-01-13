@@ -1,14 +1,15 @@
 ﻿namespace HexEditor.Model;
 
-public class StreamBinaryBuffer(Stream stream) : IBinaryBuffer
+public class StreamBinaryBuffer(Stream stream) : IBinaryDataSource
 {
 	public long Length { get; } = stream.Length;
 
-	public async ValueTask CopyToAsync(MemorySpan span, Memory<byte> destination, CancellationToken cancellationToken)
+	public async ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
     {
-		var buffer = destination[..span.Length];
-		stream.Seek(span.StartOffset, SeekOrigin.Begin);
-		await stream.ReadExactlyAsync(buffer, cancellationToken);
+		if (offset < 0 ) throw new ArgumentOutOfRangeException(nameof(offset));
+
+		stream.Seek(offset, SeekOrigin.Begin);
+		await stream.ReadExactlyAsync(destination, cancellationToken);
 	}
 
 	public ValueTask DisposeAsync() => stream.DisposeAsync();

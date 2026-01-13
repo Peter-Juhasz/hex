@@ -6,18 +6,18 @@ namespace HexEditor.Core.Model;
 
 // more efficient implementation is blocked on https://github.com/dotnet/runtime/issues/122815
 
-public class MemoryMappedFileBinaryBuffer(MemoryMappedFile file, int length) : IBinaryBuffer
+public class MemoryMappedFileBinaryBuffer(MemoryMappedFile file, int length) : IBinaryDataSource
 {
 	private readonly ArrayPool<byte> _arrayPool = ArrayPool<byte>.Create();
 
-	public ValueTask CopyToAsync(MemorySpan span, Memory<byte> destination, CancellationToken cancellationToken)
+	public ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
 	{
-		using var _accessor = file.CreateViewAccessor(span.StartOffset, span.Length, MemoryMappedFileAccess.Read);
-		var buffer = _arrayPool.Rent(span.Length);
+		using var _accessor = file.CreateViewAccessor(offset, destination.Length, MemoryMappedFileAccess.Read);
+		var buffer = _arrayPool.Rent(destination.Length);
 		try
 		{
-			_accessor.ReadArray(span.StartOffset, buffer, 0, span.Length);
-			buffer.AsSpan(0, span.Length).CopyTo(destination.Span);
+			_accessor.ReadArray(0, buffer, 0, destination.Length);
+			buffer.CopyTo(destination.Span);
 		}
 		finally
 		{
