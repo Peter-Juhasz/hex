@@ -33,7 +33,7 @@ public partial class EditorHost : Grid
 		});
 		this.ColumnDefinitions.Add(new ColumnDefinition()
 		{
-			Width = new GridLength(100, GridUnitType.Pixel),
+			Width = GridLength.Auto,
 		});
 
 		this.RowDefinitions.Add(new RowDefinition()
@@ -112,20 +112,13 @@ public partial class EditorHost : Grid
 
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
 		{
-			var hexFormatBuffer = new char[64];
-
 			foreach (var row in rows)
 			{
 				foreach (var run in row.HexRuns)
 				{
-					var hexString = string.Create(run.Data.Length * 2, run.Data.Span, (span, data) =>
-					{
-						Convert.TryToHexString(data, span, out var _);
-					});
-
 					var hexTextBlock = new TextBlock()
 					{
-						Text = hexString,
+						Text = run.Text,
 						FontFamily = _editorFontFamily,
 						FontSize = _fontSize,
 						Foreground = _editorForegroundBrush,
@@ -134,6 +127,21 @@ public partial class EditorHost : Grid
 					Canvas.SetLeft(hexTextBlock, 8);
 					Canvas.SetTop(hexTextBlock, row.VisualBounds.Top);
 					_editorCanvas.Children.Add(hexTextBlock);
+				}
+
+				foreach (var run in row.AsciiRuns)
+				{
+					var asciiTextBlock = new TextBlock()
+					{
+						Text = run.Text,
+						FontFamily = _editorFontFamily,
+						FontSize = _fontSize,
+						Foreground = _editorForegroundBrush,
+						Tag = run,
+					};
+					Canvas.SetLeft(asciiTextBlock, 128);
+					Canvas.SetTop(asciiTextBlock, row.VisualBounds.Top);
+					_editorCanvas.Children.Add(asciiTextBlock);
 				}
 			}
 		});
@@ -144,6 +152,7 @@ public partial class EditorHost : Grid
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 		{
 			_editorCanvas.Height = e.NewHeight;
+			//_verticalScrollBar.ScrollController.SetValues(0, e.NewHeight, 0, e.NewHeight);
 		});
 	}
 

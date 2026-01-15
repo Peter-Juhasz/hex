@@ -6,7 +6,7 @@ namespace HexEditor.ViewModel;
 
 internal partial class ConsoleHexView
 {
-	private ImmutableArray<FormattedSpan> Format(FormatContext context)
+	private ImmutableArray<FormattedTextRun> Format(FormatContext context)
 	{
 		var span = context.Span.Span;
 		if (span.Length == 0)
@@ -16,7 +16,7 @@ internal partial class ConsoleHexView
 
 		var memory = context.Data;
 
-		using var builder = new PooledArrayBuilder<FormattedSpan>();
+		using var builder = new PooledArrayBuilder<FormattedTextRun>();
 
 		ConsoleStyle? lastStyle = null;
 		long lastOffset = span.StartOffset;
@@ -31,9 +31,13 @@ internal partial class ConsoleHexView
 			if (style != lastStyle)
 			{
 				var length = absoluteOffset - lastOffset;
-				var formattedSpan = new FormattedSpan(
+				var data = memory.Slice((int)(lastOffset - span.StartOffset), (int)length);
+				var formattedSpan = new FormattedTextRun(
 					Span: context.Span.Slice(lastOffset - span.StartOffset, length),
-					Data: memory.Slice((int)(lastOffset - span.StartOffset), (int)length),
+					Data: data,
+					Text: ToHexString(data.Span),
+					LeftPosition: relativeOffset,
+					RenderedWidth: (double)length,
 					Style: lastStyle
 				);
 				builder.Add(formattedSpan);
@@ -43,12 +47,16 @@ internal partial class ConsoleHexView
 			}
 		}
 
-		if (lastOffset != span.Length)
+		if (lastOffset < span.EndOffset)
 		{
 			var length = span.EndOffset - lastOffset;
-			var formattedSpan = new FormattedSpan(
+			var data = memory.Slice((int)(lastOffset - span.StartOffset), (int)length);
+			var formattedSpan = new FormattedTextRun(
 				Span: context.Span.Slice(lastOffset - span.StartOffset, length),
-				Data: memory.Slice((int)(lastOffset - span.StartOffset), (int)length), 
+				Data: data, 
+				Text: ToHexString(data.Span),
+				LeftPosition: lastOffset,
+				RenderedWidth: (double)length,
 				Style: lastStyle
 			);
 			builder.Add(formattedSpan);
@@ -74,6 +82,11 @@ internal partial class ConsoleHexView
 
 		return null;
 	}
+
+	private static string ToHexString(ReadOnlySpan<byte> data) => string.Create(data.Length * 2, data, (span, data) =>
+	{
+		Convert.TryToHexString(data, span, out var _);
+	});
 
 	private readonly record struct FormatContext(
 		SnapshotSpan Span,

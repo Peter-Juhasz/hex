@@ -26,16 +26,16 @@ internal class WinUIHexView(IBinarySnapshot snapshot) : IHexView
 
 	internal async Task InvalidateAsync()
 	{
-		var rows = Enumerable.Range(0, 20).Select(i => (IHexViewRow)new ViewRow(
+		var rows = Enumerable.Range(0, 64).Select(i => (IHexViewRow)new ViewRow(
 			this,
 			new ViewportBounds(0, i * 24, 100, 24),
 			snapshot.Slice(i, 1),
 			new byte[] { (byte)i },
-			[new FormattedSpan(snapshot.Slice(i, 1), new byte[] { (byte)i }, null)],
-			[new FormattedSpan(snapshot.Slice(i, 1), new byte[] { (byte)i }, null)]
+			[new FormattedTextRun(snapshot.Slice(i, 1), new byte[] { (byte)i }, ((byte)i).ToString("X2"), 0, 0, null)],
+			[new FormattedTextRun(snapshot.Slice(i, 1), new byte[] { (byte)i }, ((char)i).ToString(), 0, 0, null)]
 		));
 		_visibleRows = rows.ToImmutableArray();
-		HeightChanged?.Invoke(this, new HeightChangedEventArgs(0.0, ScrollableHeight));
+		HeightChanged?.Invoke(this, new HeightChangedEventArgs(0.0, _visibleRows.Length * 24));
 		VisibleRowsChanged?.Invoke(this, new VisibleLinesChangedEventArgs([], _visibleRows));
 	}
 
