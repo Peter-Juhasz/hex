@@ -13,10 +13,12 @@ public interface IHexViewRow
 
 	ViewportBounds VisualBounds { get; }
 
-	ImmutableArray<FormattedSpan> FormattedRuns { get; }
+	ImmutableArray<FormattedSpan> HexRuns { get; }
+
+	ImmutableArray<FormattedSpan> AsciiRuns { get; }
 }
 
-public class ViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedSpan> formattedRuns) : IHexViewRow
+public class ViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedSpan> hexRuns, ImmutableArray<FormattedSpan> asciiRuns) : IHexViewRow
 {
 	public IHexView View { get; } = view;
 
@@ -26,5 +28,7 @@ public class ViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, Re
 
 	public ViewportBounds VisualBounds { get; } = bounds;
 
-	public ImmutableArray<FormattedSpan> FormattedRuns { get; } = formattedRuns;
+	public ImmutableArray<FormattedSpan> HexRuns { get; } = hexRuns;
+
+	public ImmutableArray<FormattedSpan> AsciiRuns { get; } = asciiRuns;
 }

@@ -32,11 +32,14 @@ internal partial class ConsoleHexView : IHexView
 	public ConsoleTheme? Theme => _theme;
 
 	public ImmutableArray<IHexViewRow> VisibleRows => _visibleRows;
-	public event EventHandler? VisibleRowsChanged;
+	public event EventHandler<VisibleLinesChangedEventArgs>? VisibleRowsChanged;
+	public event EventHandler<HeightChangedEventArgs>? HeightChanged;
 
 	public double ViewportHeight => Console.BufferHeight;
 
 	public double ViewportWidth => Console.BufferWidth;
+
+	public double ScrollableHeight => TotalRowCount * RowHeight;
 
 	public async Task<IHexViewRow?> TryGetRow(long index, CancellationToken cancellationToken)
 	{
@@ -74,7 +77,7 @@ internal partial class ConsoleHexView : IHexView
 		));
 
 		// TODO: add padding to calculation
-		var row = new ViewRow(this, new(Left: 0, Top: index, Width: Console.BufferWidth, Height: RowHeight), snapshotSpan, data, formatted);
+		var row = new ViewRow(this, new(Left: 0, Top: index, Width: Console.BufferWidth, Height: RowHeight), snapshotSpan, data, formatted, formatted);
 		return row;
 	}
 
@@ -141,12 +144,15 @@ internal partial class ConsoleHexView : IHexView
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newColumns);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newRows);
 
+		var oldHeight = ScrollableHeight;
 		Columns = newColumns;
 		Rows = newRows;
 		_totalRowCount = CalculateTotalRows(newRows);
 
 		VerticalScrollbarThumbScreenRowHeight = Math.Max(1, (int)((RowsPerScreen / (double)TotalRowCount) * RowsPerScreen));
 		VerticalScrollbarThumbScreenRowStartIndex = (int)((FirstVisibleRowIndex / (double)TotalRowCount) * RowsPerScreen);
+
+		HeightChanged?.Invoke(this, new(oldHeight, newHeight: ScrollableHeight));
 
 		return LoadAndInvalidateAsync(cancellationToken);
 	}

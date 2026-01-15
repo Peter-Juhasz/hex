@@ -15,6 +15,8 @@ public static partial class Extensions
 	{
 		public SnapshotPoint Start => new(snapshot, 0);
 
+		public SnapshotSpan Span => new(snapshot, new(0, snapshot.Length));
+
 		public SnapshotSpan Slice(long offset, long length)
 		{
 			if (offset < 0 || length < 0 || offset + length > snapshot.Length)

@@ -84,7 +84,7 @@ internal partial class ConsoleHexView
 	public async Task InvalidateAsync(CancellationToken cancellationToken)
 	{
 		_visibleRows = await CreateVisibleRowsAsync(cancellationToken);
-		VisibleRowsChanged?.Invoke(this, EventArgs.Empty);
+		VisibleRowsChanged?.Invoke(this, new([], []));
 		Render();
 	}
 
@@ -375,7 +375,7 @@ internal partial class ConsoleHexView
 				var format = _theme?.HexView?.LetterCasing == LetterCasing.Lower ? "x2" : "X2";
 
 				int col = 0;
-				foreach (var run in row.FormattedRuns)
+				foreach (var run in row.HexRuns)
 				{
 					using (UseStyle(run.Style as ConsoleStyle))
 					{
@@ -430,7 +430,7 @@ internal partial class ConsoleHexView
 			using (UseStyle(asciiViewStyle?.TextStyle))
 			{
 				int col = 0;
-				foreach (var run in row.FormattedRuns)
+				foreach (var run in row.HexRuns)
 				{
 					using (UseStyle(run.Style as ConsoleStyle))
 					{
