@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
-using Windows.Foundation;
 using Windows.UI;
 
 namespace HexEditor.WinUI;
@@ -40,7 +39,7 @@ internal class AddressBarMargin : ContentControl
 
 		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		_view.HeightChanged += OnViewHeightChanged;
+		_view.ScrollableHeightChanged += OnViewHeightChanged;
 
 		var scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
 		editorScrollView.ViewChanged += (s, e) =>
@@ -57,14 +56,25 @@ internal class AddressBarMargin : ContentControl
 	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
 	private readonly IHexView _view;
 
-	private void OnViewVisibleRowsChanged(object sender, EventArgs e)
+	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
-		var visibleRows = _view.VisibleRows;
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 		{
-			var rows = visibleRows;
+			foreach (var row in e.RemovedRows)
+			{
+				for (int i = 0; i < _canvas.Children.Count; i++)
+				{
+					if (_canvas.Children[i] is TextBlock addressTextBlock &&
+						addressTextBlock.Tag is long offset &&
+						offset == row.Extent.Span.StartOffset)
+					{
+						_canvas.Children.RemoveAt(i);
+						break;
+					}
+				}
+			}
 
-			foreach (var row in rows)
+			foreach (var row in e.AddedRows)
 			{
 				var addressTextBlock = new TextBlock()
 				{

@@ -6,6 +6,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
+using Windows.UI.Popups;
 
 namespace HexEditor.WinUI;
 
@@ -41,7 +45,7 @@ public partial class EditorHost : Grid
 			Height = new GridLength(1, GridUnitType.Star),
 		});
 
-		_view = new WinUIHexView(snapshot);
+		_view = new WinUIHexView(snapshot, _visualTheme);
 
 		_editorScrollView = new ScrollView()
 		{
@@ -79,18 +83,41 @@ public partial class EditorHost : Grid
 		this.Loaded += OnLoaded;
 		this.Unloaded += OnUnloaded;
 
+		_editorScrollView.ViewChanged += OnEditorViewChanged;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		_view.HeightChanged += OnViewHeightChanged;
-		_ = _view.InvalidateAsync();
+		_view.ScrollableHeightChanged += OnViewHeightChanged;
+
+		_workerThreadQueue = Channel.CreateUnbounded<Task>();
+		_workerThread = Worker(CancellationToken.None);
+	}
+
+	private bool _isFirstViewChange = true;
+
+	private void OnEditorViewChanged(ScrollView sender, object args)
+	{
+		if (_isFirstViewChange)
+		{
+			EnqueueWorkerTask(c => _view.ResizeWindowAsync(sender.ViewportWidth, sender.ViewportHeight, c));
+			_isFirstViewChange = false;
+		}
 	}
 
 	private readonly WinUIHexView _view;
+	private readonly Channel<Task> _workerThreadQueue;
+	private readonly Task _workerThread;
+
+	private VisualTheme _visualTheme = new(
+		Columns: 16,
+		FontWidth: 8,
+		RowHeight: 24
+	);
 
 	private void OnLoaded(object sender, RoutedEventArgs e)
 	{
 		DispatcherQueue.TryEnqueue(() =>
 		{
 			_editorScrollView.ScrollPresenter.VerticalScrollController = _verticalScrollBar.ScrollController;
+			EnqueueWorkerTask(c => _view.ResizeWindowAsync(_editorScrollView.ViewportWidth, _editorScrollView.ViewportHeight, c));
 		});
 	}
 
@@ -106,13 +133,13 @@ public partial class EditorHost : Grid
 	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 
-	private void OnViewVisibleRowsChanged(object sender, EventArgs e)
+	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
-		var rows = _view.VisibleRows;
-
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
 		{
-			foreach (var row in rows)
+			var asciiX = _visualTheme.FontWidth * (_visualTheme.Columns * 2) + 32;
+
+			foreach (var row in e.AddedRows)
 			{
 				foreach (var run in row.HexRuns)
 				{
@@ -124,7 +151,7 @@ public partial class EditorHost : Grid
 						Foreground = _editorForegroundBrush,
 						Tag = run,
 					};
-					Canvas.SetLeft(hexTextBlock, 8);
+					Canvas.SetLeft(hexTextBlock, 8 + run.LeftPosition);
 					Canvas.SetTop(hexTextBlock, row.VisualBounds.Top);
 					_editorCanvas.Children.Add(hexTextBlock);
 				}
@@ -139,7 +166,7 @@ public partial class EditorHost : Grid
 						Foreground = _editorForegroundBrush,
 						Tag = run,
 					};
-					Canvas.SetLeft(asciiTextBlock, 128);
+					Canvas.SetLeft(asciiTextBlock, asciiX + run.LeftPosition);
 					Canvas.SetTop(asciiTextBlock, row.VisualBounds.Top);
 					_editorCanvas.Children.Add(asciiTextBlock);
 				}
@@ -152,8 +179,28 @@ public partial class EditorHost : Grid
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 		{
 			_editorCanvas.Height = e.NewHeight;
-			//_verticalScrollBar.ScrollController.SetValues(0, e.NewHeight, 0, e.NewHeight);
 		});
+	}
+
+	private async Task Worker(CancellationToken cancellationToken)
+	{
+		await foreach (var task in _workerThreadQueue.Reader.ReadAllAsync(cancellationToken))
+		{
+			try
+			{
+				await task;
+			}
+			catch (Exception ex)
+			{
+				await new MessageDialog(ex.Message).ShowAsync();
+			}
+		}
+	}
+
+	private void EnqueueWorkerTask(Func<CancellationToken, Task> factory)
+	{
+		var task = factory(CancellationToken.None);
+		_workerThreadQueue.Writer.TryWrite(task);
 	}
 
 	private void OnUnloaded(object sender, RoutedEventArgs e)

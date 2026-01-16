@@ -40,7 +40,7 @@ internal class OutliningMargin : ContentControl
 
 		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		_view.HeightChanged += OnViewHeightChanged;
+		_view.ScrollableHeightChanged += OnViewHeightChanged;
 
 		var scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
 		editorScrollView.ViewChanged += (s, e) =>

@@ -18,7 +18,7 @@ public interface IHexViewRow
 	ImmutableArray<FormattedTextRun> AsciiRuns { get; }
 }
 
-public class ViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedTextRun> hexRuns, ImmutableArray<FormattedTextRun> asciiRuns) : IHexViewRow
+public class HexViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedTextRun> hexRuns, ImmutableArray<FormattedTextRun> asciiRuns) : IHexViewRow
 {
 	public IHexView View { get; } = view;
 
