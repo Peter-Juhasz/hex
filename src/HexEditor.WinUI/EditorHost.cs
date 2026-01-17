@@ -5,6 +5,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
 
@@ -92,6 +93,7 @@ public partial class EditorHost : Grid
 		_hexContentView.ViewChanged += OnEditorViewChanged;
 		_view.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 		_verticalScrollBar.ValueChanged += OnScrollBarValueChanged;
+		this.PointerWheelChanged += OnPointerWheelChanged;
 		this.SizeChanged += OnSizeChanged;
 	}
 
@@ -157,6 +159,15 @@ public partial class EditorHost : Grid
 		{
 			_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
 		});
+	}
+
+	private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+	{
+		e.Handled = true;
+
+		var point = e.GetCurrentPoint(this);
+		var delta = point.Properties.MouseWheelDelta;
+		_viewScroller.ScrollBy(-delta);
 	}
 
 	private void OnUnloaded(object sender, RoutedEventArgs e)

@@ -17,6 +17,11 @@ internal class ViewScroller
 		}
 	}
 
+	public void ScrollBy(double delta)
+	{
+		ScrollTo(Math.Clamp(VerticalOffset + delta, 0, ScrollableHeight));
+	}
+
 
 	public event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;
 

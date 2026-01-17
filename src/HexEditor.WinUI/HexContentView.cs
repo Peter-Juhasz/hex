@@ -5,6 +5,7 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
 using Windows.Foundation;
@@ -50,8 +51,10 @@ internal class HexContentView : ContentControl
 		_view = view;
 		_theme = theme;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
+		_viewScroller = viewScroller;
 		viewScroller.OffsetChanged += OnScrollOffsetChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
+
 		this.Loaded += OnLoaded;
 	}
 
@@ -66,6 +69,7 @@ internal class HexContentView : ContentControl
 
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
+	private readonly ViewScroller _viewScroller;
 
 	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
