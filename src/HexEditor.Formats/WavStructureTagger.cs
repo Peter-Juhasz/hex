@@ -28,6 +28,12 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 			return ImmutableArray<TagSpan<StructureTag>>.Empty;
 		}
 
+		// Validate that firstLength doesn't cause overflow
+		if (firstLength > int.MaxValue - 8)
+		{
+			return ImmutableArray<TagSpan<StructureTag>>.Empty;
+		}
+
 		// Read WAVE identifier (4 bytes after RIFF header)
 		byte[] waveIdBytes = new byte[4];
 		await snapshot.CopyToAsync(startOffset + 8, waveIdBytes, cancellationToken);
@@ -79,7 +85,12 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 			}
 
 			// advance (align to even byte boundary as per RIFF spec)
-			startOffset += fullExtent.Length;
+			long nextOffset = startOffset + fullExtent.Length;
+			if (nextOffset < startOffset) // Overflow check
+			{
+				break;
+			}
+			startOffset = nextOffset;
 			if (length % 2 == 1)
 			{
 				startOffset++;
