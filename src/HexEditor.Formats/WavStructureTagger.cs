@@ -48,13 +48,19 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 
 		// Parse sub-chunks starting after "WAVE" identifier
 		startOffset = 12; // Skip RIFF header (8 bytes) + WAVE identifier (4 bytes)
-		while (startOffset < span.Span.EndOffset && startOffset < riffExtent.EndOffset)
+		while (startOffset < span.Span.EndOffset && startOffset < riffExtent.EndOffset && startOffset + 8 <= snapshot.Length)
 		{
 			// try read chunk header
 			await snapshot.CopyToAsync(startOffset, headerBytes, cancellationToken);
 
 			// parse
 			if (!TryParseChunkHeader(headerBytes, out var type, out var length))
+			{
+				break;
+			}
+
+			// Validate that length doesn't cause overflow when adding header size
+			if (length > int.MaxValue - 8)
 			{
 				break;
 			}
