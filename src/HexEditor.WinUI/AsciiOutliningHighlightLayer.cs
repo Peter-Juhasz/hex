@@ -1,6 +1,4 @@
 ﻿using HexEditor.Model;
-using HexEditor.ViewModel;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -14,7 +12,7 @@ namespace HexEditor.WinUI;
 
 internal class AsciiOutliningHighlightLayer : ContentControl
 {
-	public AsciiOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme) : base()
+	public AsciiOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -41,11 +39,13 @@ internal class AsciiOutliningHighlightLayer : ContentControl
 		_scrollView.Content = _canvas;
 
 		_view = view;
-		_view.ScrollableHeightChanged += OnViewHeightChanged;
 		_theme = theme;
 
 		outliningMargin.OutliningRegionSelectionRequested += OnOutliningRegionSelectionRequested;
 		outliningMargin.OutliningRegionDismissRequested += OnDismissed;
+
+		viewScroller.OffsetChanged += OnScrollOffsetChanged;
+		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
 
@@ -111,11 +111,17 @@ internal class AsciiOutliningHighlightLayer : ContentControl
 		_canvas.Children.Clear();
 	}
 
-	private void OnViewHeightChanged(object sender, HeightChangedEventArgs e)
+	#region Scrolling
+	private static readonly ScrollingScrollOptions scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
+
+	private void OnScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
 	{
-		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
-		{
-			_canvas.Height = e.NewHeight;
-		});
+		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 	}
+
+	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	{
+		_canvas.Height = e.NewHeight;
+	}
+	#endregion
 }

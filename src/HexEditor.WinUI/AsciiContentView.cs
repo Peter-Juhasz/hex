@@ -12,7 +12,7 @@ namespace HexEditor.WinUI;
 
 internal class AsciiContentView : ContentControl
 {
-	public AsciiContentView(IHexView view, HexContentView editorScrollView, VisualTheme theme) : base()
+	public AsciiContentView(IHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -40,13 +40,8 @@ internal class AsciiContentView : ContentControl
 
 		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		_view.ScrollableHeightChanged += OnViewHeightChanged;
-
-		var scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
-		editorScrollView.ViewChanged += (s, e) =>
-		{
-			_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
-		};
+		viewScroller.OffsetChanged += OnScrollOffsetChanged;
+		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
 	private readonly ScrollView _scrollView;
@@ -109,11 +104,17 @@ internal class AsciiContentView : ContentControl
 		});
 	}
 
-	private void OnViewHeightChanged(object sender, HeightChangedEventArgs e)
+	#region Scrolling
+	private static readonly ScrollingScrollOptions scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
+
+	private void OnScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
 	{
-		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
-		{
-			_canvas.Height = e.NewHeight;
-		});
+		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 	}
+
+	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	{
+		_canvas.Height = e.NewHeight;
+	}
+	#endregion
 }

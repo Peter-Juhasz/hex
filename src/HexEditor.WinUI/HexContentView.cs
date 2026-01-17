@@ -13,7 +13,7 @@ namespace HexEditor.WinUI;
 
 internal class HexContentView : ContentControl
 {
-	public HexContentView(IHexView view, VisualTheme theme) : base()
+	public HexContentView(IHexView view, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -50,16 +50,9 @@ internal class HexContentView : ContentControl
 		_view = view;
 		_theme = theme;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		_view.ScrollableHeightChanged += OnViewHeightChanged;
-
+		viewScroller.OffsetChanged += OnScrollOffsetChanged;
+		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 		this.Loaded += OnLoaded;
-	}
-
-	public double VerticalOffset => _scrollView.VerticalOffset;
-
-	public void ScrollTo(double offset)
-	{
-		_scrollView.ScrollTo(0, offset);
 	}
 
 	private void OnLoaded(object sender, RoutedEventArgs e)
@@ -81,11 +74,6 @@ internal class HexContentView : ContentControl
 	private readonly VisualTheme _theme;
 
 	public event TypedEventHandler<ScrollView, ViewportChangedEventArgs>? ViewChanged;
-
-	public void SetScrollController(IScrollController controller)
-	{
-		_scrollView.ScrollPresenter.VerticalScrollController = controller;
-	}
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
@@ -139,14 +127,19 @@ internal class HexContentView : ContentControl
 		});
 	}
 
-	private void OnViewHeightChanged(object sender, HeightChangedEventArgs e)
+	#region Scrolling
+	private static readonly ScrollingScrollOptions scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
+
+	private void OnScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
 	{
-		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
-		{
-			_canvas.Width = this.ActualWidth;
-			_canvas.Height = e.NewHeight;
-		});
+		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 	}
+
+	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	{
+		_canvas.Height = e.NewHeight;
+	}
+	#endregion
 }
 
 public class ViewportChangedEventArgs(double width, double height, double verticalOffset) : EventArgs

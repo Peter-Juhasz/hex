@@ -47,6 +47,9 @@ public partial class EditorHost : Grid
 		});
 
 		_view = new WinUIHexView(snapshot, _visualTheme);
+		_viewScroller = new ViewScroller();
+		_viewScroller.OffsetChanged += OnScrollerScrollOffsetChanged;
+		_viewScroller.ScrollableHeightChanged += OnScrollerScrollableHeightChanged;
 
 		_verticalScrollBar = new ScrollBar()
 		{
@@ -59,25 +62,24 @@ public partial class EditorHost : Grid
 		Grid.SetColumn(_verticalScrollBar, 5);
 		this.Children.Add(_verticalScrollBar);
 
-		_hexContentView = new HexContentView(_view, _visualTheme);
-		_outliningMargin = new OutliningMargin(_view, _hexContentView, _visualTheme);
-		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
+		_hexContentView = new HexContentView(_view, _visualTheme, _viewScroller);
+		_outliningMargin = new OutliningMargin(_view, _viewScroller, _visualTheme);
+		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme, _viewScroller);
 		Grid.SetColumn(_hexOutliningHighlightLayer, 3);
 		this.Children.Add(_hexOutliningHighlightLayer);
 
-		_hexContentView = new HexContentView(_view, _visualTheme);
 		Grid.SetColumn(_hexContentView, 3);
 		this.Children.Add(_hexContentView);
 
-		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
+		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme, _viewScroller);
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 4);
 		this.Children.Add(_asciiOutliningHighlightLayer);
 
-		_asciiContentView = new AsciiContentView(_view, _hexContentView, _visualTheme);
+		_asciiContentView = new AsciiContentView(_view, _viewScroller, _visualTheme);
 		Grid.SetColumn(_asciiContentView, 4);
 		this.Children.Add(_asciiContentView);
 
-		_addressBarMargin = new AddressBarMargin(_view, _hexContentView);
+		_addressBarMargin = new AddressBarMargin(_view, _viewScroller);
 		Grid.SetColumn(_addressBarMargin, 0);
 		this.Children.Add(_addressBarMargin);
 
@@ -88,31 +90,19 @@ public partial class EditorHost : Grid
 		this.Unloaded += OnUnloaded;
 
 		_hexContentView.ViewChanged += OnEditorViewChanged;
-		_view.ScrollableHeightChanged += OnScrollableHeightChanged;
+		_view.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 		_verticalScrollBar.ValueChanged += OnScrollBarValueChanged;
 		this.SizeChanged += OnSizeChanged;
 	}
 
-	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-	{
-		_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
-	}
-
-	private void OnScrollBarValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-	{
-		_hexContentView.ScrollTo(e.NewValue);
-		_queue.Enqueue(c => _view.ScrollToAsync(e.NewValue, c));
-	}
-
-	private void OnScrollableHeightChanged(object? sender, HeightChangedEventArgs e)
-	{
-		_verticalScrollBar.Maximum = e.NewHeight;
-	}
-
-	private void OnEditorViewChanged(ScrollView sender, ViewportChangedEventArgs args)
-	{
-		_verticalScrollBar.ViewportSize = args.Height;
-	}
+	private readonly AddressBarMargin _addressBarMargin;
+	private readonly OutliningMargin _outliningMargin;
+	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
+	private readonly HexContentView _hexContentView;
+	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
+	private readonly AsciiContentView _asciiContentView;
+	private readonly ScrollBar _verticalScrollBar;
+	private readonly ViewScroller _viewScroller;
 
 	private readonly WinUIHexView _view;
 	private readonly BackgroundTaskQueue _queue = new(default);
@@ -123,6 +113,42 @@ public partial class EditorHost : Grid
 		RowHeight: 24
 	);
 
+	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+	{
+		_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
+	}
+
+	private void OnScrollerScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
+	{
+		_queue.Enqueue(c => _view.ScrollToAsync(e.VerticalOffset, c));
+	}
+
+	private void OnScrollBarValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+	{
+		// route to view scroller, already on UI thread
+		_viewScroller.ScrollTo(e.NewValue);
+	}
+
+	private void OnScrollerScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
+	{
+		// set scrollbar
+		_verticalScrollBar.Maximum = e.NewHeight;
+	}
+
+	private void OnEditorViewChanged(ScrollView sender, ViewportChangedEventArgs args)
+	{
+		_verticalScrollBar.ViewportSize = args.Height;
+	}
+
+	private void OnModelScrollableHeightChanged(object? sender, HeightChangedEventArgs e)
+	{
+		// route to UI thread
+		DispatcherQueue.TryEnqueue(() =>
+		{
+			_viewScroller.SetScrollableHeight(e.NewHeight);
+		});
+	}
+
 	private void OnLoaded(object sender, RoutedEventArgs e)
 	{
 		DispatcherQueue.TryEnqueue(() =>
@@ -130,14 +156,6 @@ public partial class EditorHost : Grid
 			_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
 		});
 	}
-
-	private readonly AddressBarMargin _addressBarMargin;
-	private readonly OutliningMargin _outliningMargin;
-	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
-	private readonly HexContentView _hexContentView;
-	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
-	private readonly AsciiContentView _asciiContentView;
-	private readonly ScrollBar _verticalScrollBar;
 
 	private void OnUnloaded(object sender, RoutedEventArgs e)
 	{
