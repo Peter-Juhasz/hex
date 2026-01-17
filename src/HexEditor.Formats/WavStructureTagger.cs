@@ -43,7 +43,7 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 		startOffset = 12;
 		byte[] chunkHeaderBytes = new byte[8];
 
-		while (startOffset < span.Span.EndOffset && startOffset < 12 + riffSize)
+		while (startOffset < span.Span.EndOffset && startOffset < 8 + riffSize)
 		{
 			// try read chunk header
 			await snapshot.CopyToAsync(startOffset, chunkHeaderBytes, cancellationToken);
