@@ -90,6 +90,12 @@ public partial class EditorHost : Grid
 		_hexContentView.ViewChanged += OnEditorViewChanged;
 		_view.ScrollableHeightChanged += OnScrollableHeightChanged;
 		_verticalScrollBar.ValueChanged += OnScrollBarValueChanged;
+		this.SizeChanged += OnSizeChanged;
+	}
+
+	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+	{
+		_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
 	}
 
 	private void OnScrollBarValueChanged(object sender, RangeBaseValueChangedEventArgs e)
