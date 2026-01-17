@@ -4,11 +4,8 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
-using Windows.Foundation;
 
 namespace HexEditor.WinUI;
 
@@ -34,10 +31,6 @@ internal class HexContentView : ContentControl
 			CornerRadius = new CornerRadius(0),
 			Padding = new Thickness(0),
 		};
-		_scrollView.ViewChanged += (s, e) =>
-		{
-			RaiseViewChanged();
-		};
 		this.Content = _scrollView;
 
 		_canvas = new Canvas
@@ -62,11 +55,6 @@ internal class HexContentView : ContentControl
 	{
 	}
 
-	internal void RaiseViewChanged()
-	{
-		ViewChanged?.Invoke(_scrollView, new ViewportChangedEventArgs(this.ActualWidth, this.ActualHeight, _scrollView.VerticalOffset));
-	}
-
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 	private readonly ViewScroller _viewScroller;
@@ -75,8 +63,6 @@ internal class HexContentView : ContentControl
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IHexView _view;
 	private readonly VisualTheme _theme;
-
-	public event TypedEventHandler<ScrollView, ViewportChangedEventArgs>? ViewChanged;
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
@@ -104,7 +90,7 @@ internal class HexContentView : ContentControl
 					Width = row.VisualBounds.Width,
 					Tag = row,
 				};
-				Canvas.SetTop(rowCanvas, _canvas.XamlRoot.SnapToPixels(row.VisualBounds.Top));
+				Canvas.SetTop(rowCanvas, Math.Round(row.VisualBounds.Top));
 
 				foreach (var run in row.HexRuns)
 				{
@@ -121,7 +107,7 @@ internal class HexContentView : ContentControl
 						TextAlignment = TextAlignment.Left,
 						Tag = run,
 					};
-					Canvas.SetLeft(hexTextBlock, _canvas.XamlRoot.SnapToPixels(run.LeftPosition));
+					Canvas.SetLeft(hexTextBlock, Math.Round(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);
 				}
 

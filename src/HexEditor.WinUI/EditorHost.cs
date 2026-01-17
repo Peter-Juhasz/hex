@@ -90,7 +90,6 @@ public partial class EditorHost : Grid
 		this.Loaded += OnLoaded;
 		this.Unloaded += OnUnloaded;
 
-		_hexContentView.ViewChanged += OnEditorViewChanged;
 		_view.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 		_verticalScrollBar.ValueChanged += OnScrollBarValueChanged;
 		this.PointerWheelChanged += OnPointerWheelChanged;
@@ -110,7 +109,7 @@ public partial class EditorHost : Grid
 	private readonly BackgroundTaskQueue _queue = new(default);
 
 	private VisualTheme _visualTheme = new(
-		Columns: 16,
+		Columns: 24,
 		FontSize: 16,
 		FontWidth: FontSizeToWidth(16),
 		RowHeight: 24
@@ -119,6 +118,7 @@ public partial class EditorHost : Grid
 
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 	{
+		_viewScroller.ResizeViewport(_hexContentView.ActualHeight);
 		_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
 	}
 
@@ -137,11 +137,6 @@ public partial class EditorHost : Grid
 	{
 		// set scrollbar
 		_verticalScrollBar.Maximum = e.NewHeight;
-	}
-
-	private void OnEditorViewChanged(ScrollView sender, ViewportChangedEventArgs args)
-	{
-		_verticalScrollBar.ViewportSize = args.Height;
 	}
 
 	private void OnModelScrollableHeightChanged(object? sender, HeightChangedEventArgs e)

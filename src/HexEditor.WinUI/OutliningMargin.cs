@@ -2,7 +2,6 @@
 using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;

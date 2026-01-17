@@ -6,7 +6,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
-using Windows.UI;
 
 namespace HexEditor.WinUI;
 
@@ -79,7 +78,7 @@ internal class AsciiContentView : ContentControl
 					Width = row.VisualBounds.Width,
 					Tag = row,
 				};
-				Canvas.SetTop(rowCanvas, _canvas.XamlRoot.SnapToPixels(row.VisualBounds.Top));
+				Canvas.SetTop(rowCanvas, Math.Round(row.VisualBounds.Top));
 
 				foreach (var run in row.AsciiRuns)
 				{
@@ -96,7 +95,7 @@ internal class AsciiContentView : ContentControl
 						TextAlignment = TextAlignment.Left,
 						Tag = run,
 					};
-					Canvas.SetLeft(hexTextBlock, _canvas.XamlRoot.SnapToPixels(run.LeftPosition));
+					Canvas.SetLeft(hexTextBlock, Math.Round(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);
 				}
 

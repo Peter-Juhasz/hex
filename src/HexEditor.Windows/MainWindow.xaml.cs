@@ -18,7 +18,7 @@ public sealed partial class MainWindow : Window
 		SetTitleBar(titleBar);
 		ExtendsContentIntoTitleBar = true;
 
-		this.AppWindow.Resize(new(800, 512));
+		this.AppWindow.Resize(new(840, 512));
 	}
 
 	private EditorHost? _editor;
