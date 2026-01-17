@@ -13,7 +13,7 @@ internal class ViewScroller
 		if (VerticalOffset != verticalOffset)
 		{
 			VerticalOffset = verticalOffset;
-			OffsetChanged?.Invoke(this, new ScrollChangedEventArgs(verticalOffset));
+			OffsetChanged?.Invoke(this, new ScrollChangedEventArgs(Math.Round(verticalOffset)));
 		}
 	}
 

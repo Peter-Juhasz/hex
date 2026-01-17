@@ -11,8 +11,9 @@ namespace HexEditor.WinUI;
 
 internal class AddressBarMargin : ContentControl
 {
-	public AddressBarMargin(IHexView view, ViewScroller viewScroller) : base()
+	public AddressBarMargin(IHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
 	{
+		_theme = theme;
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -33,7 +34,7 @@ internal class AddressBarMargin : ContentControl
 
 		_canvas = new Canvas
 		{
-			MinWidth = 80,
+			MinWidth = _theme.FontWidth * 8 + 8 * 2,
 		};
 		_scrollView.Content = _canvas;
 
@@ -46,8 +47,9 @@ internal class AddressBarMargin : ContentControl
 
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
+	private readonly VisualTheme _theme;
 
-	private readonly double _fontSize = 14;
+
 	private readonly FontFamily _addressBarFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
 	private readonly IHexView _view;
@@ -76,7 +78,7 @@ internal class AddressBarMargin : ContentControl
 				{
 					Text = row.Extent.Span.StartOffset.ToString("X8"),
 					FontFamily = _addressBarFontFamily,
-					FontSize = _fontSize,
+					FontSize = _theme.FontSize,
 					Foreground = _addressBarForegroundBrush,
 					IsTextSelectionEnabled = false,
 					IsHitTestVisible = false,

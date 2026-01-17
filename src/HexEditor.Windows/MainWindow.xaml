@@ -13,7 +13,7 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid x:Name="MainGrid" Loaded="MainGrid_Loaded">
+    <Grid x:Name="MainGrid" UseLayoutRounding="True" Loaded="MainGrid_Loaded">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

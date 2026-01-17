@@ -18,7 +18,7 @@ public partial class EditorHost : Grid
 		this.Background = new SolidColorBrush(Colors.White);
 		this.ColumnDefinitions.Add(new ColumnDefinition()
 		{
-			Width = new GridLength(80, GridUnitType.Pixel),
+			Width = GridLength.Auto
 		});
 		this.ColumnDefinitions.Add(new ColumnDefinition()
 		{
@@ -79,7 +79,7 @@ public partial class EditorHost : Grid
 		Grid.SetColumn(_asciiContentView, 4);
 		this.Children.Add(_asciiContentView);
 
-		_addressBarMargin = new AddressBarMargin(_view, _viewScroller);
+		_addressBarMargin = new AddressBarMargin(_view, _viewScroller, _visualTheme);
 		Grid.SetColumn(_addressBarMargin, 0);
 		this.Children.Add(_addressBarMargin);
 
@@ -109,9 +109,11 @@ public partial class EditorHost : Grid
 
 	private VisualTheme _visualTheme = new(
 		Columns: 16,
-		FontWidth: 8.25,
+		FontSize: 16,
+		FontWidth: FontSizeToWidth(16),
 		RowHeight: 24
 	);
+	private static double FontSizeToWidth(double fontSize) => fontSize * (8.25d / 14d);
 
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 	{

@@ -29,7 +29,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{
-		var visibleRowCount = (int)(ViewportHeight / _visualTheme.RowHeight) + 1;
+		var visibleRowCount = (int)(ViewportHeight / _visualTheme.RowHeight) + 2;
 		var firstVisibleRowIndex = (int)(VerticalOffset / _visualTheme.RowHeight);
 		var firstVisibleOffset = firstVisibleRowIndex * _visualTheme.Columns;
 
@@ -205,6 +205,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 
 public record class VisualTheme(
 	int Columns,
+	double FontSize,
 	double FontWidth,
 	double RowHeight
 );

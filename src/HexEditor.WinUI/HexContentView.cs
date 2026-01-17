@@ -67,7 +67,6 @@ internal class HexContentView : ContentControl
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 
-	private readonly double _fontSize = 14;
 	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IHexView _view;
@@ -109,7 +108,7 @@ internal class HexContentView : ContentControl
 					{
 						Text = run.Text,
 						FontFamily = _editorFontFamily,
-						FontSize = _fontSize,
+						FontSize = _theme.FontSize,
 						Foreground = _editorForegroundBrush,
 						IsTextSelectionEnabled = false,
 						IsHitTestVisible = false,

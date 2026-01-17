@@ -73,6 +73,7 @@ internal class OutliningMargin : ContentControl
 			Width = _width,
 			Height = height,
 			Tag = span,
+			IsHitTestVisible = true,
 		};
 		Canvas.SetTop(canvas, startRowTop);
 		Canvas.SetLeft(canvas, 0);

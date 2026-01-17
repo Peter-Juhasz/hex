@@ -14,6 +14,7 @@ internal class AsciiContentView : ContentControl
 {
 	public AsciiContentView(IHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
 	{
+		_theme = theme;
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -47,10 +48,10 @@ internal class AsciiContentView : ContentControl
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 
-	private readonly double _fontSize = 14;
 	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IHexView _view;
+	private readonly VisualTheme _theme;
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
@@ -86,7 +87,7 @@ internal class AsciiContentView : ContentControl
 					{
 						Text = run.Text,
 						FontFamily = _editorFontFamily,
-						FontSize = _fontSize,
+						FontSize = _theme.FontSize,
 						Foreground = _editorForegroundBrush,
 						IsTextSelectionEnabled = false,
 						IsHitTestVisible = false,
