@@ -13,7 +13,7 @@ using Microsoft.UI.Xaml.Shapes;
 using System;
 using Windows.UI;
 
-namespace HexEditor.WinUI;
+namespace HexEditor.WinUI.Outlining;
 
 internal class OutliningMargin : ContentControl
 {
@@ -64,7 +64,7 @@ internal class OutliningMargin : ContentControl
 	private readonly BackgroundTaskQueue _queue = new(default);
 	private readonly ITagAggregator<StructureTag> tagAggregator = new ParallelTagAggregator<StructureTag>(
 	[
-		new MidiStructureProvider()
+		new MidiStructureTagger()
 	]);
 
 	public event EventHandler<OutliningRegionSelectionRequestedEventArgs>? OutliningRegionSelectionRequested;

@@ -7,7 +7,7 @@ using Microsoft.UI.Xaml.Media;
 using System;
 using Windows.UI;
 
-namespace HexEditor.WinUI;
+namespace HexEditor.WinUI.AddressBar;
 
 internal class AddressBarMargin : ContentControl
 {

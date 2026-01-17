@@ -135,7 +135,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 
 	public Task ResizeWindowAsync(double viewportWidth, double viewportHeight, CancellationToken cancellationToken)
 	{
-		if (ViewportWidth == viewportWidth && ViewportHeight == viewportHeight)
+		if (ViewportHeight == viewportHeight)
 		{
 			return Task.CompletedTask;
 		}

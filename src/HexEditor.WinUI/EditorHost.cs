@@ -1,5 +1,8 @@
 using HexEditor.Model;
 using HexEditor.ViewModel;
+using HexEditor.WinUI.AddressBar;
+using HexEditor.WinUI.ContentView;
+using HexEditor.WinUI.Outlining;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;

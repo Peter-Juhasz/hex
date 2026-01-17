@@ -7,7 +7,7 @@ using System.Text;
 
 namespace HexEditor.Formats;
 
-public sealed class MidiStructureProvider : ITagger<StructureTag>
+public sealed class MidiStructureTagger : ITagger<StructureTag>
 {
 	private static readonly StructureTag MidiHeaderTag = new("MIDI Header Chunk");
 	private static readonly StructureTag MidiTrackTag = new("MIDI Track Chunk");

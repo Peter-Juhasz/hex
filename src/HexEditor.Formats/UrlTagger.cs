@@ -7,7 +7,7 @@ using System.Text;
 
 namespace HexEditor.Formats;
 
-public sealed class UrlClassifier : ITagger<UrlTag>
+public sealed class UrlTagger : ITagger<UrlTag>
 {
 	private static readonly SearchValues<byte> UriCharacters = SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.+_?#%=&/"u8);
 	private static readonly SearchValues<byte> ProtocolLetters = SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"u8);

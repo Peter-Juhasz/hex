@@ -8,11 +8,11 @@ using System;
 using Windows.Foundation;
 using Windows.UI;
 
-namespace HexEditor.WinUI;
+namespace HexEditor.WinUI.Outlining;
 
-internal class HexOutliningHighlightLayer : ContentControl
+internal class AsciiOutliningHighlightLayer : ContentControl
 {
-	public HexOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme, ViewScroller viewScroller) : base()
+	public AsciiOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -34,7 +34,7 @@ internal class HexOutliningHighlightLayer : ContentControl
 
 		_canvas = new Canvas
 		{
-			MinWidth = (theme.Columns * 2) * theme.FontWidth,
+			MinWidth = theme.Columns * theme.FontWidth,
 		};
 		_scrollView.Content = _canvas;
 
@@ -59,8 +59,8 @@ internal class HexOutliningHighlightLayer : ContentControl
 	private void OnOutliningRegionSelectionRequested(object? sender, OutliningRegionSelectionRequestedEventArgs e)
 	{
 		var span = e.Span;
-		var startPoint = _view.MapToVisualHex(span.Span.Start);
-		var endPoint = _view.MapToVisualHex(span.Span.End);
+		var startPoint = _view.MapToVisualAscii(span.Span.Start);
+		var endPoint = _view.MapToVisualAscii(span.Span.End);
 		var startRowTop = startPoint.Y;
 		var endRowTop = endPoint.Y;
 		if (startRowTop == endRowTop)
@@ -71,7 +71,7 @@ internal class HexOutliningHighlightLayer : ContentControl
 		var endRowBottom = endRowTop + _theme.RowHeight;
 		var height = endRowBottom - startRowTop;
 
-		var fullRowWidth = (_theme.Columns * 2) * _theme.FontWidth;
+		var fullRowWidth = _theme.Columns * _theme.FontWidth;
 
 		var polygon = new Path
 		{

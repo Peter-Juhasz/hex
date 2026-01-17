@@ -7,13 +7,12 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
 
-namespace HexEditor.WinUI;
+namespace HexEditor.WinUI.ContentView;
 
-internal class AsciiContentView : ContentControl
+internal class HexContentView : ContentControl
 {
-	public AsciiContentView(IHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
+	public HexContentView(IHexView view, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
-		_theme = theme;
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -25,6 +24,8 @@ internal class AsciiContentView : ContentControl
 			VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
 			HorizontalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
+			HorizontalContentAlignment = HorizontalAlignment.Stretch,
+			VerticalContentAlignment = VerticalAlignment.Top,
 			VerticalAlignment = VerticalAlignment.Stretch,
 			VerticalScrollMode = ScrollingScrollMode.Disabled,
 			CornerRadius = new CornerRadius(0),
@@ -34,18 +35,29 @@ internal class AsciiContentView : ContentControl
 
 		_canvas = new Canvas
 		{
-			MinWidth = theme.Columns * theme.FontWidth,
+			VerticalAlignment = VerticalAlignment.Top,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			MinWidth = (theme.Columns * 2) * theme.FontWidth,
 		};
 		_scrollView.Content = _canvas;
 
 		_view = view;
+		_theme = theme;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
+		_viewScroller = viewScroller;
 		viewScroller.OffsetChanged += OnScrollOffsetChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
+
+		this.Loaded += OnLoaded;
+	}
+
+	private void OnLoaded(object sender, RoutedEventArgs e)
+	{
 	}
 
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
+	private readonly ViewScroller _viewScroller;
 
 	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
@@ -54,7 +66,7 @@ internal class AsciiContentView : ContentControl
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
-		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
 		{
 			// remove old rows
 			foreach (var row in e.RemovedRows)
@@ -80,7 +92,7 @@ internal class AsciiContentView : ContentControl
 				};
 				Canvas.SetTop(rowCanvas, Math.Round(row.VisualBounds.Top));
 
-				foreach (var run in row.AsciiRuns)
+				foreach (var run in row.HexRuns)
 				{
 					var hexTextBlock = new TextBlock()
 					{
@@ -117,4 +129,11 @@ internal class AsciiContentView : ContentControl
 		_canvas.Height = e.NewHeight;
 	}
 	#endregion
+}
+
+public class ViewportChangedEventArgs(double width, double height, double verticalOffset) : EventArgs
+{
+	public double Width { get; } = width;
+	public double Height { get; } = height;
+	public double VerticalOffset { get; } = verticalOffset;
 }
