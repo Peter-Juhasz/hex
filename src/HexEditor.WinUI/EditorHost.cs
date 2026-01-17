@@ -60,8 +60,18 @@ public partial class EditorHost : Grid
 		this.Children.Add(_verticalScrollBar);
 
 		_hexContentView = new HexContentView(_view, _visualTheme);
+		_outliningMargin = new OutliningMargin(_view, _hexContentView, _visualTheme);
+		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
+		Grid.SetColumn(_hexOutliningHighlightLayer, 3);
+		this.Children.Add(_hexOutliningHighlightLayer);
+
+		_hexContentView = new HexContentView(_view, _visualTheme);
 		Grid.SetColumn(_hexContentView, 3);
 		this.Children.Add(_hexContentView);
+
+		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
+		Grid.SetColumn(_asciiOutliningHighlightLayer, 4);
+		this.Children.Add(_asciiOutliningHighlightLayer);
 
 		_asciiContentView = new AsciiContentView(_view, _hexContentView, _visualTheme);
 		Grid.SetColumn(_asciiContentView, 4);
@@ -71,7 +81,6 @@ public partial class EditorHost : Grid
 		Grid.SetColumn(_addressBarMargin, 0);
 		this.Children.Add(_addressBarMargin);
 
-		_outliningMargin = new OutliningMargin(_view, _hexContentView, _visualTheme);
 		Grid.SetColumn(_outliningMargin, 2);
 		this.Children.Add(_outliningMargin);
 
@@ -104,7 +113,7 @@ public partial class EditorHost : Grid
 
 	private VisualTheme _visualTheme = new(
 		Columns: 16,
-		FontWidth: 10,
+		FontWidth: 8.25,
 		RowHeight: 24
 	);
 
@@ -118,7 +127,9 @@ public partial class EditorHost : Grid
 
 	private readonly AddressBarMargin _addressBarMargin;
 	private readonly OutliningMargin _outliningMargin;
+	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
 	private readonly HexContentView _hexContentView;
+	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
 	private readonly ScrollBar _verticalScrollBar;
 

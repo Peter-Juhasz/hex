@@ -6,6 +6,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
@@ -38,7 +39,7 @@ internal class OutliningMargin : ContentControl
 
 		_canvas = new Canvas
 		{
-			Width = 16,
+			Width = _width,
 		};
 		_scrollView.Content = _canvas;
 
@@ -53,12 +54,16 @@ internal class OutliningMargin : ContentControl
 		};
 	}
 
+	private readonly double _width = 12;
 	private readonly VisualTheme _theme;
+
+	public event EventHandler<OutliningRegionSelectionRequestedEventArgs>? OutliningRegionSelectionRequested;
+	public event EventHandler<EventArgs>? OutliningRegionDismissRequested;
 
 	private void AddRegion(StructureSpan span)
 	{
-		var startRowTop = _view.MapToVisual(span.FullExtent.Start).Y;
-		var endRowTop = _view.MapToVisual(span.FullExtent.End).Y;
+		var startRowTop = _view.MapToVisualHex(span.FullExtent.Start).Y;
+		var endRowTop = _view.MapToVisualHex(span.FullExtent.End).Y;
 		if (startRowTop == endRowTop)
 		{
 			return;
@@ -68,6 +73,19 @@ internal class OutliningMargin : ContentControl
 		var endRowBottom = endRowTop + _theme.RowHeight;
 		var height = endRowBottom - startRowTop;
 
+		var canvas = new Canvas()
+		{
+			Width = _width,
+			Height = height,
+			Tag = span,
+		};
+		Canvas.SetTop(canvas, startRowTop);
+		Canvas.SetLeft(canvas, 0);
+		if (span.Label != null)
+		{
+			ToolTipService.SetToolTip(canvas, span.Label);
+		}
+
 		var line = new Path()
 		{
 			Data = new PathGeometry()
@@ -76,44 +94,58 @@ internal class OutliningMargin : ContentControl
 				[
 					new PathFigure()
 					{
-						StartPoint = new(_canvas.XamlRoot.SnapToPixels(16), _canvas.XamlRoot.SnapToPixels(0)),
+						IsFilled = false,
+						IsClosed = false,
+						StartPoint = new(_canvas.XamlRoot.SnapToPixels(_width), _canvas.XamlRoot.SnapToPixels(1)),
 						Segments =
 						[
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(8), _canvas.XamlRoot.SnapToPixels(0)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), _canvas.XamlRoot.SnapToPixels(1)),
 							},
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(8), _canvas.XamlRoot.SnapToPixels(height)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), _canvas.XamlRoot.SnapToPixels(height)),
 							},
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(16), _canvas.XamlRoot.SnapToPixels(height)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(_width), _canvas.XamlRoot.SnapToPixels(height)),
 							},
 						],
 					}
 				],
 			},
+			Width = _width,
+			Height = height,
 			Stroke = _strokeBrush,
 			StrokeThickness = 1,
-			Width = 16,
-			Height = height,
-			Tag = span,
 		};
-		Canvas.SetTop(line, startRowTop);
-		Canvas.SetLeft(line, 0);
-		if (span.Label != null)
-		{
-			ToolTipService.SetToolTip(line, span.Label);
-		}
-		_canvas.Children.Add(line);
+		canvas.Children.Add(line);
+
+		canvas.PointerEntered += OnPointerEntered;
+		canvas.PointerExited += OnPointerExited;
+		_canvas.Children.Add(canvas);
+	}
+
+	private void OnPointerExited(object sender, PointerRoutedEventArgs e)
+	{
+		var line = (Canvas)sender;
+		line.Background = null;
+		OutliningRegionDismissRequested?.Invoke(this, new());
+	}
+
+	private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
+	{
+		var line = (Canvas)sender;
+		line.Background = _pointerOverBrush;
+		OutliningRegionSelectionRequested?.Invoke(this, new OutliningRegionSelectionRequestedEventArgs((StructureSpan)line.Tag));
 	}
 
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 
 	private readonly Brush _strokeBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
+	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
 	private readonly WinUIHexView _view;
 
 	private readonly BackgroundTaskQueue _queue = new(default);
@@ -129,7 +161,7 @@ internal class OutliningMargin : ContentControl
 				for (int i = 0; i < _canvas.Children.Count; i++)
 				{
 					var child = _canvas.Children[i];
-					if (child is Path { Tag: StructureSpan span } path)
+					if (child is Canvas { Tag: StructureSpan span })
 					{
 						bool toRemove = true;
 						foreach (var row in e.RemovedRows)
@@ -145,6 +177,8 @@ internal class OutliningMargin : ContentControl
 						if (toRemove)
 						{
 							_canvas.Children.RemoveAt(i);
+							child.PointerEntered -= OnPointerEntered;
+							child.PointerExited -= OnPointerExited;
 							i--;
 						}
 					}
@@ -167,7 +201,7 @@ internal class OutliningMargin : ContentControl
 						for (int i = 0; i < _canvas.Children.Count; i++)
 						{
 							var child = _canvas.Children[i];
-							if (child is Path { Tag: StructureSpan span } path)
+							if (child is Canvas { Tag: StructureSpan span })
 							{
 								if (span.FullExtent == newStructure.FullExtent && span.Label == newStructure.Label)
 								{
@@ -201,4 +235,9 @@ internal class OutliningMargin : ContentControl
 			_canvas.Height = e.NewHeight;
 		});
 	}
+}
+
+public class OutliningRegionSelectionRequestedEventArgs(StructureSpan span) : EventArgs
+{
+	public StructureSpan Span { get; } = span;
 }

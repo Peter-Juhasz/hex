@@ -160,12 +160,17 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 		return InvalidateAsync(snapshot, cancellationToken);
 	}
 
-	public Point MapToVisual(SnapshotPoint point)
+	public Point MapToVisualHex(SnapshotPoint point)
+	{
+		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _visualTheme.Columns);
+		return new Point(columnIndex * 2 * _visualTheme.FontWidth, rowIndex * _visualTheme.RowHeight);
+	}
+
+	public Point MapToVisualAscii(SnapshotPoint point)
 	{
 		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _visualTheme.Columns);
 		return new Point(columnIndex * _visualTheme.FontWidth, rowIndex * _visualTheme.RowHeight);
 	}
-
 
 	public Task ScrollDownByRowAsync(CancellationToken cancellationToken)
 	{

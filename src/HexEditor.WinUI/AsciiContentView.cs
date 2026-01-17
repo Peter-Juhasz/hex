@@ -94,6 +94,10 @@ internal class AsciiContentView : ContentControl
 						FontSize = _fontSize,
 						Foreground = _editorForegroundBrush,
 						IsTextSelectionEnabled = false,
+						IsHitTestVisible = false,
+						TextWrapping = TextWrapping.NoWrap,
+						TextTrimming = TextTrimming.None,
+						TextAlignment = TextAlignment.Left,
 						Tag = run,
 					};
 					Canvas.SetLeft(hexTextBlock, _canvas.XamlRoot.SnapToPixels(run.LeftPosition));

@@ -83,6 +83,10 @@ internal class AddressBarMargin : ContentControl
 					FontSize = _fontSize,
 					Foreground = _addressBarForegroundBrush,
 					IsTextSelectionEnabled = false,
+					IsHitTestVisible = false,
+					TextWrapping = TextWrapping.NoWrap,
+					TextTrimming = TextTrimming.None,
+					TextAlignment = TextAlignment.Right,
 					Tag = row.Extent.Span.StartOffset,
 				};
 				Canvas.SetLeft(addressTextBlock, _canvas.XamlRoot.SnapToPixels(8));

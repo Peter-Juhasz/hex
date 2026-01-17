@@ -123,9 +123,11 @@ internal class HexContentView : ContentControl
 						FontFamily = _editorFontFamily,
 						FontSize = _fontSize,
 						Foreground = _editorForegroundBrush,
-						VerticalAlignment = VerticalAlignment.Center,
-						Height = _theme.RowHeight,
 						IsTextSelectionEnabled = false,
+						IsHitTestVisible = false,
+						TextWrapping = TextWrapping.NoWrap,
+						TextTrimming = TextTrimming.None,
+						TextAlignment = TextAlignment.Left,
 						Tag = run,
 					};
 					Canvas.SetLeft(hexTextBlock, _canvas.XamlRoot.SnapToPixels(run.LeftPosition));
