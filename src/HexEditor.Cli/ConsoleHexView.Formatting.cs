@@ -1,4 +1,5 @@
 ﻿using HexEditor.Classification;
+using HexEditor.Core.Tagging;
 using HexEditor.Model;
 using System.Collections.Immutable;
 
@@ -92,6 +93,6 @@ internal partial class ConsoleHexView
 		SnapshotSpan Span,
 		ReadOnlyMemory<byte> Data,
 		ImmutableArray<ValueFormattingRule> Rules,
-		ImmutableArray<ClassificationSpan> Classifications
+		ImmutableArray<TagSpan<ClassificationTag>> Classifications
 	);
 }

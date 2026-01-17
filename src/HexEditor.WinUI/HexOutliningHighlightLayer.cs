@@ -59,8 +59,8 @@ internal class HexOutliningHighlightLayer : ContentControl
 	private void OnOutliningRegionSelectionRequested(object? sender, OutliningRegionSelectionRequestedEventArgs e)
 	{
 		var span = e.Span;
-		var startPoint = _view.MapToVisualHex(span.FullExtent.Start);
-		var endPoint = _view.MapToVisualHex(span.FullExtent.End);
+		var startPoint = _view.MapToVisualHex(span.Span.Start);
+		var endPoint = _view.MapToVisualHex(span.Span.End);
 		var startRowTop = startPoint.Y;
 		var endRowTop = endPoint.Y;
 		if (startRowTop == endRowTop)

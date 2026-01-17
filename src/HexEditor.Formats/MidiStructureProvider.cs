@@ -1,4 +1,5 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Tagging;
+using HexEditor.Model;
 using HexEditor.Structure;
 using System.Buffers.Binary;
 using System.Collections.Immutable;
@@ -6,14 +7,17 @@ using System.Text;
 
 namespace HexEditor.Formats;
 
-public sealed class MidiStructureProvider : IStructureProvider
+public sealed class MidiStructureProvider : ITagger<StructureTag>
 {
-	public async ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	private static readonly StructureTag MidiHeaderTag = new("MIDI Header Chunk");
+	private static readonly StructureTag MidiTrackTag = new("MIDI Track Chunk");
+
+	public async Task<ImmutableArray<TagSpan<StructureTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
 		var snapshot = span.Snapshot;
 		long startOffset = 0;
 		byte[] headerBytes = new byte[8];
-		var list = new List<StructureSpan>();
+		var list = new List<TagSpan<StructureTag>>();
 		while (startOffset < span.Span.EndOffset)
 		{
 			// try read chunk header
@@ -29,12 +33,12 @@ public sealed class MidiStructureProvider : IStructureProvider
 			var fullExtent = new LongSpan(startOffset, 8 + length);
 			if (fullExtent.IntersectsWith(span.Span))
 			{
-				list.Add(new StructureSpan(
-					FullExtent: new(snapshot, fullExtent),
-					Label:
-						type == "MThd"u8 ? "MIDI Header Chunk" :
-						type == "MTrk"u8 ? "MIDI Track Chunk" :
-						Encoding.ASCII.GetString(type)
+				list.Add(new TagSpan<StructureTag>(
+					Span: new(snapshot, fullExtent),
+					Tag:
+						type.SequenceEqual("MThd"u8) ? MidiHeaderTag :
+						type.SequenceEqual("MTrk"u8) ? MidiTrackTag :
+						new StructureTag(Encoding.ASCII.GetString(type))
 				));
 			}
 

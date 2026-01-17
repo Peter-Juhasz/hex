@@ -1,21 +1,23 @@
-﻿using HexEditor.Classification;
+﻿using HexEditor.Core.Hyperlinks;
+using HexEditor.Core.Tagging;
 using HexEditor.Model;
 using System.Buffers;
 using System.Collections.Immutable;
+using System.Text;
 
 namespace HexEditor.Formats;
 
-public sealed class UrlClassifier : IClassifier
+public sealed class UrlClassifier : ITagger<UrlTag>
 {
 	private static readonly SearchValues<byte> UriCharacters = SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.+_?#%=&/"u8);
 	private static readonly SearchValues<byte> ProtocolLetters = SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"u8);
 
-	public async ValueTask<ImmutableArray<ClassificationSpan>> GetClassificationsAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	public async Task<ImmutableArray<TagSpan<UrlTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
 		var data = new byte[span.Span.Length];
 		await span.CopyToAsync(data, cancellationToken);
 
-		var builder = new List<ClassificationSpan>();
+		var builder = new List<TagSpan<UrlTag>>(); // TODO: use array builder
 		var dataSpan = data;
 		foreach (var index in dataSpan.IndexesOf("://"u8))
 		{
@@ -43,7 +45,7 @@ public sealed class UrlClassifier : IClassifier
 			var uriLength = firstInvalidIndex == -1 ? after.Length : firstInvalidIndex;
 
 			var uriSpan = span.Slice(protocolStart, index + 3 + uriLength - protocolStart);
-			builder.Add(new(uriSpan, "text.url"));
+			builder.Add(new(uriSpan, new UrlTag(Encoding.UTF8.GetString(dataSpan.AsSpan(protocolStart, uriLength))))); // TODO: cache strings
 		}
 
 		return builder.ToImmutableArray();

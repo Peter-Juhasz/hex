@@ -1,4 +1,6 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Classification;
+using HexEditor.Core.Tagging;
+using HexEditor.Model;
 using System.Collections.Immutable;
 
 namespace HexEditor.ViewModel;
@@ -11,7 +13,7 @@ internal partial class ConsoleHexView : IHexView
         MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.Length);
 		SetThemeCore(Themes.Dark);
 
-		_classificationAggregator = new([]);
+		_classificationAggregator = new EmptyTagger<ClassificationTag>();
     }
 
 	private const double RowHeight = 1d;
@@ -41,6 +43,8 @@ internal partial class ConsoleHexView : IHexView
 
 	public double ScrollableHeight => TotalRowCount * RowHeight;
 
+	private readonly ITagger<ClassificationTag> _classificationAggregator;
+
 	public async Task<IHexViewRow?> TryGetRow(long index, CancellationToken cancellationToken)
 	{
 		// adjust index with grouping
@@ -67,7 +71,7 @@ internal partial class ConsoleHexView : IHexView
 		var data = new byte[length];
 		await snapshotSpan.CopyToAsync(data, cancellationToken);
 
-		var classifications = await _classificationAggregator.ClassifyAsync(snapshotSpan, cancellationToken);
+		var classifications = await _classificationAggregator.GetTagsAsync(snapshotSpan, cancellationToken);
 
 		var formatted = Format(new(
 			Span: snapshotSpan,

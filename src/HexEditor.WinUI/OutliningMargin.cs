@@ -1,4 +1,5 @@
-﻿using HexEditor.Formats;
+﻿using HexEditor.Core.Tagging;
+using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
@@ -54,10 +55,10 @@ internal class OutliningMargin : ContentControl
 	public event EventHandler<OutliningRegionSelectionRequestedEventArgs>? OutliningRegionSelectionRequested;
 	public event EventHandler<EventArgs>? OutliningRegionDismissRequested;
 
-	private void AddRegion(StructureSpan span)
+	private void AddRegion(TagSpan<StructureTag> span)
 	{
-		var startRowTop = _view.MapToVisualHex(span.FullExtent.Start).Y;
-		var endRowTop = _view.MapToVisualHex(span.FullExtent.End).Y;
+		var startRowTop = _view.MapToVisualHex(span.Span.Start).Y;
+		var endRowTop = _view.MapToVisualHex(span.Span.End).Y;
 		if (startRowTop == endRowTop)
 		{
 			return;
@@ -76,9 +77,9 @@ internal class OutliningMargin : ContentControl
 		};
 		Canvas.SetTop(canvas, startRowTop);
 		Canvas.SetLeft(canvas, 0);
-		if (span.Label != null)
+		if (span.Tag.Label != null)
 		{
-			ToolTipService.SetToolTip(canvas, span.Label);
+			ToolTipService.SetToolTip(canvas, span.Tag.Label);
 		}
 
 		var line = new Path()
@@ -133,7 +134,7 @@ internal class OutliningMargin : ContentControl
 	{
 		var line = (Canvas)sender;
 		line.Background = _pointerOverBrush;
-		OutliningRegionSelectionRequested?.Invoke(this, new OutliningRegionSelectionRequestedEventArgs((StructureSpan)line.Tag));
+		OutliningRegionSelectionRequested?.Invoke(this, new OutliningRegionSelectionRequestedEventArgs((TagSpan<StructureTag>)line.Tag));
 	}
 
 	private readonly ScrollView _scrollView;
@@ -144,7 +145,7 @@ internal class OutliningMargin : ContentControl
 	private readonly WinUIHexView _view;
 
 	private readonly BackgroundTaskQueue _queue = new(default);
-	private readonly IStructureProvider structureProvider = new MidiStructureProvider();
+	private readonly ITagger<StructureTag> structureProvider = new MidiStructureProvider();
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
@@ -156,13 +157,13 @@ internal class OutliningMargin : ContentControl
 				for (int i = 0; i < _canvas.Children.Count; i++)
 				{
 					var child = _canvas.Children[i];
-					if (child is Canvas { Tag: StructureSpan span })
+					if (child is Canvas { Tag: TagSpan<StructureTag> span })
 					{
 						bool toRemove = true;
 						foreach (var row in e.RemovedRows)
 						{
-							if (span.FullExtent.Snapshot == row.Extent.Snapshot &&
-								span.FullExtent.Span.IntersectsWith(row.Extent.Span)
+							if (span.Span.Snapshot == row.Extent.Snapshot &&
+								span.Span.Span.IntersectsWith(row.Extent.Span)
 							)
 							{
 								toRemove = false;
@@ -188,7 +189,7 @@ internal class OutliningMargin : ContentControl
 				try
 				{
 					// get structure
-					var structures = await structureProvider.GetStructureSpansAsync(newSpan, c);
+					var structures = await structureProvider.GetTagsAsync(newSpan, c);
 					foreach (var newStructure in structures)
 					{
 						// check if we already have this region
@@ -196,9 +197,9 @@ internal class OutliningMargin : ContentControl
 						for (int i = 0; i < _canvas.Children.Count; i++)
 						{
 							var child = _canvas.Children[i];
-							if (child is Canvas { Tag: StructureSpan span })
+							if (child is Canvas { Tag: TagSpan<StructureTag> span })
 							{
-								if (span.FullExtent == newStructure.FullExtent && span.Label == newStructure.Label)
+								if (span.Span == newStructure.Span && span.Tag == newStructure.Tag)
 								{
 									exists = true;
 									break;
@@ -238,7 +239,7 @@ internal class OutliningMargin : ContentControl
 	#endregion
 }
 
-public class OutliningRegionSelectionRequestedEventArgs(StructureSpan span) : EventArgs
+public class OutliningRegionSelectionRequestedEventArgs(TagSpan<StructureTag> span) : EventArgs
 {
-	public StructureSpan Span { get; } = span;
+	public TagSpan<StructureTag> Span { get; } = span;
 }
