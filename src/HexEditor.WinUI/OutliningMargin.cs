@@ -12,7 +12,7 @@ namespace HexEditor.WinUI;
 
 internal class OutliningMargin : ContentControl
 {
-	public OutliningMargin(IHexView view, ScrollView editorScrollView) : base()
+	public OutliningMargin(IHexView view, HexContentView editorScrollView) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -34,7 +34,7 @@ internal class OutliningMargin : ContentControl
 
 		_canvas = new Canvas
 		{
-			MinWidth = 80,
+			MinWidth = 8,
 		};
 		_scrollView.Content = _canvas;
 
@@ -42,10 +42,10 @@ internal class OutliningMargin : ContentControl
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		_view.ScrollableHeightChanged += OnViewHeightChanged;
 
-		var scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
+		var scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled, ScrollingSnapPointsMode.Ignore);
 		editorScrollView.ViewChanged += (s, e) =>
 		{
-			_scrollView.ScrollTo(0, editorScrollView.VerticalOffset, scrollOptions);
+			_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 		};
 		AddRegion(24, 120);
 	}
