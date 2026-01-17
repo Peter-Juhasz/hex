@@ -13,7 +13,7 @@ internal partial class ConsoleHexView : IHexView
         MinimumAddressLength = CalculateRequiredAddressLengthInCharacters(viewBuffer.Length);
 		SetThemeCore(Themes.Dark);
 
-		_classificationAggregator = new EmptyTagger<ClassificationTag>();
+		_classificationAggregator = new EmptyTagAggregator<ClassificationTag>();
     }
 
 	private const double RowHeight = 1d;
@@ -43,7 +43,7 @@ internal partial class ConsoleHexView : IHexView
 
 	public double ScrollableHeight => TotalRowCount * RowHeight;
 
-	private readonly ITagger<ClassificationTag> _classificationAggregator;
+	private readonly ITagAggregator<ClassificationTag> _classificationAggregator;
 
 	public async Task<IHexViewRow?> TryGetRow(long index, CancellationToken cancellationToken)
 	{

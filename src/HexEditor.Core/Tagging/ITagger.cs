@@ -3,12 +3,12 @@ using System.Collections.Immutable;
 
 namespace HexEditor.Core.Tagging;
 
-public interface ITagger<T> where T : ITag
+public interface ITagger<TTag> where TTag : ITag
 {
-	Task<ImmutableArray<TagSpan<T>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken);
+	Task<ImmutableArray<TagSpan<TTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken);
 }
 
-public class EmptyTagger<T> : ITagger<T> where T : ITag
+public class EmptyTagger<TTag> : ITagger<TTag> where TTag : ITag
 {
-	public Task<ImmutableArray<TagSpan<T>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken) => Task.FromResult(ImmutableArray<TagSpan<T>>.Empty);
+	public Task<ImmutableArray<TagSpan<TTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken) => Task.FromResult(ImmutableArray<TagSpan<TTag>>.Empty);
 }

@@ -62,7 +62,10 @@ internal class OutliningMargin : ContentControl
 	private readonly WinUIHexView _view;
 
 	private readonly BackgroundTaskQueue _queue = new(default);
-	private readonly ITagger<StructureTag> structureProvider = new MidiStructureProvider();
+	private readonly ITagAggregator<StructureTag> tagAggregator = new ParallelTagAggregator<StructureTag>(
+	[
+		new MidiStructureProvider()
+	]);
 
 	public event EventHandler<OutliningRegionSelectionRequestedEventArgs>? OutliningRegionSelectionRequested;
 	public event EventHandler<EventArgs>? OutliningRegionDismissRequested;
@@ -192,7 +195,7 @@ internal class OutliningMargin : ContentControl
 				try
 				{
 					// get structure
-					var structures = await structureProvider.GetTagsAsync(newSpan, c);
+					var structures = await tagAggregator.GetTagsAsync(newSpan, c);
 					foreach (var newStructure in structures)
 					{
 						// check if we already have this region
