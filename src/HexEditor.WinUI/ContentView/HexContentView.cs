@@ -59,7 +59,6 @@ internal sealed class HexContentView : ContentControl
 	private readonly Canvas _canvas;
 	private readonly ViewScroller _viewScroller;
 
-	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IHexView _view;
 	private readonly VisualTheme _theme;
@@ -97,7 +96,7 @@ internal sealed class HexContentView : ContentControl
 					var hexTextBlock = new TextBlock()
 					{
 						Text = run.Text,
-						FontFamily = _editorFontFamily,
+						FontFamily = _theme.FontFamily,
 						FontSize = _theme.FontSize,
 						Foreground = _editorForegroundBrush,
 						IsTextSelectionEnabled = false,
@@ -129,11 +128,4 @@ internal sealed class HexContentView : ContentControl
 		_canvas.Height = e.NewHeight;
 	}
 	#endregion
-}
-
-public class ViewportChangedEventArgs(double width, double height, double verticalOffset) : EventArgs
-{
-	public double Width { get; } = width;
-	public double Height { get; } = height;
-	public double VerticalOffset { get; } = verticalOffset;
 }

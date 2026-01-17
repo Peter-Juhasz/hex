@@ -50,7 +50,6 @@ internal sealed class AddressBarMargin : ContentControl
 	private readonly VisualTheme _theme;
 
 
-	private readonly FontFamily _addressBarFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
 	private readonly IHexView _view;
 
@@ -77,7 +76,7 @@ internal sealed class AddressBarMargin : ContentControl
 				var addressTextBlock = new TextBlock()
 				{
 					Text = row.Extent.Span.StartOffset.ToString("X8"),
-					FontFamily = _addressBarFontFamily,
+					FontFamily = _theme.FontFamily,
 					FontSize = _theme.FontSize,
 					Foreground = _addressBarForegroundBrush,
 					IsTextSelectionEnabled = false,

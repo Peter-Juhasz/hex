@@ -47,7 +47,6 @@ internal sealed class AsciiContentView : ContentControl
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 
-	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IHexView _view;
 	private readonly VisualTheme _theme;
@@ -85,7 +84,7 @@ internal sealed class AsciiContentView : ContentControl
 					var hexTextBlock = new TextBlock()
 					{
 						Text = run.Text,
-						FontFamily = _editorFontFamily,
+						FontFamily = _theme.FontFamily,
 						FontSize = _theme.FontSize,
 						Foreground = _editorForegroundBrush,
 						IsTextSelectionEnabled = false,

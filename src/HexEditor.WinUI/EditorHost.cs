@@ -113,6 +113,7 @@ public partial class EditorHost : Grid
 
 	private VisualTheme _visualTheme = new(
 		Columns: 24,
+		FontFamily: new FontFamily("Cascadia Mono"),
 		FontSize: 16,
 		FontWidth: FontSizeToWidth(16),
 		RowHeight: 24

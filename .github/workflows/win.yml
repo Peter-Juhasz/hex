@@ -1,0 +1,77 @@
+﻿name: CLI
+
+env:
+  PROJECT_NAME: 'HexEditor.Windows'
+  DOTNET_VERSION: '10'
+  BUILD_CONFIGURATION: 'Release'
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    paths:
+      - .github/workflows/win.yml
+      - src/HexEditor.Windows/**
+      - src/HexEditor.WinUI/**
+      - src/HexEditor.Core/**
+  pull_request:
+    branches: [ "main", "master" ]
+    paths:
+      - .github/workflows/win.yml
+      - src/HexEditor.Windows/**
+      - src/HexEditor.WinUI/**
+      - src/HexEditor.Core/**
+    
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}.x
+        dotnet-quality: ga
+    - name: Clear packages cache
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet nuget locals all --clear
+    - name: Restore dependencies
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet restore --runtime ${{ matrix.rid }} --verbosity normal
+    - name: Audit Vulnerable
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet list package --vulnerable --include-transitive
+    - name: Audit Deprecated
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet list package --deprecated --include-transitive
+    - name: Build
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet build --no-restore --runtime ${{ matrix.rid }} -c ${{ env.BUILD_CONFIGURATION }} /property:WarningLevel=0
+    # - name: Test
+    #   working-directory: ./src/${{ env.PROJECT_NAME }}
+    #   run: dotnet test --no-build --verbosity normal -c ${{ env.BUILD_CONFIGURATION }}
+    - name: Publish
+      working-directory: ./src/${{ env.PROJECT_NAME }}
+      run: dotnet publish --runtime ${{ matrix.rid }} -c ${{ env.BUILD_CONFIGURATION }} --verbosity normal --version-suffix "preview.${{ github.run_number }}" /property:WarningLevel=0 -p:DebugType=None -p:DebugSymbols=false
+    
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ matrix.rid }}
+        path: ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/${{ matrix.rid }}/publish/
+        if-no-files-found: error
+        include-hidden-files: true
+    - name: Attest
+      uses: actions/attest-build-provenance@v3
+      with:
+        subject-path: |
+          ./src/${{ env.PROJECT_NAME }}/bin/${{ env.BUILD_CONFIGURATION }}/net${{ env.DOTNET_VERSION }}.0/${{ matrix.rid }}/publish/**

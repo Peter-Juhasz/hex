@@ -1,5 +1,6 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
+using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Immutable;
 using System.Threading;
@@ -205,6 +206,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 
 public record class VisualTheme(
 	int Columns,
+	FontFamily FontFamily,
 	double FontSize,
 	double FontWidth,
 	double RowHeight
