@@ -3,6 +3,7 @@ using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
+using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -52,6 +53,17 @@ internal class OutliningMargin : ContentControl
 	private readonly double _width = 12;
 	private readonly VisualTheme _theme;
 
+	private readonly ScrollView _scrollView;
+	private readonly Canvas _canvas;
+
+	private readonly Brush _strokeBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
+	private readonly Brush _transparentBrush = new SolidColorBrush(Colors.Transparent);
+	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
+	private readonly WinUIHexView _view;
+
+	private readonly BackgroundTaskQueue _queue = new(default);
+	private readonly ITagger<StructureTag> structureProvider = new MidiStructureProvider();
+
 	public event EventHandler<OutliningRegionSelectionRequestedEventArgs>? OutliningRegionSelectionRequested;
 	public event EventHandler<EventArgs>? OutliningRegionDismissRequested;
 
@@ -73,6 +85,7 @@ internal class OutliningMargin : ContentControl
 			Width = _width,
 			Height = height,
 			Tag = span,
+			Background = _transparentBrush,
 			IsHitTestVisible = true,
 		};
 		Canvas.SetTop(canvas, startRowTop);
@@ -126,7 +139,7 @@ internal class OutliningMargin : ContentControl
 	private void OnPointerExited(object sender, PointerRoutedEventArgs e)
 	{
 		var line = (Canvas)sender;
-		line.Background = null;
+		line.Background = _transparentBrush;
 		OutliningRegionDismissRequested?.Invoke(this, new());
 	}
 
@@ -136,16 +149,6 @@ internal class OutliningMargin : ContentControl
 		line.Background = _pointerOverBrush;
 		OutliningRegionSelectionRequested?.Invoke(this, new OutliningRegionSelectionRequestedEventArgs((TagSpan<StructureTag>)line.Tag));
 	}
-
-	private readonly ScrollView _scrollView;
-	private readonly Canvas _canvas;
-
-	private readonly Brush _strokeBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
-	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
-	private readonly WinUIHexView _view;
-
-	private readonly BackgroundTaskQueue _queue = new(default);
-	private readonly ITagger<StructureTag> structureProvider = new MidiStructureProvider();
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
