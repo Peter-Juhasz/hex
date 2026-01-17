@@ -24,16 +24,46 @@
 
         <MenuBar Grid.Row="1">
             <MenuBarItem Title="File">
-                <MenuFlyoutItem Text="New" AccessKey="N" />
+                <MenuFlyoutItem Text="New" AccessKey="N">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="N" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
                 <MenuFlyoutItem Text="Open...">
                     <MenuFlyoutItem.Command>
                         <XamlUICommand x:Name="OpenCommand" AccessKey="O" ExecuteRequested="OpenCommand_ExecuteRequested" />
                     </MenuFlyoutItem.Command>
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="O" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Save" AccessKey="S" />
+                <MenuFlyoutItem Text="Save" AccessKey="S">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="S" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+            <MenuBarItem Title="Edit">
+                <MenuFlyoutItem Text="Copy" AccessKey="C" IsEnabled="False">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="C" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Cut" AccessKey="X" IsEnabled="False">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="X" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Paste" AccessKey="V" IsEnabled="False">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="V" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+            <MenuBarItem Title="Help">
+                <MenuFlyoutItem Text="About">
+                </MenuFlyoutItem>
             </MenuBarItem>
         </MenuBar>
-
-        
     </Grid>
 </Window>
