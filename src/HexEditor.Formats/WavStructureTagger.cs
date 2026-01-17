@@ -54,7 +54,7 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 
 		// Parse sub-chunks starting after "WAVE" identifier
 		startOffset = 12; // Skip RIFF header (8 bytes) + WAVE identifier (4 bytes)
-		while (startOffset < span.Span.EndOffset && startOffset < riffExtent.EndOffset && startOffset <= snapshot.Length - 8)
+		while (startOffset < span.Span.EndOffset && startOffset < riffExtent.EndOffset && snapshot.Length >= 8 && startOffset <= snapshot.Length - 8)
 		{
 			// try read chunk header
 			await snapshot.CopyToAsync(startOffset, headerBytes, cancellationToken);
@@ -85,20 +85,11 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 			}
 
 			// advance (align to even byte boundary as per RIFF spec)
-			long nextOffset = startOffset + fullExtent.Length;
-			if (nextOffset < startOffset) // Overflow check
-			{
-				break;
-			}
+			startOffset += fullExtent.Length;
 			if (length % 2 == 1)
 			{
-				if (nextOffset == long.MaxValue) // Check overflow before increment
-				{
-					break;
-				}
-				nextOffset++;
+				startOffset++;
 			}
-			startOffset = nextOffset;
 		}
 
 		return list.ToImmutableArray();
