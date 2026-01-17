@@ -94,6 +94,15 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 
 		type = bytes[..4];
 		length = BinaryPrimitives.ReadInt32LittleEndian(bytes[4..8]);
+		
+		// Validate length is non-negative
+		if (length < 0)
+		{
+			type = default;
+			length = 0;
+			return false;
+		}
+		
 		return true;
 	}
 }
