@@ -9,7 +9,7 @@ using Windows.UI;
 
 namespace HexEditor.WinUI.AddressBar;
 
-internal class AddressBarMargin : ContentControl
+internal sealed class AddressBarMargin : ContentControl
 {
 	public AddressBarMargin(IHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
 	{

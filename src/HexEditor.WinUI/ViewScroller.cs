@@ -2,7 +2,7 @@
 
 namespace HexEditor.WinUI;
 
-internal class ViewScroller
+internal sealed class ViewScroller
 {
 	public event EventHandler<ScrollChangedEventArgs>? OffsetChanged;
 

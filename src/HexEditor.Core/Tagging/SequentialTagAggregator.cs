@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace HexEditor.Core.Tagging;
 
-public class SequentialTagAggregator<TTag>(
+public sealed class SequentialTagAggregator<TTag>(
 	ImmutableArray<ITagger<TTag>> taggers
 ) 
 	: ITagAggregator<TTag> where TTag : ITag

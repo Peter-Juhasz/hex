@@ -9,7 +9,7 @@ using System;
 
 namespace HexEditor.WinUI.ContentView;
 
-internal class AsciiContentView : ContentControl
+internal sealed class AsciiContentView : ContentControl
 {
 	public AsciiContentView(IHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
 	{

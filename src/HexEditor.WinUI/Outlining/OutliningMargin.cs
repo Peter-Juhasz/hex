@@ -15,7 +15,7 @@ using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
-internal class OutliningMargin : ContentControl
+internal sealed class OutliningMargin : ContentControl
 {
 	public OutliningMargin(WinUIHexView view, ViewScroller viewScroller, VisualTheme visualTheme) : base()
 	{
@@ -62,10 +62,10 @@ internal class OutliningMargin : ContentControl
 	private readonly WinUIHexView _view;
 
 	private readonly BackgroundTaskQueue _queue = new(default);
-	private readonly ITagAggregator<StructureTag> tagAggregator = new ParallelTagAggregator<StructureTag>(
+	private readonly ITagAggregator<StructureTag> tagAggregator = new FullCachingTagAggregator<StructureTag>(new ParallelTagAggregator<StructureTag>(
 	[
 		new MidiStructureTagger()
-	]);
+	]));
 
 	public event EventHandler<OutliningRegionSelectionRequestedEventArgs>? OutliningRegionSelectionRequested;
 	public event EventHandler<EventArgs>? OutliningRegionDismissRequested;

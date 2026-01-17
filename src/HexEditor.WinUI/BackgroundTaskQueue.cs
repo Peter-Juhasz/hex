@@ -6,7 +6,7 @@ using Windows.UI.Popups;
 
 namespace HexEditor.WinUI;
 
-internal class BackgroundTaskQueue
+internal sealed class BackgroundTaskQueue
 {
 	public BackgroundTaskQueue(CancellationToken cancellationToken)
 	{

@@ -10,7 +10,7 @@ using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
-internal class HexOutliningHighlightLayer : ContentControl
+internal sealed class HexOutliningHighlightLayer : ContentControl
 {
 	public HexOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
