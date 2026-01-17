@@ -13,7 +13,7 @@ namespace HexEditor.WinUI;
 
 internal class HexContentView : ContentControl
 {
-	public HexContentView(IHexView view) : base()
+	public HexContentView(IHexView view, VisualTheme theme) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -43,10 +43,12 @@ internal class HexContentView : ContentControl
 		{
 			VerticalAlignment = VerticalAlignment.Top,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
+			MinWidth = (theme.Columns * 2) * theme.FontWidth,
 		};
 		_scrollView.Content = _canvas;
 
 		_view = view;
+		_theme = theme;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		_view.ScrollableHeightChanged += OnViewHeightChanged;
 
@@ -76,6 +78,7 @@ internal class HexContentView : ContentControl
 	private readonly FontFamily _editorFontFamily = new FontFamily("Cascadia Mono");
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IHexView _view;
+	private readonly VisualTheme _theme;
 
 	public event TypedEventHandler<ScrollView, ViewportChangedEventArgs>? ViewChanged;
 
@@ -86,7 +89,7 @@ internal class HexContentView : ContentControl
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
-		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
 		{
 			// remove old rows
 			foreach (var row in e.RemovedRows)
@@ -110,7 +113,7 @@ internal class HexContentView : ContentControl
 					Width = row.VisualBounds.Width,
 					Tag = row,
 				};
-				Canvas.SetTop(rowCanvas, row.VisualBounds.Top);
+				Canvas.SetTop(rowCanvas, _canvas.XamlRoot.SnapToPixels(row.VisualBounds.Top));
 
 				foreach (var run in row.HexRuns)
 				{
@@ -120,9 +123,12 @@ internal class HexContentView : ContentControl
 						FontFamily = _editorFontFamily,
 						FontSize = _fontSize,
 						Foreground = _editorForegroundBrush,
+						VerticalAlignment = VerticalAlignment.Center,
+						Height = _theme.RowHeight,
+						IsTextSelectionEnabled = false,
 						Tag = run,
 					};
-					Canvas.SetLeft(hexTextBlock, run.LeftPosition);
+					Canvas.SetLeft(hexTextBlock, _canvas.XamlRoot.SnapToPixels(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);
 				}
 

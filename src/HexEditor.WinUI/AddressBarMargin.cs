@@ -82,10 +82,11 @@ internal class AddressBarMargin : ContentControl
 					FontFamily = _addressBarFontFamily,
 					FontSize = _fontSize,
 					Foreground = _addressBarForegroundBrush,
+					IsTextSelectionEnabled = false,
 					Tag = row.Extent.Span.StartOffset,
 				};
-				Canvas.SetLeft(addressTextBlock, 8);
-				Canvas.SetTop(addressTextBlock, row.VisualBounds.Top);
+				Canvas.SetLeft(addressTextBlock, _canvas.XamlRoot.SnapToPixels(8));
+				Canvas.SetTop(addressTextBlock, _canvas.XamlRoot.SnapToPixels(row.VisualBounds.Top));
 				_canvas.Children.Add(addressTextBlock);
 			}
 		});

@@ -12,7 +12,7 @@ namespace HexEditor.WinUI;
 
 internal class AsciiContentView : ContentControl
 {
-	public AsciiContentView(IHexView view, HexContentView editorScrollView) : base()
+	public AsciiContentView(IHexView view, HexContentView editorScrollView, VisualTheme theme) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -34,7 +34,7 @@ internal class AsciiContentView : ContentControl
 
 		_canvas = new Canvas
 		{
-			MinWidth = 80,
+			MinWidth = theme.Columns * theme.FontWidth,
 		};
 		_scrollView.Content = _canvas;
 
@@ -83,7 +83,7 @@ internal class AsciiContentView : ContentControl
 					Width = row.VisualBounds.Width,
 					Tag = row,
 				};
-				Canvas.SetTop(rowCanvas, row.VisualBounds.Top);
+				Canvas.SetTop(rowCanvas, _canvas.XamlRoot.SnapToPixels(row.VisualBounds.Top));
 
 				foreach (var run in row.AsciiRuns)
 				{
@@ -93,9 +93,10 @@ internal class AsciiContentView : ContentControl
 						FontFamily = _editorFontFamily,
 						FontSize = _fontSize,
 						Foreground = _editorForegroundBrush,
+						IsTextSelectionEnabled = false,
 						Tag = run,
 					};
-					Canvas.SetLeft(hexTextBlock, run.LeftPosition);
+					Canvas.SetLeft(hexTextBlock, _canvas.XamlRoot.SnapToPixels(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);
 				}
 

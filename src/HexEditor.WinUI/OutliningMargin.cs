@@ -1,4 +1,7 @@
-﻿using HexEditor.ViewModel;
+﻿using HexEditor.Formats;
+using HexEditor.Model;
+using HexEditor.Structure;
+using HexEditor.ViewModel;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -12,8 +15,9 @@ namespace HexEditor.WinUI;
 
 internal class OutliningMargin : ContentControl
 {
-	public OutliningMargin(IHexView view, HexContentView editorScrollView) : base()
+	public OutliningMargin(WinUIHexView view, HexContentView editorScrollView, VisualTheme visualTheme) : base()
 	{
+		_theme = visualTheme;
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -34,7 +38,7 @@ internal class OutliningMargin : ContentControl
 
 		_canvas = new Canvas
 		{
-			MinWidth = 8,
+			Width = 16,
 		};
 		_scrollView.Content = _canvas;
 
@@ -47,56 +51,147 @@ internal class OutliningMargin : ContentControl
 		{
 			_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 		};
-		AddRegion(24, 120);
 	}
 
-	private void AddRegion(double startOffset, double endOffset)
+	private readonly VisualTheme _theme;
+
+	private void AddRegion(StructureSpan span)
 	{
-		double s = _canvas.XamlRoot?.RasterizationScale ?? 1.0;
-		double SnapCenter(double v) => (Math.Round(v * s) + 0.5) / s;
-		double SnapEdge(double v) => Math.Round(v * s) / s;
+		var startRowTop = _view.MapToVisual(span.FullExtent.Start).Y;
+		var endRowTop = _view.MapToVisual(span.FullExtent.End).Y;
+		if (startRowTop == endRowTop)
+		{
+			return;
+		}
+
+		var startOffset = startRowTop + _theme.RowHeight / 2;
+		var endRowBottom = endRowTop + _theme.RowHeight;
+		var height = endRowBottom - startRowTop;
 
 		var line = new Path()
 		{
 			Data = new PathGeometry()
 			{
-				Figures = [
+				Figures = 
+				[
 					new PathFigure()
 					{
-						StartPoint = new(SnapCenter(8), startOffset),
+						StartPoint = new(_canvas.XamlRoot.SnapToPixels(16), _canvas.XamlRoot.SnapToPixels(0)),
 						Segments =
 						[
 							new LineSegment()
 							{
-								Point = new(SnapCenter(8), SnapCenter(endOffset)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(8), _canvas.XamlRoot.SnapToPixels(0)),
 							},
 							new LineSegment()
 							{
-								Point = new(SnapCenter(16), SnapCenter(endOffset)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(8), _canvas.XamlRoot.SnapToPixels(height)),
+							},
+							new LineSegment()
+							{
+								Point = new(_canvas.XamlRoot.SnapToPixels(16), _canvas.XamlRoot.SnapToPixels(height)),
 							},
 						],
 					}
 				],
 			},
-			Stroke = _addressBarForegroundBrush,
+			Stroke = _strokeBrush,
 			StrokeThickness = 1,
+			Width = 16,
+			Height = height,
+			Tag = span,
 		};
-		Canvas.SetTop(line, 24);
+		Canvas.SetTop(line, startRowTop);
 		Canvas.SetLeft(line, 0);
+		if (span.Label != null)
+		{
+			ToolTipService.SetToolTip(line, span.Label);
+		}
 		_canvas.Children.Add(line);
 	}
 
 	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 
-	private readonly double _fontSize = 14;
-	private readonly FontFamily _addressBarFontFamily = new FontFamily("Cascadia Mono");
-	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
-	private readonly IHexView _view;
+	private readonly Brush _strokeBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
+	private readonly WinUIHexView _view;
 
-	private void OnViewVisibleRowsChanged(object sender, EventArgs e)
+	private readonly BackgroundTaskQueue _queue = new(default);
+	private readonly IStructureProvider structureProvider = new MidiStructureProvider();
+
+	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
-		var visibleRows = _view.VisibleRows;
+		_queue.Enqueue(async c =>
+		{
+			// remove regions that are no longer visible
+			if (!e.RemovedRows.IsEmpty)
+			{
+				for (int i = 0; i < _canvas.Children.Count; i++)
+				{
+					var child = _canvas.Children[i];
+					if (child is Path { Tag: StructureSpan span } path)
+					{
+						bool toRemove = true;
+						foreach (var row in e.RemovedRows)
+						{
+							if (span.FullExtent.Snapshot == row.Extent.Snapshot &&
+								span.FullExtent.Span.IntersectsWith(row.Extent.Span)
+							)
+							{
+								toRemove = false;
+								break;
+							}
+						}
+						if (toRemove)
+						{
+							_canvas.Children.RemoveAt(i);
+							i--;
+						}
+					}
+				}
+			}
+
+			// recompute and add regions for newly visible rows
+			if (!e.AddedRows.IsEmpty)
+			{
+				var newSpan = SnapshotSpan.Create(e.AddedRows[0].Extent.Start, e.AddedRows[^1].Extent.End);
+
+				try
+				{
+					// get structure
+					var structures = await structureProvider.GetStructureSpansAsync(newSpan, c);
+					foreach (var newStructure in structures)
+					{
+						// check if we already have this region
+						var exists = false;
+						for (int i = 0; i < _canvas.Children.Count; i++)
+						{
+							var child = _canvas.Children[i];
+							if (child is Path { Tag: StructureSpan span } path)
+							{
+								if (span.FullExtent == newStructure.FullExtent && span.Label == newStructure.Label)
+								{
+									exists = true;
+									break;
+								}
+							}
+						}
+
+						if (exists)
+						{
+							break;
+						}
+
+						// add region
+						AddRegion(newStructure);
+					}
+				}
+				catch (Exception ex)
+				{
+
+				}
+			}
+		});
 	}
 
 	private void OnViewHeightChanged(object sender, HeightChangedEventArgs e)

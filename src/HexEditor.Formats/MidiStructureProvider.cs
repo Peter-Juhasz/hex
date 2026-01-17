@@ -6,7 +6,7 @@ using System.Text;
 
 namespace HexEditor.Formats;
 
-internal sealed class MidiStructureProvider : IStructureProvider
+public sealed class MidiStructureProvider : IStructureProvider
 {
 	public async ValueTask<ImmutableArray<StructureSpan>> GetStructureSpansAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
@@ -30,7 +30,7 @@ internal sealed class MidiStructureProvider : IStructureProvider
 			if (fullExtent.IntersectsWith(span.Span))
 			{
 				list.Add(new StructureSpan(
-					Span: fullExtent,
+					FullExtent: new(snapshot, fullExtent),
 					Label:
 						type == "MThd"u8 ? "MIDI Header Chunk" :
 						type == "MTrk"u8 ? "MIDI Track Chunk" :

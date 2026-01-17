@@ -7,10 +7,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using System;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using Windows.UI.Popups;
 
 namespace HexEditor.WinUI;
 
@@ -63,11 +59,11 @@ public partial class EditorHost : Grid
 		Grid.SetColumn(_verticalScrollBar, 5);
 		this.Children.Add(_verticalScrollBar);
 
-		_hexContentView = new HexContentView(_view);
+		_hexContentView = new HexContentView(_view, _visualTheme);
 		Grid.SetColumn(_hexContentView, 3);
 		this.Children.Add(_hexContentView);
 
-		_asciiContentView = new AsciiContentView(_view, _hexContentView);
+		_asciiContentView = new AsciiContentView(_view, _hexContentView, _visualTheme);
 		Grid.SetColumn(_asciiContentView, 4);
 		this.Children.Add(_asciiContentView);
 
@@ -75,7 +71,7 @@ public partial class EditorHost : Grid
 		Grid.SetColumn(_addressBarMargin, 0);
 		this.Children.Add(_addressBarMargin);
 
-		_outliningMargin = new OutliningMargin(_view, _hexContentView);
+		_outliningMargin = new OutliningMargin(_view, _hexContentView, _visualTheme);
 		Grid.SetColumn(_outliningMargin, 2);
 		this.Children.Add(_outliningMargin);
 
@@ -85,15 +81,12 @@ public partial class EditorHost : Grid
 		_hexContentView.ViewChanged += OnEditorViewChanged;
 		_view.ScrollableHeightChanged += OnScrollableHeightChanged;
 		_verticalScrollBar.ValueChanged += OnScrollBarValueChanged;
-
-		_workerThreadQueue = Channel.CreateUnbounded<Task>();
-		_workerThread = Worker(CancellationToken.None);
 	}
 
 	private void OnScrollBarValueChanged(object sender, RangeBaseValueChangedEventArgs e)
 	{
 		_hexContentView.ScrollTo(e.NewValue);
-		EnqueueWorkerTask(c => _view.ScrollToAsync(e.NewValue, c));
+		_queue.Enqueue(c => _view.ScrollToAsync(e.NewValue, c));
 	}
 
 	private void OnScrollableHeightChanged(object? sender, HeightChangedEventArgs e)
@@ -107,12 +100,11 @@ public partial class EditorHost : Grid
 	}
 
 	private readonly WinUIHexView _view;
-	private readonly Channel<Task> _workerThreadQueue;
-	private readonly Task _workerThread;
+	private readonly BackgroundTaskQueue _queue = new(default);
 
 	private VisualTheme _visualTheme = new(
 		Columns: 16,
-		FontWidth: 8,
+		FontWidth: 10,
 		RowHeight: 24
 	);
 
@@ -120,7 +112,7 @@ public partial class EditorHost : Grid
 	{
 		DispatcherQueue.TryEnqueue(() =>
 		{
-			EnqueueWorkerTask(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
+			_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
 		});
 	}
 
@@ -130,28 +122,25 @@ public partial class EditorHost : Grid
 	private readonly AsciiContentView _asciiContentView;
 	private readonly ScrollBar _verticalScrollBar;
 
-	private async Task Worker(CancellationToken cancellationToken)
-	{
-		await foreach (var task in _workerThreadQueue.Reader.ReadAllAsync(cancellationToken))
-		{
-			try
-			{
-				await task;
-			}
-			catch (Exception ex)
-			{
-				await new MessageDialog(ex.Message).ShowAsync();
-			}
-		}
-	}
-
-	private void EnqueueWorkerTask(Func<CancellationToken, Task> factory)
-	{
-		var task = factory(CancellationToken.None);
-		_workerThreadQueue.Writer.TryWrite(task);
-	}
-
 	private void OnUnloaded(object sender, RoutedEventArgs e)
 	{
+	}
+}
+
+internal static partial class Extensions
+{
+	private static double _rasterizationScale = 0d;
+
+	extension(XamlRoot? root)
+	{
+		public double SnapToPixels(double value)
+		{
+			if (_rasterizationScale == 0d)
+			{
+				_rasterizationScale = root?.RasterizationScale ?? 1.0d;
+			}
+
+			return (Math.Round(value * _rasterizationScale) + 0.5) / _rasterizationScale;
+		}
 	}
 }

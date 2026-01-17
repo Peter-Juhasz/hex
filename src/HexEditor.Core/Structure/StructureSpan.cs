@@ -2,4 +2,4 @@
 
 namespace HexEditor.Structure;
 
-public record class StructureSpan(LongSpan Span, string? Label = null);
+public record class StructureSpan(SnapshotSpan FullExtent, string? Label = null);

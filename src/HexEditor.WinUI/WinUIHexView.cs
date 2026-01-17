@@ -19,7 +19,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 	public double ViewportWidth { get; private set; }
 	public double VerticalOffset { get; private set; }
 
-	public double ScrollableHeight { get; private set; } = 20 * 24;
+	public double ScrollableHeight { get; private set; } = theme.RowHeight;
 
 	public event EventHandler<VisibleRowsChangedEventArgs>? VisibleRowsChanged;
 
@@ -29,7 +29,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{
-		var visibleRowCount = (int)(ViewportHeight / _visualTheme.RowHeight);
+		var visibleRowCount = (int)(ViewportHeight / _visualTheme.RowHeight) + 1;
 		var firstVisibleRowIndex = (int)(VerticalOffset / _visualTheme.RowHeight);
 		var firstVisibleOffset = firstVisibleRowIndex * _visualTheme.Columns;
 
@@ -160,7 +160,12 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 		return InvalidateAsync(snapshot, cancellationToken);
 	}
 
-	public Point MapToScreen(SnapshotPoint point) => throw new NotImplementedException();
+	public Point MapToVisual(SnapshotPoint point)
+	{
+		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _visualTheme.Columns);
+		return new Point(columnIndex * _visualTheme.FontWidth, rowIndex * _visualTheme.RowHeight);
+	}
+
 
 	public Task ScrollDownByRowAsync(CancellationToken cancellationToken)
 	{
