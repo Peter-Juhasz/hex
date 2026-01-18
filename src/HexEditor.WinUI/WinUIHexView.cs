@@ -280,6 +280,14 @@ public class WinUIHexView : IHexView
 		y: point.Y + VerticalOffset
 	);
 
+	public SnapshotSpan GetContainingRow(SnapshotPoint point)
+	{
+		var rowIndex = point.Position / _theme.Columns;
+		var rowStart = rowIndex * _theme.Columns;
+		var rowEnd = Math.Min(rowStart + _theme.Columns, snapshot.Length);
+		return new SnapshotSpan(snapshot, new LongSpan(rowStart, rowEnd - rowStart));
+	}
+
 	public Task ScrollDownByRowAsync(CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();

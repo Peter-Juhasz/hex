@@ -1,8 +1,10 @@
-﻿using HexEditor.ViewModel;
+﻿using HexEditor.Model;
+using HexEditor.ViewModel;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
 using Windows.UI;
@@ -11,7 +13,7 @@ namespace HexEditor.WinUI.AddressBar;
 
 internal sealed class AddressBarMargin : ContentControl
 {
-	public AddressBarMargin(IHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
+	public AddressBarMargin(WinUIHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
 	{
 		_theme = theme;
 		this.Padding = new Thickness(0);
@@ -51,7 +53,7 @@ internal sealed class AddressBarMargin : ContentControl
 
 
 	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
-	private readonly IHexView _view;
+	private readonly WinUIHexView _view;
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
@@ -65,6 +67,7 @@ internal sealed class AddressBarMargin : ContentControl
 						addressTextBlock.Tag is long offset &&
 						offset == row.Extent.Span.StartOffset)
 					{
+						addressTextBlock.PointerPressed -= OnAddressClick;
 						_canvas.Children.RemoveAt(i);
 						break;
 					}
@@ -80,7 +83,7 @@ internal sealed class AddressBarMargin : ContentControl
 					FontSize = _theme.FontSize,
 					Foreground = _addressBarForegroundBrush,
 					IsTextSelectionEnabled = false,
-					IsHitTestVisible = false,
+					IsHitTestVisible = true,
 					TextWrapping = TextWrapping.NoWrap,
 					TextTrimming = TextTrimming.None,
 					TextAlignment = TextAlignment.Right,
@@ -88,9 +91,19 @@ internal sealed class AddressBarMargin : ContentControl
 				};
 				Canvas.SetLeft(addressTextBlock, 8);
 				Canvas.SetTop(addressTextBlock, Math.Round(row.VisualBounds.Top));
+				addressTextBlock.PointerPressed += OnAddressClick;
 				_canvas.Children.Add(addressTextBlock);
 			}
 		});
+	}
+
+	private void OnAddressClick(object sender, PointerRoutedEventArgs e)
+	{
+		var address = (long)((FrameworkElement)sender).Tag;
+		var snapshot = _view.Snapshot;
+		var point = new SnapshotPoint(snapshot, address);
+		var row = _view.GetContainingRow(point);
+		_view.SelectionManager.Select(row);
 	}
 
 	#region Scrolling
