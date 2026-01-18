@@ -173,6 +173,20 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 		return new Point(columnIndex * _visualTheme.FontWidth, rowIndex * _visualTheme.RowHeight);
 	}
 
+	public SnapshotPoint MapFromVisualHex(Point point)
+	{
+		var rowIndex = (int)(point.Y / _visualTheme.RowHeight);
+		var columnIndex = (int)(point.X / (2 * _visualTheme.FontWidth));
+		return new SnapshotPoint(snapshot, rowIndex * _visualTheme.Columns + columnIndex);
+	}
+
+	public SnapshotPoint MapFromVisualAscii(Point point)
+	{
+		var rowIndex = (int)(point.Y / _visualTheme.RowHeight);
+		var columnIndex = (int)(point.X / _visualTheme.FontWidth);
+		return new SnapshotPoint(snapshot, rowIndex * _visualTheme.Columns + columnIndex);
+	}
+
 	public Task ScrollDownByRowAsync(CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();

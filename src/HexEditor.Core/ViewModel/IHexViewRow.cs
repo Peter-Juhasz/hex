@@ -16,19 +16,84 @@ public interface IHexViewRow
 	ImmutableArray<FormattedTextRun> HexRuns { get; }
 
 	ImmutableArray<FormattedTextRun> AsciiRuns { get; }
+
+	int GetRelativePositionFromHex(double xCoordinate)
+	{
+		if (xCoordinate < 0)
+		{
+			return 0;
+		}
+
+		var lastRun = HexRuns[^1];
+		if (xCoordinate > lastRun.LeftPosition + lastRun.RenderedWidth)
+		{
+			return Data.Length;
+		}
+
+		var bytesBefore = 0;
+
+		foreach (var run in HexRuns)
+		{
+			if (xCoordinate >= run.LeftPosition && xCoordinate < run.LeftPosition + run.RenderedWidth)
+			{
+				var runRelativeX = xCoordinate - run.LeftPosition;
+				var byteIndexInRun = (int)(runRelativeX / (run.RenderedWidth / run.Data.Length));
+				bytesBefore += byteIndexInRun;
+				break;
+			}
+
+			bytesBefore += run.Data.Length;
+		}
+
+		return bytesBefore;
+	}
+
+	int GetRelativePositionFromAscii(double xCoordinate)
+	{
+		if (xCoordinate < 0)
+		{
+			return 0;
+		}
+
+		var lastRun = HexRuns[^1];
+		if (xCoordinate > lastRun.LeftPosition + lastRun.RenderedWidth)
+		{
+			return Data.Length;
+		}
+
+		var bytesBefore = 0;
+
+		foreach (var run in AsciiRuns)
+		{
+			if (xCoordinate >= run.LeftPosition && xCoordinate < run.LeftPosition + run.RenderedWidth)
+			{
+				var runRelativeX = xCoordinate - run.LeftPosition;
+				var byteIndexInRun = (int)(runRelativeX / (run.RenderedWidth / run.Data.Length));
+				bytesBefore += byteIndexInRun;
+				break;
+			}
+
+			bytesBefore += run.Data.Length;
+		}
+
+		return bytesBefore;
+	}
 }
 
-public class HexViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedTextRun> hexRuns, ImmutableArray<FormattedTextRun> asciiRuns) : IHexViewRow
+public static partial class Extensions
 {
-	public IHexView View { get; } = view;
+	extension(IHexViewRow row)
+	{
+		public SnapshotPoint GetPositionFromHexView(double xCoordinate)
+		{
+			var relativePosition = row.GetRelativePositionFromHex(xCoordinate);
+			return row.Extent.Start + relativePosition;
+		}
 
-	public SnapshotSpan Extent { get; } = span;
-
-	public ReadOnlySpan<byte> Data => dataView.Span;
-
-	public ViewportBounds VisualBounds { get; } = bounds;
-
-	public ImmutableArray<FormattedTextRun> HexRuns { get; } = hexRuns;
-
-	public ImmutableArray<FormattedTextRun> AsciiRuns { get; } = asciiRuns;
+		public SnapshotPoint GetPositionFromAsciiView(double xCoordinate)
+		{
+			var relativePosition = row.GetRelativePositionFromAscii(xCoordinate);
+			return row.Extent.Start + relativePosition;
+		}
+	}
 }

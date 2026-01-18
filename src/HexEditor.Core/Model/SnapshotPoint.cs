@@ -21,4 +21,25 @@ public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Posit
 
 		return a.Position > b.Position;
 	}
+
+	public static SnapshotPoint operator +(SnapshotPoint point, long offset)
+	{
+		var newPosition = point.Position + offset;
+		if (newPosition < 0 || newPosition > point.Snapshot.Length)
+		{
+			throw new ArgumentOutOfRangeException(nameof(offset), "Resulting position is out of bounds.");
+		}
+
+		return new SnapshotPoint(point.Snapshot, newPosition);
+	}
+
+	public static SnapshotPoint operator -(SnapshotPoint point, long offset)
+	{
+		var newPosition = point.Position - offset;
+		if (newPosition < 0 || newPosition > point.Snapshot.Length)
+		{
+			throw new ArgumentOutOfRangeException(nameof(offset), "Resulting position is out of bounds.");
+		}
+		return new SnapshotPoint(point.Snapshot, newPosition);
+	}
 }
