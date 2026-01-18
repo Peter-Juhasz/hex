@@ -178,11 +178,6 @@ internal sealed class OutliningMargin : ContentControl
 			{
 				DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 				{
-					if (c.IsCancellationRequested)
-					{
-						return;
-					}
-
 					for (int i = 0; i < _canvas.Children.Count; i++)
 					{
 						var child = _canvas.Children[i];
@@ -222,6 +217,11 @@ internal sealed class OutliningMargin : ContentControl
 					var structures = await tagAggregator.GetTagsAsync(newSpan, c).ConfigureAwait(false);
 					DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 					{
+						if (c.IsCancellationRequested)
+						{
+							return;
+						}
+
 						foreach (var newStructure in structures)
 						{
 							// check if we already have this region

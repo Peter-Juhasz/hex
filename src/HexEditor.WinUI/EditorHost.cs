@@ -7,12 +7,15 @@ using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
+using Windows.System;
+using Windows.UI.Core;
 
 namespace HexEditor.WinUI;
 
@@ -100,6 +103,7 @@ public partial class EditorHost : Grid
 		_view.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 		_verticalScrollBar.ValueChanged += OnScrollBarValueChanged;
 		this.PointerWheelChanged += OnPointerWheelChanged;
+		this.PreviewKeyDown += OnKeyDown;
 		this.SizeChanged += OnSizeChanged;
 	}
 
@@ -164,6 +168,42 @@ public partial class EditorHost : Grid
 			var newHeight = this.ActualHeight;
 			_queue.Enqueue(c => _view.ResizeWindowAsync(0, newHeight, c));
 		});
+	}
+
+	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
+	{
+		switch (e.Key)
+		{
+			case VirtualKey.PageUp:
+				_viewScroller.ScrollBy(-_viewScroller.ViewportHeight);
+				e.Handled = true;
+				break;
+
+			case VirtualKey.PageDown:
+				_viewScroller.ScrollBy(_viewScroller.ViewportHeight);
+				e.Handled = true;
+				break;
+
+			case VirtualKey.Home when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+				_viewScroller.ScrollTo(0);
+				e.Handled = true;
+				break;
+
+			case VirtualKey.End when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+				_viewScroller.ScrollTo(_viewScroller.ScrollableHeight - _viewScroller.ViewportHeight);
+				e.Handled = true;
+				break;
+
+			case VirtualKey.Up when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+				_viewScroller.ScrollBy(-_visualTheme.RowHeight);
+				e.Handled = true;
+				break;
+
+			case VirtualKey.Down when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+				_viewScroller.ScrollBy(_visualTheme.RowHeight);
+				e.Handled = true;
+				break;
+		}
 	}
 
 	private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
