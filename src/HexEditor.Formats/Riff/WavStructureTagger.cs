@@ -4,6 +4,7 @@ using HexEditor.Model;
 using HexEditor.Structure;
 using System.Buffers.Binary;
 using System.Collections.Immutable;
+using System.Text;
 
 namespace HexEditor.Formats.Riff;
 
@@ -13,6 +14,7 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 	private static readonly StructureTag WavRiffTag = new("WAV RIFF Chunk");
 	private static readonly StructureTag WavFormatTag = new("WAV Format Chunk");
 	private static readonly StructureTag WavDataTag = new("WAV Data Chunk");
+	private static readonly StructureTag WavFactTag = new("WAV Fact Chunk");
 
 	public async Task<ImmutableArray<TagSpan<StructureTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
@@ -24,46 +26,55 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 
 		long startOffset;
 		byte[] buffer = new byte[8];
-		using var _ = ImmutableArrayBuilderPool<TagSpan<StructureTag>>.GetPooledObject(out var builder);
 
 		// try read RIFF header
 		var riffChunk = await ReadChunkAsync(snapshot.Span, buffer, cancellationToken);
-		if (riffChunk == null || !buffer.SequenceEqual("RIFF"u8))
+		if (riffChunk == null || !buffer.AsSpan(0, 4).SequenceEqual("RIFF"u8))
 		{
 			return [];
 		}
-		builder.Add(new TagSpan<StructureTag>(
-			Span: new(snapshot, new LongSpan(0, 8 + riffChunk.Value.Size)),
-			Tag: WavRiffTag
-		));
+
+		using var _ = ImmutableArrayBuilderPool<TagSpan<StructureTag>>.GetPooledObject(out var builder);
+		var fullExtent = new LongSpan(0, 8 + riffChunk.Value.Size);
+		if (span.Span.IntersectsWith(fullExtent))
+		{
+			builder.Add(new TagSpan<StructureTag>(
+				Span: new(snapshot, fullExtent),
+				Tag: WavRiffTag
+			));
+		}
 		startOffset = 8 + 4;
 
-		// try read format chunk
-		var formatChunk = await ReadChunkAsync(snapshot.Slice(startOffset), buffer, cancellationToken);
-		var fullExtent = new LongSpan(startOffset, 8 + riffChunk.Value.Size);
-		if (formatChunk == null || !buffer.SequenceEqual("fmt "u8) || !span.Span.IntersectsWith(fullExtent))
+		if (span.Span.EndOffset < startOffset )
 		{
 			return builder.ToImmutable();
 		}
 
-		builder.Add(new TagSpan<StructureTag>(
-			Span: new(snapshot, fullExtent),
-			Tag: WavFormatTag
-		));
-		startOffset = fullExtent.EndOffset;
-
-		// try read data chunk
-		var dataChunk = await ReadChunkAsync(snapshot.Slice(startOffset), buffer, cancellationToken);
-		fullExtent = new LongSpan(startOffset, 8 + riffChunk.Value.Size);
-		if (dataChunk == null || !buffer.SequenceEqual("data"u8) || !span.Span.IntersectsWith(fullExtent))
+		// try read chunks
+		while (await ReadChunkAsync(snapshot.Slice(startOffset), buffer, cancellationToken) is Chunk chunk)
 		{
-			return builder.ToImmutable();
+			var chunkId = buffer.AsSpan(0, 4);
+			fullExtent = new LongSpan(startOffset, 8 + chunk.Size);
+			if (span.Span.IntersectsWith(fullExtent))
+			{
+				var tag = chunkId switch
+				{
+					_ when chunkId.SequenceEqual("fmt "u8) => WavFormatTag,
+					_ when chunkId.SequenceEqual("fact"u8) => WavFactTag,
+					_ when chunkId.SequenceEqual("data"u8) => WavDataTag,
+					_ => new StructureTag($"WAV {Encoding.ASCII.GetString(chunkId)} Chunk"),
+				};
+				builder.Add(new TagSpan<StructureTag>(
+					Span: new(snapshot, fullExtent),
+					Tag: tag
+				));
+			}
+			startOffset = fullExtent.EndOffset;
+			if (span.Span.EndOffset < startOffset)
+			{
+				break;
+			}
 		}
-		builder.Add(new TagSpan<StructureTag>(
-			Span: new(snapshot, fullExtent),
-			Tag: WavDataTag
-		));
-		startOffset = fullExtent.EndOffset;
 
 		return builder.ToImmutable();
 	}
