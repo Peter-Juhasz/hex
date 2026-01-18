@@ -3,7 +3,6 @@ using HexEditor.Model;
 using HexEditor.Structure;
 using System.Buffers.Binary;
 using System.Collections.Immutable;
-using System.Text;
 
 namespace HexEditor.Formats;
 
@@ -15,16 +14,30 @@ public sealed class MidiStructureTagger : ITagger<StructureTag>
 	public async Task<ImmutableArray<TagSpan<StructureTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
 		var snapshot = span.Snapshot;
+		if (snapshot.Length < 8)
+		{
+			return [];
+		}
+
 		long startOffset = 0;
-		byte[] headerBytes = new byte[8];
-		var list = new List<TagSpan<StructureTag>>();
+		byte[] buffer = new byte[8];
+		using var _ = ImmutableArrayBuilderPool<TagSpan<StructureTag>>.GetPooledObject(out var builder);
 		while (startOffset < span.Span.EndOffset)
 		{
 			// try read chunk header
-			await snapshot.CopyToAsync(startOffset, headerBytes, cancellationToken);
+			await snapshot.CopyToAsync(startOffset, buffer, cancellationToken);
 
 			// parse
-			if (!TryParseChunkHeader(headerBytes, out var type, out var length))
+			if (!TryParseChunkHeader(buffer, out var type, out var length))
+			{
+				break;
+			}
+
+			var tag = 
+				type.SequenceEqual("MThd"u8) ? MidiHeaderTag :
+				type.SequenceEqual("MTrk"u8) ? MidiTrackTag : 
+				null;
+			if (tag == null)
 			{
 				break;
 			}
@@ -33,31 +46,25 @@ public sealed class MidiStructureTagger : ITagger<StructureTag>
 			var fullExtent = new LongSpan(startOffset, 8 + length);
 			if (fullExtent.IntersectsWith(span.Span))
 			{
-				list.Add(new TagSpan<StructureTag>(
+				builder.Add(new TagSpan<StructureTag>(
 					Span: new(snapshot, fullExtent),
-					Tag:
-						type.SequenceEqual("MThd"u8) ? MidiHeaderTag :
-						type.SequenceEqual("MTrk"u8) ? MidiTrackTag :
-						new StructureTag(Encoding.ASCII.GetString(type))
+					Tag: tag
 				));
+			}
+			else if (span.Span.EndOffset < fullExtent.StartOffset)
+			{
+				break;
 			}
 
 			// advance
 			startOffset += fullExtent.Length;
 		}
 
-		return list.ToImmutableArray();
+		return builder.ToImmutable();
 	}
 
 	private static bool TryParseChunkHeader(ReadOnlySpan<byte> bytes, out ReadOnlySpan<byte> type, out int length)
 	{
-		if (bytes.Length < 8)
-		{
-			type = default;
-			length = 0;
-			return false;
-		}
-
 		type = bytes[..4];
 		length = BinaryPrimitives.ReadInt32BigEndian(bytes[4..8]);
 		return true;
