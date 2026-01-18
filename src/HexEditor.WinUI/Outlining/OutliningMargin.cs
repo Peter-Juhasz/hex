@@ -1,5 +1,4 @@
 ﻿using HexEditor.Core.Tagging;
-using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
@@ -11,13 +10,14 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using System.Collections.Immutable;
 using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
 internal sealed class OutliningMargin : ContentControl
 {
-	public OutliningMargin(WinUIHexView view, ViewScroller viewScroller, VisualTheme visualTheme) : base()
+	public OutliningMargin(WinUIHexView view, ViewScroller viewScroller, VisualTheme visualTheme, ReflectionTaggerProvider taggerProvider, string contentType) : base()
 	{
 		_theme = visualTheme;
 		this.Padding = new Thickness(0);
@@ -25,6 +25,9 @@ internal sealed class OutliningMargin : ContentControl
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+
+		var taggers = taggerProvider.CreateTaggers<StructureTag>(contentType).ToImmutableArray();
+		tagAggregator = new FullCachingTagAggregator<StructureTag>(new ParallelTagAggregator<StructureTag>(taggers));
 
 		_scrollView = new ScrollView
 		{
@@ -62,10 +65,7 @@ internal sealed class OutliningMargin : ContentControl
 	private readonly WinUIHexView _view;
 
 	private readonly BackgroundTaskQueue _queue = new(default);
-	private readonly ITagAggregator<StructureTag> tagAggregator = new FullCachingTagAggregator<StructureTag>(new ParallelTagAggregator<StructureTag>(
-	[
-		new MidiStructureTagger()
-	]));
+	private readonly ITagAggregator<StructureTag> tagAggregator;
 
 	public event EventHandler<OutliningRegionSelectionRequestedEventArgs>? OutliningRegionSelectionRequested;
 	public event EventHandler<EventArgs>? OutliningRegionDismissRequested;

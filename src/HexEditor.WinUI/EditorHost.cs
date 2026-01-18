@@ -1,3 +1,5 @@
+using HexEditor.Core.Tagging;
+using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.ViewModel;
 using HexEditor.WinUI.AddressBar;
@@ -16,7 +18,7 @@ namespace HexEditor.WinUI;
 
 public partial class EditorHost : Grid
 {
-	public EditorHost(IBinarySnapshot snapshot)
+	public EditorHost(IBinarySnapshot snapshot, string contentType)
 	{
 		this.RequestedTheme = ElementTheme.Light;
 		this.Background = new SolidColorBrush(Colors.White);
@@ -50,6 +52,8 @@ public partial class EditorHost : Grid
 			Height = new GridLength(1, GridUnitType.Star),
 		});
 
+		var taggerProvider = new ReflectionTaggerProvider([typeof(UrlTagger).Assembly]);
+
 		_view = new WinUIHexView(snapshot, _visualTheme);
 		_viewScroller = new ViewScroller();
 		_viewScroller.OffsetChanged += OnScrollerScrollOffsetChanged;
@@ -67,7 +71,7 @@ public partial class EditorHost : Grid
 		this.Children.Add(_verticalScrollBar);
 
 		_hexContentView = new HexContentView(_view, _visualTheme, _viewScroller);
-		_outliningMargin = new OutliningMargin(_view, _viewScroller, _visualTheme);
+		_outliningMargin = new OutliningMargin(_view, _viewScroller, _visualTheme, taggerProvider, contentType);
 		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme, _viewScroller);
 		Grid.SetColumn(_hexOutliningHighlightLayer, 3);
 		this.Children.Add(_hexOutliningHighlightLayer);

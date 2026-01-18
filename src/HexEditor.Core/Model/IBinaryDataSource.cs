@@ -11,6 +11,8 @@ public interface IBinaryDataSource : IAsyncDisposable
 
 public record class BinaryDataSourceSnapshot(IBinaryDataSource DataSource) : IBinarySnapshot
 {
+	public IBinaryDataSource Source => DataSource;
+
 	public ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken) =>
 		DataSource.CopyToAsync(offset, destination, cancellationToken);
 

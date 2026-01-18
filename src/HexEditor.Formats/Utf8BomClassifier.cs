@@ -1,10 +1,13 @@
 ﻿using HexEditor.Classification;
+using HexEditor.Core.Model;
 using HexEditor.Core.Tagging;
+using HexEditor.Formats.Text;
 using HexEditor.Model;
 using System.Collections.Immutable;
 
 namespace HexEditor.Formats;
 
+[ContentType(TextContentTypeDefinition.Id)]
 public sealed class Utf8BomClassifier : ITagger<ClassificationTag>
 {
     private static readonly ClassificationTag Tag = new("encoding.utf8.bom");

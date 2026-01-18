@@ -1,11 +1,13 @@
-﻿using HexEditor.Core.Tagging;
+﻿using HexEditor.Core.Model;
+using HexEditor.Core.Tagging;
 using HexEditor.Model;
 using HexEditor.Structure;
 using System.Buffers.Binary;
 using System.Collections.Immutable;
 
-namespace HexEditor.Formats;
+namespace HexEditor.Formats.Midi;
 
+[ContentType(MidiContentTypeDefinition.Id)]
 public sealed class MidiStructureTagger : ITagger<StructureTag>
 {
 	private static readonly StructureTag MidiHeaderTag = new("MIDI Header Chunk");

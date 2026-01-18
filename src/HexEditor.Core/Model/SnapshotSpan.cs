@@ -51,7 +51,11 @@ public static partial class Extensions
 				throw new ArgumentException("Destination buffer is smaller than the span length.", nameof(destination));
 			}
 
-			destination = destination[..(int)span.Span.Length];
+			var spanLength = (int)span.Span.Length;
+			if (destination.Length > spanLength)
+			{
+				destination = destination[..spanLength];
+			}
 
 			return span.Snapshot.CopyToAsync(span.Span.StartOffset, destination, cancellationToken);
 		}

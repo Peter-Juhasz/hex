@@ -1,3 +1,5 @@
+using HexEditor.Core.Model;
+using HexEditor.Formats.Text;
 using HexEditor.Model;
 using HexEditor.WinUI;
 using Microsoft.UI.Xaml;
@@ -6,6 +8,8 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.Windows.Storage.Pickers;
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HexEditor.Windows;
 
@@ -35,20 +39,44 @@ public sealed partial class MainWindow : Window
 				var handle = File.OpenHandle(testFile);
 				var binaryBuffer = await MemoryBinaryBuffer.CreateAsync(new SafeFileHandleBinaryBuffer(handle), default);
 				var snapshot = new BinaryDataSourceSnapshot(binaryBuffer);
-				CreateEditor(snapshot);
+				await CreateEditorAsync(testFile, snapshot);
 				break;
 			}
 		}
 	}
 
-	private void CreateEditor(IBinarySnapshot snapshot)
+	private async Task CreateEditorAsync(string filePath, IBinarySnapshot snapshot)
 	{
 		if (_editor != null)
 		{
 			MainGrid.Children.Remove(_editor);
 		}
 
-		var editorHost = new WinUI.EditorHost(snapshot);
+		// determine content type
+		var contentTypeDefinitionType = typeof(ContentTypeDefinition);
+		var contentTypeDefinitions = typeof(TextContentTypeDefinition).Assembly
+			.GetExportedTypes()
+			.Where(t => !t.IsAbstract && contentTypeDefinitionType.IsAssignableFrom(t));
+		var contentType = "binary";
+		foreach (var contentTypeDefinition in contentTypeDefinitions)
+		{
+			try
+			{
+				var definition = (ContentTypeDefinition)Activator.CreateInstance(contentTypeDefinition)!;
+				if (await definition.MatchesAsync(filePath, snapshot.Source, default))
+				{
+					contentType = definition.Type;
+					break;
+				}
+			}
+			catch (Exception ex) 
+			{ 
+				// TODO: log
+			}
+		}
+
+		// create editor
+		var editorHost = new WinUI.EditorHost(snapshot, contentType);
 		Grid.SetRow(editorHost, 2);
 		MainGrid.Children.Add(editorHost);
 		_editor = editorHost;
@@ -67,6 +95,6 @@ public sealed partial class MainWindow : Window
 		var handle = File.OpenHandle(file.Path);
 		var binaryBuffer = new SafeFileHandleBinaryBuffer(handle);
 		var snapshot = new BinaryDataSourceSnapshot(binaryBuffer);
-		CreateEditor(snapshot);
+		await CreateEditorAsync(file.Path, snapshot);
 	}
 }
