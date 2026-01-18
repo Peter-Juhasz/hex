@@ -5,6 +5,7 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
 using System;
 
 namespace HexEditor.WinUI.ContentView;
@@ -94,6 +95,36 @@ internal sealed class AsciiContentView : ContentControl
 						TextAlignment = TextAlignment.Left,
 						Tag = run,
 					};
+					if (run.Style is WinUITextRunStyle style)
+					{
+						if (style.Background is not null)
+						{
+							var rectangle = new Rectangle()
+							{
+								Width = run.RenderedWidth,
+								Height = _theme.RowHeight,
+								Fill = style.Background,
+							};
+							if (style.Opacity is not null)
+							{
+								rectangle.Opacity = style.Opacity.Value;
+							}
+							Canvas.SetLeft(rectangle, Math.Round(run.LeftPosition));
+							rowCanvas.Children.Add(rectangle);
+						}
+						if (style.Foreground is not null)
+						{
+							hexTextBlock.Foreground = style.Foreground;
+						}
+						if (style.FontWeight is not null)
+						{
+							hexTextBlock.FontWeight = style.FontWeight.Value;
+						}
+						if (style.Opacity is not null)
+						{
+							hexTextBlock.Opacity = style.Opacity.Value;
+						}
+					}
 					Canvas.SetLeft(hexTextBlock, Math.Round(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);
 				}
