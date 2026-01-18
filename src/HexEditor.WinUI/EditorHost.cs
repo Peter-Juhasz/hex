@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
+using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
 
@@ -172,6 +173,8 @@ public partial class EditorHost : Grid
 
 	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
 	{
+		var controlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+
 		switch (e.Key)
 		{
 			case VirtualKey.PageUp:
@@ -184,23 +187,28 @@ public partial class EditorHost : Grid
 				e.Handled = true;
 				break;
 
-			case VirtualKey.Home when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+			case VirtualKey.Home when controlState.HasFlag(CoreVirtualKeyStates.Down):
 				_viewScroller.ScrollTo(0);
 				e.Handled = true;
 				break;
 
-			case VirtualKey.End when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+			case VirtualKey.End when controlState.HasFlag(CoreVirtualKeyStates.Down):
 				_viewScroller.ScrollTo(_viewScroller.ScrollableHeight - _viewScroller.ViewportHeight);
 				e.Handled = true;
 				break;
 
-			case VirtualKey.Up when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+			case VirtualKey.Up when controlState.HasFlag(CoreVirtualKeyStates.Down):
 				_viewScroller.ScrollBy(-_visualTheme.RowHeight);
 				e.Handled = true;
 				break;
 
-			case VirtualKey.Down when InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down):
+			case VirtualKey.Down when controlState.HasFlag(CoreVirtualKeyStates.Down):
 				_viewScroller.ScrollBy(_visualTheme.RowHeight);
+				e.Handled = true;
+				break;
+
+			case VirtualKey.Escape:
+				_view.SelectionManager.Clear();
 				e.Handled = true;
 				break;
 		}
@@ -234,6 +242,28 @@ internal static partial class Extensions
 			}
 
 			return (Math.Round(value * _rasterizationScale) + 0.5) / _rasterizationScale;
+		}
+	}
+
+	extension(PathFigure figure)
+	{
+		public void Fill(Point[] points)
+		{
+			double maxX = points[0].X;
+			double maxY = points[0].Y;
+
+			var segments = new PathSegmentCollection();
+			for (int i = 1; i < points.Length; i++)
+			{
+				var point = points[i];
+				segments.Add(new LineSegment() { Point = point });
+
+				if (point.X > maxX) maxX = point.X;
+				if (point.Y > maxY) maxY = point.Y;
+			}
+
+			figure.StartPoint = points[0];
+			figure.Segments = segments;
 		}
 	}
 }

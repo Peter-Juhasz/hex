@@ -1,18 +1,21 @@
-﻿using HexEditor.ViewModel;
+﻿using HexEditor.Model;
+using HexEditor.ViewModel;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using Windows.UI;
 
 namespace HexEditor.WinUI.ContentView;
 
 internal sealed class HexContentView : ContentControl
 {
-	public HexContentView(IHexView view, VisualTheme theme, ViewScroller viewScroller) : base()
+	public HexContentView(WinUIHexView view, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
@@ -49,7 +52,12 @@ internal sealed class HexContentView : ContentControl
 		viewScroller.OffsetChanged += OnScrollOffsetChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 
+		_view.SelectionManager.SelectionChanged += OnSelectionChanged;
+
 		this.Loaded += OnLoaded;
+		this.PointerPressed += OnPointerPressed;
+		this.PointerMoved += OnPointerMoved;
+		this.PointerReleased += OnPointerReleased;
 	}
 
 	private void OnLoaded(object sender, RoutedEventArgs e)
@@ -61,8 +69,12 @@ internal sealed class HexContentView : ContentControl
 	private readonly ViewScroller _viewScroller;
 
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
-	private readonly IHexView _view;
+	private readonly WinUIHexView _view;
 	private readonly VisualTheme _theme;
+
+	private Path? _selectionPath;
+	private readonly Brush _selectionBackground = new SolidColorBrush(Color.FromArgb(255, 153, 201, 239));
+	private SnapshotPoint? _anchorPoint;
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
@@ -89,6 +101,7 @@ internal sealed class HexContentView : ContentControl
 					Height = row.VisualBounds.Height,
 					Width = row.VisualBounds.Width,
 					Tag = row,
+					IsHitTestVisible = false,
 				};
 				Canvas.SetTop(rowCanvas, Math.Round(row.VisualBounds.Top));
 
@@ -116,11 +129,13 @@ internal sealed class HexContentView : ContentControl
 								Width = run.RenderedWidth,
 								Height = _theme.RowHeight,
 								Fill = style.Background,
+								IsHitTestVisible = false,
 							};
 							if (style.Opacity is not null)
 							{
 								rectangle.Opacity = style.Opacity.Value;
 							}
+							Canvas.SetZIndex(rectangle, -2);
 							Canvas.SetLeft(rectangle, Math.Round(run.LeftPosition));
 							rowCanvas.Children.Add(rectangle);
 						}
@@ -145,6 +160,60 @@ internal sealed class HexContentView : ContentControl
 			}
 		});
 	}
+
+	#region Selection
+	private void OnSelectionChanged(object? sender, Selection.SelectionChangedEventArgs e)
+	{
+		if (e.Selection == null)
+		{
+			_selectionPath?.Visibility = Visibility.Collapsed;
+			return;
+		}
+
+		if (_selectionPath == null)
+		{
+			_selectionPath = new Path()
+			{
+				Data = new PathGeometry()
+				{
+					Figures = [new PathFigure()
+					{
+						IsFilled = true,
+						IsClosed = true,
+					}],
+				},
+				Fill = _selectionBackground,
+				IsHitTestVisible = false,
+			};
+			Canvas.SetZIndex(_selectionPath, -1);
+			_canvas.Children.Add(_selectionPath);
+		}
+
+		var points = _view.MapToVisualHex(e.Selection.Span);
+		var figure = ((PathGeometry)_selectionPath.Data).Figures[0];
+		figure.Fill(points);
+		_selectionPath.Visibility = Visibility.Visible;
+	}
+
+	private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
+	{
+		_anchorPoint = _view.MapFromVisualHex(_view.MapViewportToVisual(e.GetCurrentPoint(this).Position));
+	}
+
+	private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
+	{
+		if (_anchorPoint is SnapshotPoint anchorPoint)
+		{
+			var activePoint = _view.MapFromVisualHex(_view.MapViewportToVisual(e.GetCurrentPoint(this).Position));
+			_view.SelectionManager.Select(anchorPoint, activePoint);
+		}
+	}
+
+	private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
+	{
+		_anchorPoint = null;
+	}
+	#endregion
 
 	#region Scrolling
 	private static readonly ScrollingScrollOptions scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);

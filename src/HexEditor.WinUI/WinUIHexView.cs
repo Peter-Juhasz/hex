@@ -1,40 +1,55 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
+using HexEditor.WinUI.Selection;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Immutable;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
 namespace HexEditor.WinUI;
 
-internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexView
+public class WinUIHexView : IHexView
 {
+	public WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme)
+	{
+		this.snapshot = snapshot;
+		ScrollableHeight = theme.RowHeight;
+		_theme = theme;
+		SelectionManager = new(this);
+	}
+
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
 
 	public ImmutableArray<IHexViewRow> VisibleRows => _visibleRows;
-	public long TotalRowCount { get; }
+	public long TotalRowCount { get; private set; }
+
+	public IBinarySnapshot Snapshot => snapshot;
 
 	public double ViewportHeight { get; private set; }
 	public double ViewportWidth { get; private set; }
 	public double VerticalOffset { get; private set; }
 
-	public double ScrollableHeight { get; private set; } = theme.RowHeight;
+	public double ScrollableHeight { get; private set; }
 
 	public event EventHandler<VisibleRowsChangedEventArgs>? VisibleRowsChanged;
 
 	public event EventHandler<HeightChangedEventArgs>? ScrollableHeightChanged;
 
-	private VisualTheme _visualTheme = theme;
+	private VisualTheme _theme;
+	private readonly IBinarySnapshot snapshot;
+
+	public SelectionManager SelectionManager { get; }
 
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{
-		var visibleRowCount = (int)(ViewportHeight / _visualTheme.RowHeight) + 2;
-		var firstVisibleRowIndex = (int)(VerticalOffset / _visualTheme.RowHeight);
-		var firstVisibleOffset = firstVisibleRowIndex * _visualTheme.Columns;
+		var visibleRowCount = (int)(ViewportHeight / _theme.RowHeight) + 2;
+		var firstVisibleRowIndex = (int)(VerticalOffset / _theme.RowHeight);
+		var firstVisibleOffset = firstVisibleRowIndex * _theme.Columns;
 
-		var visibleSpan = snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * _visualTheme.Columns, snapshot.Length - firstVisibleOffset));
+		var visibleSpan = snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * _theme.Columns, snapshot.Length - firstVisibleOffset));
 		var screenBuffer = new byte[visibleSpan.Span.Length];
 		await visibleSpan.CopyToAsync(screenBuffer, cancellationToken);
 
@@ -45,7 +60,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 		var processedRelativeOffset = 0L;
 		while (processedRelativeOffset < visibleSpan.Span.Length)
 		{
-			var rowSpan = visibleSpan.Slice(processedRelativeOffset, Math.Min(_visualTheme.Columns, visibleSpan.Span.Length - processedRelativeOffset));
+			var rowSpan = visibleSpan.Slice(processedRelativeOffset, Math.Min(_theme.Columns, visibleSpan.Span.Length - processedRelativeOffset));
 
 			// try to reuse existing row if possible
 			var isReused = false;
@@ -67,14 +82,14 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 			}
 
 			// create new row
-			var rowIndex = (int)(processedRelativeOffset / _visualTheme.Columns);
+			var rowIndex = (int)(processedRelativeOffset / _theme.Columns);
 			var viewRow = new HexViewRow(
 				this,
 				new ViewportBounds(
-					Left: 0, 
-					Top: (firstVisibleRowIndex + rowIndex) * _visualTheme.RowHeight, 
-					Width: _visualTheme.FontWidth * rowSpan.Span.Length, 
-					Height: _visualTheme.RowHeight
+					Left: 0,
+					Top: (firstVisibleRowIndex + rowIndex) * _theme.RowHeight,
+					Width: _theme.FontWidth * rowSpan.Span.Length,
+					Height: _theme.RowHeight
 				),
 				rowSpan,
 				screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
@@ -83,7 +98,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 					screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
 					FormattedTextRun.ToHexString(screenBuffer.AsSpan((int)processedRelativeOffset, (int)rowSpan.Span.Length)),
 					0,
-					rowSpan.Span.Length * 2 * _visualTheme.FontWidth,
+					rowSpan.Span.Length * 2 * _theme.FontWidth,
 					null
 				)],
 				[new(
@@ -91,7 +106,7 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 					screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
 					FormattedTextRun.ToAsciiString(screenBuffer.AsSpan((int)processedRelativeOffset, (int)rowSpan.Span.Length)),
 					0,
-					rowSpan.Span.Length * _visualTheme.FontWidth,
+					rowSpan.Span.Length * _theme.FontWidth,
 					null
 				)]
 			);
@@ -144,8 +159,9 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 		ViewportHeight = viewportHeight;
 		ViewportWidth = viewportWidth;
 		var oldHeight = ScrollableHeight;
-		var rowCount = snapshot.Length / _visualTheme.Columns;
-		ScrollableHeight = rowCount * _visualTheme.RowHeight;
+		var rowCount = (snapshot.Length / _theme.Columns) + 1;
+		TotalRowCount = rowCount;
+		ScrollableHeight = rowCount * _theme.RowHeight;
 		ScrollableHeightChanged?.Invoke(this, new HeightChangedEventArgs(oldHeight, ScrollableHeight));
 		return InvalidateAsync(snapshot, cancellationToken);
 	}
@@ -163,29 +179,106 @@ internal class WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme) : IHexV
 
 	public Point MapToVisualHex(SnapshotPoint point)
 	{
-		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _visualTheme.Columns);
-		return new Point(columnIndex * 2 * _visualTheme.FontWidth, rowIndex * _visualTheme.RowHeight);
+		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
+		return new Point(columnIndex * 2 * _theme.FontWidth, rowIndex * _theme.RowHeight);
 	}
 
 	public Point MapToVisualAscii(SnapshotPoint point)
 	{
-		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _visualTheme.Columns);
-		return new Point(columnIndex * _visualTheme.FontWidth, rowIndex * _visualTheme.RowHeight);
+		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
+		return new Point(columnIndex * _theme.FontWidth, rowIndex * _theme.RowHeight);
 	}
 
 	public SnapshotPoint MapFromVisualHex(Point point)
 	{
-		var rowIndex = (int)(point.Y / _visualTheme.RowHeight);
-		var columnIndex = (int)(point.X / (2 * _visualTheme.FontWidth));
-		return new SnapshotPoint(snapshot, rowIndex * _visualTheme.Columns + columnIndex);
+		var rowIndex = Math.Clamp((int)(point.Y / _theme.RowHeight), 0, TotalRowCount);
+		var columnIndex = Math.Clamp((int)(point.X / (2 * _theme.FontWidth) + 1), 0, _theme.Columns);
+		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
 	}
 
 	public SnapshotPoint MapFromVisualAscii(Point point)
 	{
-		var rowIndex = (int)(point.Y / _visualTheme.RowHeight);
-		var columnIndex = (int)(point.X / _visualTheme.FontWidth);
-		return new SnapshotPoint(snapshot, rowIndex * _visualTheme.Columns + columnIndex);
+		var rowIndex = Math.Clamp((int)(point.Y / _theme.RowHeight), 0, TotalRowCount);
+		var columnIndex = Math.Clamp((int)(point.X / _theme.FontWidth + 1), 0, _theme.Columns);
+		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
 	}
+
+	public Point[] MapToVisualHex(SnapshotSpan span)
+	{
+		var startPoint = MapToVisualHex(span.Start);
+		var endPoint = MapToVisualHex(span.End);
+		var startRowTop = startPoint.Y;
+		var endRowTop = endPoint.Y;
+
+		var endRowBottom = endRowTop + _theme.RowHeight;
+		var height = endRowBottom - startRowTop;
+
+		if (startRowTop == endRowTop)
+		{
+			return
+			[
+				new Point(startPoint.X, startRowTop + 0),
+				new Point(endPoint.X, startRowTop + 0),
+				new Point(endPoint.X, startRowTop + _theme.RowHeight),
+				new Point(startPoint.X, startRowTop + _theme.RowHeight),
+			];
+		}
+
+		var fullRowWidth = (_theme.Columns * 2) * _theme.FontWidth;
+
+		return
+		[
+			new Point(startPoint.X, startRowTop + 0),
+			new Point(fullRowWidth, startRowTop + 0),
+			new Point(fullRowWidth, startRowTop + height - _theme.RowHeight),
+			new Point(endPoint.X, startRowTop + height - _theme.RowHeight),
+			new Point(endPoint.X, startRowTop + height),
+			new Point(0, startRowTop + height),
+			new Point(0, startRowTop + _theme.RowHeight),
+			new(startPoint.X, startRowTop + _theme.RowHeight),
+		];
+	}
+
+	public Point[] MapToVisualAscii(SnapshotSpan span)
+	{
+		var startPoint = MapToVisualAscii(span.Start);
+		var endPoint = MapToVisualAscii(span.End);
+		var startRowTop = startPoint.Y;
+		var endRowTop = endPoint.Y;
+
+		var endRowBottom = endRowTop + _theme.RowHeight;
+		var height = endRowBottom - startRowTop;
+
+		if (startRowTop == endRowTop)
+		{
+			return
+			[
+				new Point(startPoint.X, startRowTop + 0),
+				new Point(endPoint.X, startRowTop + 0),
+				new Point(endPoint.X, startRowTop + _theme.RowHeight),
+				new Point(startPoint.X, startRowTop + _theme.RowHeight),
+			];
+		}
+
+		var fullRowWidth = _theme.Columns * _theme.FontWidth;
+
+		return
+		[
+			new Point(startPoint.X, startRowTop + 0),
+			new Point(fullRowWidth, startRowTop + 0),
+			new Point(fullRowWidth, startRowTop + height - _theme.RowHeight),
+			new Point(endPoint.X, startRowTop + height - _theme.RowHeight),
+			new Point(endPoint.X, startRowTop + height),
+			new Point(0, startRowTop + height),
+			new Point(0, startRowTop + _theme.RowHeight),
+			new(startPoint.X, startRowTop + _theme.RowHeight),
+		];
+	}
+
+	public Point MapViewportToVisual(Point point) => new(
+		x: point.X,
+		y: point.Y + VerticalOffset
+	);
 
 	public Task ScrollDownByRowAsync(CancellationToken cancellationToken)
 	{

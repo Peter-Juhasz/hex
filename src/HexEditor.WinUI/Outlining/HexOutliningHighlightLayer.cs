@@ -1,11 +1,9 @@
-﻿using HexEditor.Model;
-using Microsoft.UI.Input;
+﻿using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
-using Windows.Foundation;
 using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
@@ -56,59 +54,38 @@ internal sealed class HexOutliningHighlightLayer : ContentControl
 	private readonly VisualTheme _theme;
 	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
 
+	private Path? _regionPath;
+
 	private void OnOutliningRegionSelectionRequested(object? sender, OutliningRegionSelectionRequestedEventArgs e)
 	{
-		var span = e.Span;
-		var startPoint = _view.MapToVisualHex(span.Span.Start);
-		var endPoint = _view.MapToVisualHex(span.Span.End);
-		var startRowTop = startPoint.Y;
-		var endRowTop = endPoint.Y;
-		if (startRowTop == endRowTop)
+		if (_regionPath == null)
 		{
-			return;
-		}
-
-		var endRowBottom = endRowTop + _theme.RowHeight;
-		var height = endRowBottom - startRowTop;
-
-		var fullRowWidth = (_theme.Columns * 2) * _theme.FontWidth;
-
-		var polygon = new Path
-		{
-			Data = new PathGeometry()
+			_regionPath = new Path()
 			{
-				Figures =
-				[
-					new PathFigure()
+				Data = new PathGeometry()
+				{
+					Figures = [new PathFigure()
 					{
-						StartPoint = new Point(startPoint.X, _theme.RowHeight),
-						Segments =
-						[
-							new LineSegment() { Point = new Point(startPoint.X, 0) },
-							new LineSegment() { Point = new Point(fullRowWidth, 0) },
-							new LineSegment() { Point = new Point(fullRowWidth, height - _theme.RowHeight) },
-							new LineSegment() { Point = new Point(endPoint.X, height - _theme.RowHeight) },
-							new LineSegment() { Point = new Point(endPoint.X, height) },
-							new LineSegment() { Point = new Point(0, height) },
-							new LineSegment() { Point = new Point(0, _theme.RowHeight) },
-						],
 						IsFilled = true,
 						IsClosed = true,
-					}
-				]
-			},
-			Width = fullRowWidth,
-			Height = height,
-			Fill = _pointerOverBrush,
-		};
-		Canvas.SetLeft(polygon, 0);
-		Canvas.SetTop(polygon, startRowTop);
-		_canvas.Children.Add(polygon);
+					}],
+				},
+				Fill = _pointerOverBrush,
+				IsHitTestVisible = false,
+			};
+			Canvas.SetZIndex(_regionPath, -1);
+			_canvas.Children.Add(_regionPath);
+		}
+
+		var points = _view.MapToVisualHex(e.Span.Span);
+		var figure = ((PathGeometry)_regionPath.Data).Figures[0];
+		figure.Fill(points);
+		_regionPath.Visibility = Visibility.Visible;
 	}
 
 	private void OnDismissed(object? sender, EventArgs e)
 	{
-		_canvas.Children.Clear();
+		_regionPath?.Visibility = Visibility.Collapsed;
 	}
 
 	#region Scrolling
