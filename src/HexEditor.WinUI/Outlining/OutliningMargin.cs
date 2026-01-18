@@ -53,7 +53,7 @@ internal sealed class OutliningMargin : ContentControl
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
-	private readonly double _width = 12;
+	private readonly double _width = 14;
 	private readonly VisualTheme _theme;
 
 	private readonly ScrollView _scrollView;
@@ -81,7 +81,7 @@ internal sealed class OutliningMargin : ContentControl
 
 		var startOffset = startRowTop + _theme.RowHeight / 2;
 		var endRowBottom = endRowTop + _theme.RowHeight;
-		var height = endRowBottom - startRowTop;
+		var height = Math.Round(endRowBottom - startRowTop);
 
 		var canvas = new Canvas()
 		{
@@ -91,7 +91,7 @@ internal sealed class OutliningMargin : ContentControl
 			Background = _transparentBrush,
 			IsHitTestVisible = true,
 		};
-		Canvas.SetTop(canvas, startRowTop);
+		Canvas.SetTop(canvas, Math.Round(startRowTop));
 		Canvas.SetLeft(canvas, 0);
 		if (span.Tag.Label != null)
 		{
@@ -102,26 +102,26 @@ internal sealed class OutliningMargin : ContentControl
 		{
 			Data = new PathGeometry()
 			{
-				Figures = 
+				Figures =
 				[
 					new PathFigure()
 					{
 						IsFilled = false,
 						IsClosed = false,
-						StartPoint = new(_canvas.XamlRoot.SnapToPixels(_width), _canvas.XamlRoot.SnapToPixels(1)),
+						StartPoint = new(_canvas.XamlRoot.SnapToPixels(_width), 0),
 						Segments =
 						[
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), _canvas.XamlRoot.SnapToPixels(1)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), 0),
 							},
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), _canvas.XamlRoot.SnapToPixels(height)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), height),
 							},
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(_width), _canvas.XamlRoot.SnapToPixels(height)),
+								Point = new(_canvas.XamlRoot.SnapToPixels(_width), height),
 							},
 						],
 					}
@@ -136,7 +136,22 @@ internal sealed class OutliningMargin : ContentControl
 
 		canvas.PointerEntered += OnPointerEntered;
 		canvas.PointerExited += OnPointerExited;
-		_canvas.Children.Add(canvas);
+
+		// insert in order
+		var insertionIndex = 0;
+		for (int i = 0; i < _canvas.Children.Count; i++)
+		{
+			var child = _canvas.Children[i];
+			if (child is Canvas { Tag: TagSpan<StructureTag> existingSpan })
+			{
+				if (span.Span.Start.Position < existingSpan.Span.Start.Position)
+				{
+					break;
+				}
+			}
+			insertionIndex++;
+		}
+		_canvas.Children.Insert(insertionIndex, canvas);
 	}
 
 	private void OnPointerExited(object sender, PointerRoutedEventArgs e)
@@ -215,7 +230,7 @@ internal sealed class OutliningMargin : ContentControl
 
 						if (exists)
 						{
-							break;
+							continue;
 						}
 
 						// add region

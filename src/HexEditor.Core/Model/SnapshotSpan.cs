@@ -1,7 +1,5 @@
 ﻿namespace HexEditor.Model;
 
-public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Position);
-
 public readonly record struct SnapshotSpan(IBinarySnapshot Snapshot, LongSpan Span);
 
 public static partial class Extensions
