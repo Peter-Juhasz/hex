@@ -10,6 +10,7 @@ internal sealed class BackgroundTaskQueue
 {
 	public BackgroundTaskQueue(CancellationToken cancellationToken)
 	{
+		_cancellationSeries = new CancellationSeries(cancellationToken);
 		_workerThreadQueue = Channel.CreateUnbounded<Task>(new UnboundedChannelOptions
 		{
 			SingleReader = true,
@@ -20,10 +21,12 @@ internal sealed class BackgroundTaskQueue
 
 	private readonly Channel<Task> _workerThreadQueue;
 	private readonly Task _workerThread;
+	private readonly CancellationSeries _cancellationSeries;
 
 	public void Enqueue(Func<CancellationToken, Task> factory)
 	{
-		var task = factory(CancellationToken.None);
+		var cancellationToken = _cancellationSeries.GetNext();
+		var task = factory(cancellationToken);
 		_workerThreadQueue.Writer.TryWrite(task);
 	}
 
@@ -34,6 +37,10 @@ internal sealed class BackgroundTaskQueue
 			try
 			{
 				await task;
+			}
+			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+			{
+				// ignore
 			}
 			catch (Exception ex)
 			{

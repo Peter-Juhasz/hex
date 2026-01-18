@@ -237,6 +237,10 @@ internal sealed class OutliningMargin : ContentControl
 						AddRegion(newStructure);
 					}
 				}
+				catch (OperationCanceledException) when (c.IsCancellationRequested)
+				{
+					// ignore
+				}
 				catch (Exception ex)
 				{
 
