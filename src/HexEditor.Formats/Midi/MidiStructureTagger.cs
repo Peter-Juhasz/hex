@@ -27,7 +27,7 @@ public sealed class MidiStructureTagger : ITagger<StructureTag>
 		while (startOffset < span.Span.EndOffset)
 		{
 			// try read chunk header
-			await snapshot.CopyToAsync(startOffset, buffer, cancellationToken);
+			await snapshot.CopyToAsync(startOffset, buffer, cancellationToken).ConfigureAwait(false);
 
 			// parse
 			if (!TryParseChunkHeader(buffer, out var type, out var length))

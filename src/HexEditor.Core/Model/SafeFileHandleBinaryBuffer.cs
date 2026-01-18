@@ -8,7 +8,7 @@ public class SafeFileHandleBinaryBuffer(SafeFileHandle handle) : IBinaryDataSour
 
 	public async ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
     {
-		var read = await RandomAccess.ReadAsync(handle, destination, offset, cancellationToken);
+		var read = await RandomAccess.ReadAsync(handle, destination, offset, cancellationToken).ConfigureAwait(false);
 		if (read < destination.Length)
 		{
 			throw new ArgumentOutOfRangeException(nameof(destination));

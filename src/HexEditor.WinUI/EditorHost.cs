@@ -126,8 +126,9 @@ public partial class EditorHost : Grid
 
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 	{
-		_viewScroller.ResizeViewport(_hexContentView.ActualHeight);
-		_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
+		var newHeight = e.NewSize.Height;
+		_viewScroller.ResizeViewport(newHeight);
+		_queue.Enqueue(c => _view.ResizeWindowAsync(0, newHeight, c));
 	}
 
 	private void OnScrollerScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
@@ -160,7 +161,8 @@ public partial class EditorHost : Grid
 	{
 		DispatcherQueue.TryEnqueue(() =>
 		{
-			_queue.Enqueue(c => _view.ResizeWindowAsync(_hexContentView.ActualWidth, _hexContentView.ActualHeight, c));
+			var newHeight = this.ActualHeight;
+			_queue.Enqueue(c => _view.ResizeWindowAsync(0, newHeight, c));
 		});
 	}
 

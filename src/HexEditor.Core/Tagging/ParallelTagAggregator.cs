@@ -18,7 +18,7 @@ public sealed class ParallelTagAggregator<TTag>(
 			tasks[i] = ParallelTagAggregator<TTag>.CollectAsync(results, i, taggers[i], span, cancellationToken);
 		}
 
-		await Task.WhenAll(tasks);
+		await Task.WhenAll(tasks).ConfigureAwait(false);
 
 		var totalCount = 0;
 		for (int i = 0; i < results.Length; i++)
@@ -40,7 +40,7 @@ public sealed class ParallelTagAggregator<TTag>(
 	{
 		try
 		{
-			results[index] = await tagger.GetTagsAsync(span, cancellationToken);
+			results[index] = await tagger.GetTagsAsync(span, cancellationToken).ConfigureAwait(false);
 		}
 		catch { }
 	}

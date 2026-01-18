@@ -17,7 +17,7 @@ public sealed class Utf8BomClassifier : ITagger<ClassificationTag>
         if (span.Span.StartOffset < 3 && span.Snapshot.Length >= 3)
         {
             var buffer = new byte[3];
-            await span.Snapshot.CopyToAsync(0, buffer, cancellationToken);
+            await span.Snapshot.CopyToAsync(0, buffer, cancellationToken).ConfigureAwait(false);
             if (buffer is [0xEF, 0xBB, 0xBF])
             {
                 return [new(span.Snapshot.Slice(0, 3), Tag)];

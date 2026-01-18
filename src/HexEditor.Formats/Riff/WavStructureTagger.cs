@@ -28,7 +28,7 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 		byte[] buffer = new byte[8];
 
 		// try read RIFF header
-		var riffChunk = await ReadChunkAsync(snapshot.Span, buffer, cancellationToken);
+		var riffChunk = await ReadChunkAsync(snapshot.Span, buffer, cancellationToken).ConfigureAwait(false);
 		if (riffChunk == null || !buffer.AsSpan(0, 4).SequenceEqual("RIFF"u8))
 		{
 			return [];
@@ -51,7 +51,7 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 		}
 
 		// try read chunks
-		while (await ReadChunkAsync(snapshot.Slice(startOffset), buffer, cancellationToken) is Chunk chunk)
+		while (await ReadChunkAsync(snapshot.Slice(startOffset), buffer, cancellationToken).ConfigureAwait(false) is Chunk chunk)
 		{
 			var chunkId = buffer.AsSpan(0, 4);
 			fullExtent = new LongSpan(startOffset, 8 + chunk.Size);
@@ -94,7 +94,7 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 		}
 
 		var headerSpan = remaining.Slice(0, 8);
-		await headerSpan.Snapshot.CopyToAsync(headerSpan.Span.StartOffset, buffer, cancellationToken);
+		await headerSpan.Snapshot.CopyToAsync(headerSpan.Span.StartOffset, buffer, cancellationToken).ConfigureAwait(false);
 
 		if (!TryParseChunkHeader(buffer.Span, out var type, out var length))
 		{

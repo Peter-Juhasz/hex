@@ -16,7 +16,7 @@ public sealed class FullCachingTagAggregator<TTag>(
 		var currentSnapshot = span.Snapshot;
 		if (_lastCached is not { } cacheItem || cacheItem.Snapshot != currentSnapshot)
 		{
-			var tags = await inner.GetTagsAsync(currentSnapshot.Span, cancellationToken);
+			var tags = await inner.GetTagsAsync(currentSnapshot.Span, cancellationToken).ConfigureAwait(false);
 			cacheItem = new CacheItem(currentSnapshot, ImmutableCollectionsMarshal.AsArray(tags) ?? []);
 			_lastCached = cacheItem;
 		}

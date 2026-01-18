@@ -15,9 +15,9 @@ public sealed class UrlTagger : ITagger<UrlTag>
 	public async Task<ImmutableArray<TagSpan<UrlTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
 		var data = new byte[span.Span.Length];
-		await span.CopyToAsync(data, cancellationToken);
+		await span.CopyToAsync(data, cancellationToken).ConfigureAwait(false);
 
-		var builder = new List<TagSpan<UrlTag>>(); // TODO: use array builder
+		using var builder = new PooledArrayBuilder<TagSpan<UrlTag>>();
 		var dataSpan = data;
 		foreach (var index in dataSpan.IndexesOf("://"u8))
 		{

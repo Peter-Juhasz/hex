@@ -9,7 +9,7 @@ public class StreamBinaryBuffer(Stream stream) : IBinaryDataSource
 		if (offset < 0 ) throw new ArgumentOutOfRangeException(nameof(offset));
 
 		stream.Seek(offset, SeekOrigin.Begin);
-		await stream.ReadExactlyAsync(destination, cancellationToken);
+		await stream.ReadExactlyAsync(destination, cancellationToken).ConfigureAwait(false);
 	}
 
 	public ValueTask DisposeAsync() => stream.DisposeAsync();

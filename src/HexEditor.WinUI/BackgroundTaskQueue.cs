@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Windows.UI.Popups;
 
 namespace HexEditor.WinUI;
 
@@ -11,7 +10,7 @@ internal sealed class BackgroundTaskQueue
 	public BackgroundTaskQueue(CancellationToken cancellationToken)
 	{
 		_cancellationSeries = new CancellationSeries(cancellationToken);
-		_workerThreadQueue = Channel.CreateUnbounded<Task>(new UnboundedChannelOptions
+		_workerThreadQueue = Channel.CreateUnbounded<WorkItem>(new UnboundedChannelOptions
 		{
 			SingleReader = true,
 			SingleWriter = false,
@@ -19,24 +18,23 @@ internal sealed class BackgroundTaskQueue
 		_workerThread = Task.Run(() => Worker(cancellationToken), cancellationToken);
 	}
 
-	private readonly Channel<Task> _workerThreadQueue;
+	private readonly Channel<WorkItem> _workerThreadQueue;
 	private readonly Task _workerThread;
 	private readonly CancellationSeries _cancellationSeries;
 
 	public void Enqueue(Func<CancellationToken, Task> factory)
 	{
 		var cancellationToken = _cancellationSeries.GetNext();
-		var task = factory(cancellationToken);
-		_workerThreadQueue.Writer.TryWrite(task);
+		_workerThreadQueue.Writer.TryWrite(new(factory, cancellationToken));
 	}
 
 	private async Task Worker(CancellationToken cancellationToken)
 	{
-		await foreach (var task in _workerThreadQueue.Reader.ReadAllAsync(cancellationToken))
+		await foreach (var workItem in _workerThreadQueue.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
 		{
 			try
 			{
-				await task;
+				await workItem.Factory(cancellationToken).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 			{
@@ -44,8 +42,9 @@ internal sealed class BackgroundTaskQueue
 			}
 			catch (Exception ex)
 			{
-				await new MessageDialog(ex.Message).ShowAsync();
 			}
 		}
 	}
+
+	private record struct WorkItem(Func<CancellationToken, Task> Factory, CancellationToken CancellationToken);
 }

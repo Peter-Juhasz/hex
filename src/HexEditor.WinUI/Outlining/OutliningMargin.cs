@@ -3,6 +3,7 @@ using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
 using Microsoft.UI;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -175,31 +176,39 @@ internal sealed class OutliningMargin : ContentControl
 			// remove regions that are no longer visible
 			if (!e.RemovedRows.IsEmpty)
 			{
-				for (int i = 0; i < _canvas.Children.Count; i++)
+				DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 				{
-					var child = _canvas.Children[i];
-					if (child is Canvas { Tag: TagSpan<StructureTag> span })
+					if (c.IsCancellationRequested)
 					{
-						bool toRemove = true;
-						foreach (var row in e.RemovedRows)
+						return;
+					}
+
+					for (int i = 0; i < _canvas.Children.Count; i++)
+					{
+						var child = _canvas.Children[i];
+						if (child is Canvas { Tag: TagSpan<StructureTag> span })
 						{
-							if (span.Span.Snapshot == row.Extent.Snapshot &&
-								span.Span.Span.IntersectsWith(row.Extent.Span)
-							)
+							bool toRemove = true;
+							foreach (var row in e.RemovedRows)
 							{
-								toRemove = false;
-								break;
+								if (span.Span.Snapshot == row.Extent.Snapshot &&
+									span.Span.Span.IntersectsWith(row.Extent.Span)
+								)
+								{
+									toRemove = false;
+									break;
+								}
+							}
+							if (toRemove)
+							{
+								_canvas.Children.RemoveAt(i);
+								child.PointerEntered -= OnPointerEntered;
+								child.PointerExited -= OnPointerExited;
+								i--;
 							}
 						}
-						if (toRemove)
-						{
-							_canvas.Children.RemoveAt(i);
-							child.PointerEntered -= OnPointerEntered;
-							child.PointerExited -= OnPointerExited;
-							i--;
-						}
 					}
-				}
+				});
 			}
 
 			// recompute and add regions for newly visible rows
@@ -210,32 +219,35 @@ internal sealed class OutliningMargin : ContentControl
 				try
 				{
 					// get structure
-					var structures = await tagAggregator.GetTagsAsync(newSpan, c);
-					foreach (var newStructure in structures)
+					var structures = await tagAggregator.GetTagsAsync(newSpan, c).ConfigureAwait(false);
+					DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 					{
-						// check if we already have this region
-						var exists = false;
-						for (int i = 0; i < _canvas.Children.Count; i++)
+						foreach (var newStructure in structures)
 						{
-							var child = _canvas.Children[i];
-							if (child is Canvas { Tag: TagSpan<StructureTag> span })
+							// check if we already have this region
+							var exists = false;
+							for (int i = 0; i < _canvas.Children.Count; i++)
 							{
-								if (span.Span == newStructure.Span && span.Tag == newStructure.Tag)
+								var child = _canvas.Children[i];
+								if (child is Canvas { Tag: TagSpan<StructureTag> span })
 								{
-									exists = true;
-									break;
+									if (span.Span == newStructure.Span && span.Tag == newStructure.Tag)
+									{
+										exists = true;
+										break;
+									}
 								}
 							}
-						}
 
-						if (exists)
-						{
-							continue;
-						}
+							if (exists)
+							{
+								continue;
+							}
 
-						// add region
-						AddRegion(newStructure);
-					}
+							// add region
+							AddRegion(newStructure);
+						}
+					});
 				}
 				catch (OperationCanceledException) when (c.IsCancellationRequested)
 				{

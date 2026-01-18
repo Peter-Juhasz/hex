@@ -23,7 +23,7 @@ public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryDataSource
 		}
 
 		var buffer = new byte[source.Length];
-		await source.CopyToAsync(0, buffer, cancellationToken);
+		await source.CopyToAsync(0, buffer, cancellationToken).ConfigureAwait(false);
 		return new MemoryBinaryBuffer(buffer);
 	}
 }
