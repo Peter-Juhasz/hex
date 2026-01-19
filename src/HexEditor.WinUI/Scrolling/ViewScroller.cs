@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace HexEditor.WinUI;
+namespace HexEditor.WinUI.Scrolling;
 
-internal sealed class ViewScroller
+internal sealed class ViewScroller : IViewScroller
 {
-	public event EventHandler<ScrollChangedEventArgs>? OffsetChanged;
+	public event EventHandler<ScrollVerticalOffsetChangedEventArgs>? VerticalOffsetChanged;
 
 	public double VerticalOffset { get; private set; }
 
@@ -13,7 +13,7 @@ internal sealed class ViewScroller
 		if (!double.AreApproximatelyEqual(VerticalOffset, verticalOffset, 1d))
 		{
 			VerticalOffset = verticalOffset;
-			OffsetChanged?.Invoke(this, new ScrollChangedEventArgs(Math.Round(verticalOffset)));
+			VerticalOffsetChanged?.Invoke(this, new ScrollVerticalOffsetChangedEventArgs(Math.Round(verticalOffset)));
 		}
 	}
 
@@ -49,19 +49,4 @@ internal sealed class ViewScroller
 			ViewportChanged?.Invoke(this, new ViewportHeightChangedEventArgs(newHeight));
 		}
 	}
-}
-
-public class ScrollChangedEventArgs(double verticalOffset) : EventArgs
-{
-	public double VerticalOffset { get; } = verticalOffset;
-}
-
-public class ViewportHeightChangedEventArgs(double newHeight) : EventArgs
-{
-	public double NewHeight { get; } = newHeight;
-}
-
-public class ScrollableHeightChangedEventArgs(double newHeight) : EventArgs
-{
-	public double NewHeight { get; } = newHeight;
 }

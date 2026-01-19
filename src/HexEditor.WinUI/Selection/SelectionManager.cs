@@ -3,7 +3,7 @@ using System;
 
 namespace HexEditor.WinUI.Selection;
 
-public class SelectionManager
+public class SelectionManager : ISelection
 {
 	public SelectionManager(WinUIHexView view)
 	{
@@ -14,6 +14,8 @@ public class SelectionManager
 	private SelectionSpan? _selection;
 
 	public event EventHandler<SelectionChangedEventArgs>? SelectionChanged;
+
+	public SelectionSpan? Span => _selection;
 
 	public void Select(SnapshotPoint anchorPoint, SnapshotPoint activePoint)
 	{

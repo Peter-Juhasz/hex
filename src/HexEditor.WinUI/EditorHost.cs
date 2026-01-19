@@ -5,6 +5,7 @@ using HexEditor.ViewModel;
 using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
+using HexEditor.WinUI.Scrolling;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -67,7 +68,7 @@ public partial class EditorHost : ContentControl
 
 		_view = new WinUIHexView(snapshot, _visualTheme);
 		_viewScroller = new ViewScroller();
-		_viewScroller.OffsetChanged += OnViewScrollerScrollOffsetChanged;
+		_viewScroller.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
 
 		_hexContentView = new HexContentView(_view, _visualTheme, _viewScroller);
 		_outliningMargin = new OutliningMargin(_view, _viewScroller, _visualTheme, taggerProvider, contentType);
@@ -151,9 +152,9 @@ public partial class EditorHost : ContentControl
 		_queue.Enqueue(c => _view.ResizeWindowAsync(0, newHeight, c));
 	}
 
-	private void OnViewScrollerScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
+	private void OnViewScrollerScrollOffsetChanged(object? sender, ScrollVerticalOffsetChangedEventArgs e)
 	{
-		_queue.Enqueue(c => _view.ScrollToAsync(e.VerticalOffset, c));
+		_queue.Enqueue(c => _view.ScrollToAsync(e.NewVerticalOffset, c));
 	}
 
 	private void OnModelScrollableHeightChanged(object? sender, HeightChangedEventArgs e)
@@ -197,22 +198,22 @@ public partial class EditorHost : ContentControl
 		switch (e.Key)
 		{
 			case VirtualKey.Home when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_view.CaretManager.MoveToHome();
+				_view.Caret.MoveToHome();
 				e.Handled = true;
 				break;
 
 			case VirtualKey.End when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_view.CaretManager.MoveToEnd();
+				_view.Caret.MoveToEnd();
 				e.Handled = true;
 				break;
 
 			case VirtualKey.Home when controlState.HasFlag(CoreVirtualKeyStates.None):
-				_view.CaretManager.MoveToRowStart();
+				_view.Caret.MoveToRowStart();
 				e.Handled = true;
 				break;
 
 			case VirtualKey.End when controlState.HasFlag(CoreVirtualKeyStates.None):
-				_view.CaretManager.MoveToRowEnd();
+				_view.Caret.MoveToRowEnd();
 				e.Handled = true;
 				break;
 
@@ -227,7 +228,7 @@ public partial class EditorHost : ContentControl
 				break;
 
 			case VirtualKey.Escape:
-				_view.SelectionManager.Clear();
+				_view.Selection.Clear();
 				e.Handled = true;
 				break;
 		}

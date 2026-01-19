@@ -2,6 +2,7 @@
 using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
+using HexEditor.WinUI.Scrolling;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;

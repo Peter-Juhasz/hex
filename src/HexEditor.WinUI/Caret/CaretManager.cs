@@ -4,13 +4,13 @@ using System;
 
 namespace HexEditor.WinUI.Caret;
 
-public class CaretManager
+public class CaretManager : ICaret
 {
 	public CaretManager(WinUIHexView view)
 	{
 		_view = view;
 
-		_view.SelectionManager.SelectionChanged += OnSelectionChanged;
+		_view.Selection.SelectionChanged += OnSelectionChanged;
 	}
 
 	private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -120,6 +120,6 @@ public class CaretManager
 		_caretPosition = caretPosition;
 		CaretPositionChanged?.Invoke(this, new CaretPositionChangedEventArgs(caretPosition));
 
-		_view.SelectionManager.Clear();
+		_view.Selection.Clear();
 	}
 }

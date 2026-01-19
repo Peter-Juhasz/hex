@@ -20,8 +20,8 @@ public class WinUIHexView : IHexView
 		this.snapshot = snapshot;
 		ScrollableHeight = theme.RowHeight;
 		_theme = theme;
-		SelectionManager = new(this);
-		CaretManager = new(this);
+		Selection = new SelectionManager(this);
+		Caret = new CaretManager(this);
 	}
 
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
@@ -44,9 +44,9 @@ public class WinUIHexView : IHexView
 	private VisualTheme _theme;
 	private readonly IBinarySnapshot snapshot;
 
-	public SelectionManager SelectionManager { get; }
+	public ISelection Selection { get; }
 
-	public CaretManager CaretManager { get; }
+	public ICaret Caret { get; }
 
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{

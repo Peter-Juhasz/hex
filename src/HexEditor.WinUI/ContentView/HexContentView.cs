@@ -1,6 +1,7 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
 using HexEditor.WinUI.Caret;
+using HexEditor.WinUI.Scrolling;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -48,9 +49,9 @@ internal sealed class HexContentView : ContentControl
 		_viewScroller = viewScroller;
 		_viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 
-		_view.SelectionManager.SelectionChanged += OnSelectionChanged;
-		_view.CaretManager.CaretPositionChanged += OnCaretPositionChanged;
-		_view.CaretManager.ActiveViewChanged += OnCaretActiveViewChanged;
+		_view.Selection.SelectionChanged += OnSelectionChanged;
+		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.ActiveViewChanged += OnCaretActiveViewChanged;
 
 		this.PointerPressed += OnPointerPressed;
 		this.PointerMoved += OnPointerMoved;
@@ -201,7 +202,7 @@ internal sealed class HexContentView : ContentControl
 			e.Handled = true;
 		}
 
-		_view.CaretManager.ChangeView(ActiveView.Hex);
+		_view.Caret.ChangeView(ActiveView.Hex);
 	}
 
 	private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
@@ -209,7 +210,7 @@ internal sealed class HexContentView : ContentControl
 		if (_anchorPoint is SnapshotPoint anchorPoint)
 		{
 			var activePoint = _view.MapFromVisualHex(e.GetCurrentPoint(this).Position);
-			_view.SelectionManager.Select(anchorPoint, activePoint);
+			_view.Selection.Select(anchorPoint, activePoint);
 			e.Handled = true;
 		}
 	}
@@ -222,7 +223,7 @@ internal sealed class HexContentView : ContentControl
 			var activePoint = _view.MapFromVisualHex(pointerPoint.Position);
 			if (_anchorPoint == activePoint)
 			{
-				_view.CaretManager.MoveTo(activePoint);
+				_view.Caret.MoveTo(activePoint);
 			}
 
 			_anchorPoint = null;
@@ -243,7 +244,7 @@ internal sealed class HexContentView : ContentControl
 			Y1 = 0,
 			X2 = 0,
 			Y2 = _theme.RowHeight,
-			Visibility = _view.CaretManager.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed,
+			Visibility = _view.Caret.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed,
 		};
 
 		var animation = new DoubleAnimationUsingKeyFrames()

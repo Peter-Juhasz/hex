@@ -1,6 +1,7 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
 using HexEditor.WinUI.Caret;
+using HexEditor.WinUI.Scrolling;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -40,7 +41,7 @@ internal sealed class AddressBarMargin : ContentControl
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 
-		_view.CaretManager.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly Canvas _canvas;
@@ -71,7 +72,7 @@ internal sealed class AddressBarMargin : ContentControl
 				}
 			}
 
-			var currentRow = _view.GetContainingRow(_view.CaretManager.Position.Point);
+			var currentRow = _view.GetContainingRow(_view.Caret.Position.Point);
 
 			foreach (var row in e.AddedRows)
 			{
@@ -109,7 +110,7 @@ internal sealed class AddressBarMargin : ContentControl
 		var snapshot = _view.Snapshot;
 		var point = new SnapshotPoint(snapshot, address);
 		var row = _view.GetContainingRow(point);
-		_view.SelectionManager.Select(row);
+		_view.Selection.Select(row);
 	}
 
 	#region Caret
