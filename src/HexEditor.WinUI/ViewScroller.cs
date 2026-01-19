@@ -10,7 +10,7 @@ internal sealed class ViewScroller
 
 	public void ScrollTo(double verticalOffset)
 	{
-		if (VerticalOffset != verticalOffset)
+		if (!double.AreApproximatelyEqual(VerticalOffset, verticalOffset, 1d))
 		{
 			VerticalOffset = verticalOffset;
 			OffsetChanged?.Invoke(this, new ScrollChangedEventArgs(Math.Round(verticalOffset)));

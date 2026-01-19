@@ -27,29 +27,18 @@ internal sealed class HexContentView : ContentControl
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
+		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
-
-		_scrollView = new ScrollView
-		{
-			VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
-			HorizontalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			HorizontalContentAlignment = HorizontalAlignment.Stretch,
-			VerticalContentAlignment = VerticalAlignment.Top,
-			VerticalAlignment = VerticalAlignment.Stretch,
-			VerticalScrollMode = ScrollingScrollMode.Disabled,
-			CornerRadius = new CornerRadius(0),
-			Padding = new Thickness(0),
-		};
-		this.Content = _scrollView;
 
 		_canvas = new Canvas
 		{
 			VerticalAlignment = VerticalAlignment.Top,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			MinWidth = (theme.Columns * 2) * theme.FontWidth,
+			Background = new SolidColorBrush(Colors.Transparent),
 		};
-		_scrollView.Content = _canvas;
+		this.Content = _canvas;
 
 		// create caret
 		_caret = CreateCaret();
@@ -57,24 +46,17 @@ internal sealed class HexContentView : ContentControl
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		_viewScroller = viewScroller;
-		viewScroller.OffsetChanged += OnScrollOffsetChanged;
-		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
+		_viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 
 		_view.SelectionManager.SelectionChanged += OnSelectionChanged;
 		_view.CaretManager.CaretPositionChanged += OnCaretPositionChanged;
 		_view.CaretManager.ActiveViewChanged += OnCaretActiveViewChanged;
 
-		this.Loaded += OnLoaded;
 		this.PointerPressed += OnPointerPressed;
 		this.PointerMoved += OnPointerMoved;
 		this.PointerReleased += OnPointerReleased;
 	}
 
-	private void OnLoaded(object sender, RoutedEventArgs e)
-	{
-	}
-
-	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 	private readonly ViewScroller _viewScroller;
 
@@ -305,14 +287,7 @@ internal sealed class HexContentView : ContentControl
 	#endregion
 
 	#region Scrolling
-	private static readonly ScrollingScrollOptions scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
-
-	private void OnScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
-	{
-		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
-	}
-
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}

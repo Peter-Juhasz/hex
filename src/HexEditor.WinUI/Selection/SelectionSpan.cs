@@ -12,12 +12,12 @@ public class SelectionSpan
 			throw new ArgumentException("Anchor point and active point must belong to the same snapshot.");
 		}
 
-		this.manager = manager;
+		_manager = manager;
 		AnchorPoint = anchorPoint;
 		ActivePoint = activePoint;
 	}
 
-	private readonly SelectionManager manager;
+	private readonly SelectionManager _manager;
 
 	public SnapshotPoint AnchorPoint { get; }
 

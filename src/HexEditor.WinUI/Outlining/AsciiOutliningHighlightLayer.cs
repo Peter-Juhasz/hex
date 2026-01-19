@@ -12,42 +12,30 @@ internal sealed class AsciiOutliningHighlightLayer : ContentControl
 {
 	public AsciiOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
+		_view = view;
+		_theme = theme;
+
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
+		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
-
-		_scrollView = new ScrollView
-		{
-			VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
-			HorizontalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			VerticalAlignment = VerticalAlignment.Stretch,
-			VerticalScrollMode = ScrollingScrollMode.Disabled,
-			CornerRadius = new CornerRadius(0),
-			Padding = new Thickness(0),
-		};
-		this.Content = _scrollView;
 
 		_canvas = new Canvas
 		{
 			MinWidth = theme.Columns * theme.FontWidth,
 		};
-		_scrollView.Content = _canvas;
-
-		_view = view;
-		_theme = theme;
+		this.Content = _canvas;
 
 		outliningMargin.OutliningRegionSelectionRequested += OnOutliningRegionSelectionRequested;
 		outliningMargin.OutliningRegionDismissRequested += OnDismissed;
 
-		viewScroller.OffsetChanged += OnScrollOffsetChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
 
-	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 
 	private readonly WinUIHexView _view;
@@ -89,14 +77,7 @@ internal sealed class AsciiOutliningHighlightLayer : ContentControl
 	}
 
 	#region Scrolling
-	private static readonly ScrollingScrollOptions scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
-
-	private void OnScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
-	{
-		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
-	}
-
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}

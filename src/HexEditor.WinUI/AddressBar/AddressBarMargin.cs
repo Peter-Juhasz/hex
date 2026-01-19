@@ -1,5 +1,6 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
+using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -15,42 +16,32 @@ internal sealed class AddressBarMargin : ContentControl
 {
 	public AddressBarMargin(WinUIHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
 	{
+		_view = view;
 		_theme = theme;
+
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
-		this.VerticalAlignment = VerticalAlignment.Stretch;
+		this.VerticalAlignment = VerticalAlignment.Top;
+		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
-
-		_scrollView = new ScrollView
-		{
-			VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
-			HorizontalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			VerticalAlignment = VerticalAlignment.Stretch,
-			VerticalScrollMode = ScrollingScrollMode.Disabled,
-			CornerRadius = new CornerRadius(0),
-			Padding = new Thickness(0),
-		};
-		this.Content = _scrollView;
 
 		_canvas = new Canvas
 		{
+			VerticalAlignment = VerticalAlignment.Top,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
 			MinWidth = _theme.FontWidth * 8 + 8 * 2,
+			Background = new SolidColorBrush(Colors.Transparent),
 		};
-		_scrollView.Content = _canvas;
+		this.Content = _canvas;
 
-		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		viewScroller.OffsetChanged += OnScrollOffsetChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
-
-	private readonly ScrollView _scrollView;
 	private readonly Canvas _canvas;
 	private readonly VisualTheme _theme;
-
 
 	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
 	private readonly WinUIHexView _view;
@@ -107,14 +98,7 @@ internal sealed class AddressBarMargin : ContentControl
 	}
 
 	#region Scrolling
-	private static readonly ScrollingScrollOptions scrollOptions = new ScrollingScrollOptions(ScrollingAnimationMode.Disabled);
-
-	private void OnScrollOffsetChanged(object? sender, ScrollChangedEventArgs e)
-	{
-		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
-	}
-
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}
