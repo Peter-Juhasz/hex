@@ -169,7 +169,7 @@ internal sealed class OutliningMargin : ContentControl
 		OutliningRegionSelectionRequested?.Invoke(this, new OutliningRegionSelectionRequestedEventArgs((TagSpan<StructureTag>)line.Tag));
 	}
 
-	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
+	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
 	{
 		_queue.Enqueue(async c =>
 		{
@@ -255,7 +255,7 @@ internal sealed class OutliningMargin : ContentControl
 				}
 				catch (Exception ex)
 				{
-
+					// TODO
 				}
 			}
 		});
@@ -269,7 +269,7 @@ internal sealed class OutliningMargin : ContentControl
 		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 	}
 
-	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}

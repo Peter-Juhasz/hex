@@ -64,7 +64,7 @@ internal sealed class AsciiContentView : ContentControl
 	private readonly Brush _selectionBackground = new SolidColorBrush(Color.FromArgb(255, 153, 201, 239));
 	private SnapshotPoint? _anchorPoint;
 
-	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
+	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
 	{
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 		{
@@ -211,7 +211,7 @@ internal sealed class AsciiContentView : ContentControl
 		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 	}
 
-	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}

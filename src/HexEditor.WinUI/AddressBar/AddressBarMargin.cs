@@ -55,7 +55,7 @@ internal sealed class AddressBarMargin : ContentControl
 	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
 	private readonly WinUIHexView _view;
 
-	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
+	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
 	{
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
 		{
@@ -114,7 +114,7 @@ internal sealed class AddressBarMargin : ContentControl
 		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 	}
 
-	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}

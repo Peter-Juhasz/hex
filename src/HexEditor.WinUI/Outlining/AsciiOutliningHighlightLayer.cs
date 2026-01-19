@@ -96,7 +96,7 @@ internal sealed class AsciiOutliningHighlightLayer : ContentControl
 		_scrollView.ScrollTo(0, e.VerticalOffset, scrollOptions);
 	}
 
-	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}

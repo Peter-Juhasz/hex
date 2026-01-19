@@ -42,8 +42,9 @@ internal sealed class BackgroundTaskQueue
 			}
 			catch (Exception ex)
 			{
-			}
-		}
+                // TODO
+            }
+        }
 	}
 
 	private record struct WorkItem(Func<CancellationToken, Task> Factory, CancellationToken CancellationToken);
