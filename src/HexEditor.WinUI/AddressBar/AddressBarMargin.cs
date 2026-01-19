@@ -1,5 +1,6 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
+using HexEditor.WinUI.Caret;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -38,13 +39,18 @@ internal sealed class AddressBarMargin : ContentControl
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
+
+		_view.CaretManager.CaretPositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly Canvas _canvas;
 	private readonly VisualTheme _theme;
 
-	private readonly Brush _addressBarForegroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
+	private readonly Brush _foregroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
+	private readonly Brush _caretForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly WinUIHexView _view;
+
+	private TextBlock? _previouslyActiveTextBlock;
 
 	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
 	{
@@ -65,6 +71,8 @@ internal sealed class AddressBarMargin : ContentControl
 				}
 			}
 
+			var currentRow = _view.GetContainingRow(_view.CaretManager.Position.Point);
+
 			foreach (var row in e.AddedRows)
 			{
 				var addressTextBlock = new TextBlock()
@@ -72,7 +80,7 @@ internal sealed class AddressBarMargin : ContentControl
 					Text = row.Extent.Span.StartOffset.ToString("X8"),
 					FontFamily = _theme.FontFamily,
 					FontSize = _theme.FontSize,
-					Foreground = _addressBarForegroundBrush,
+					Foreground = _foregroundBrush,
 					IsTextSelectionEnabled = false,
 					IsHitTestVisible = true,
 					TextWrapping = TextWrapping.NoWrap,
@@ -82,6 +90,13 @@ internal sealed class AddressBarMargin : ContentControl
 				};
 				Canvas.SetLeft(addressTextBlock, 8);
 				Canvas.SetTop(addressTextBlock, Math.Round(row.VisualBounds.Top));
+
+				if (row.Extent.Span.StartOffset == currentRow.Span.StartOffset)
+				{
+					addressTextBlock.Foreground = _caretForegroundBrush;
+					_previouslyActiveTextBlock = addressTextBlock;
+				}
+
 				addressTextBlock.PointerPressed += OnAddressClick;
 				_canvas.Children.Add(addressTextBlock);
 			}
@@ -96,6 +111,39 @@ internal sealed class AddressBarMargin : ContentControl
 		var row = _view.GetContainingRow(point);
 		_view.SelectionManager.Select(row);
 	}
+
+	#region Caret
+	private void OnCaretPositionChanged(object? sender, CaretPositionChangedEventArgs e)
+	{
+		var row = _view.GetContainingRow(e.CaretPosition.Point);
+
+		if (_previouslyActiveTextBlock is { Tag: long previousOffset })
+		{
+			if (previousOffset == row.Span.StartOffset)
+			{
+				return;
+			}
+
+			_previouslyActiveTextBlock.Foreground = _foregroundBrush;
+			_previouslyActiveTextBlock = null;
+		}
+
+		foreach (var child in _canvas.Children)
+		{
+			if (child is TextBlock addressTextBlock)
+			{
+				if (addressTextBlock.Tag is long offset &&
+					offset == row.Span.StartOffset
+				)
+				{
+					addressTextBlock.Foreground = _caretForegroundBrush;
+					_previouslyActiveTextBlock = addressTextBlock;
+					break;
+				}
+			}
+		}
+	}
+	#endregion
 
 	#region Scrolling
 	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
