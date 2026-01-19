@@ -1,5 +1,7 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
+using HexEditor.WinUI.Caret;
+using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Selection;
 using Microsoft.UI.Xaml.Media;
 using System;
@@ -19,6 +21,7 @@ public class WinUIHexView : IHexView
 		ScrollableHeight = theme.RowHeight;
 		_theme = theme;
 		SelectionManager = new(this);
+		CaretManager = new(this);
 	}
 
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
@@ -42,6 +45,8 @@ public class WinUIHexView : IHexView
 	private readonly IBinarySnapshot snapshot;
 
 	public SelectionManager SelectionManager { get; }
+
+	public CaretManager CaretManager { get; }
 
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{
@@ -83,33 +88,13 @@ public class WinUIHexView : IHexView
 
 			// create new row
 			var rowIndex = (int)(processedRelativeOffset / _theme.Columns);
-			var viewRow = new HexViewRow(
-				this,
-				new ViewportBounds(
-					Left: 0,
-					Top: (firstVisibleRowIndex + rowIndex) * _theme.RowHeight,
-					Width: _theme.FontWidth * rowSpan.Span.Length,
-					Height: _theme.RowHeight
-				),
-				rowSpan,
-				screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
-				[new(
-					rowSpan,
-					screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
-					FormattedTextRun.ToHexString(screenBuffer.AsSpan((int)processedRelativeOffset, (int)rowSpan.Span.Length)),
-					0,
-					rowSpan.Span.Length * 2 * _theme.FontWidth,
-					null
-				)],
-				[new(
-					rowSpan,
-					screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
-					FormattedTextRun.ToAsciiString(screenBuffer.AsSpan((int)processedRelativeOffset, (int)rowSpan.Span.Length)),
-					0,
-					rowSpan.Span.Length * _theme.FontWidth,
-					null
-				)]
-			);
+			var viewRow = RowFormatter.Format(new(
+				View: this,
+				Theme: _theme,
+				Top: (firstVisibleRowIndex + rowIndex) * _theme.RowHeight,
+				Span: rowSpan,
+				Data: screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length)
+			));
 			totalRowsBuilder.Add(viewRow);
 			newRowsBuilder.Add(viewRow);
 			processedRelativeOffset += rowSpan.Span.Length;

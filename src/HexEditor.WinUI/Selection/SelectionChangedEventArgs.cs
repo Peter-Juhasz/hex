@@ -4,10 +4,10 @@ namespace HexEditor.WinUI.Selection;
 
 public class SelectionChangedEventArgs : EventArgs
 {
-	public SelectionChangedEventArgs(BinarySelectionSpan? selection)
+	public SelectionChangedEventArgs(SelectionSpan? selection)
 	{
 		Selection = selection;
 	}
 
-	public BinarySelectionSpan? Selection { get; }
+	public SelectionSpan? Selection { get; }
 }

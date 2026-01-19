@@ -1,5 +1,6 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
+using HexEditor.WinUI.Caret;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -10,6 +11,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using Windows.UI;
+using Windows.UI.Input;
 
 namespace HexEditor.WinUI.ContentView;
 
@@ -17,6 +19,9 @@ internal sealed class HexContentView : ContentControl
 {
 	public HexContentView(WinUIHexView view, VisualTheme theme, ViewScroller viewScroller) : base()
 	{
+		_view = view;
+		_theme = theme;
+
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -45,14 +50,27 @@ internal sealed class HexContentView : ContentControl
 		};
 		_scrollView.Content = _canvas;
 
-		_view = view;
-		_theme = theme;
+		_caret = new Line()
+		{
+			Stroke = _caretStroke,
+			StrokeThickness = 1,
+			IsHitTestVisible = false,
+			X1 = 0,
+			Y1 = 0,
+			X2 = 0,
+			Y2 = _theme.RowHeight,
+			Visibility = _view.CaretManager.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed,
+		};
+		_canvas.Children.Add(_caret);
+
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		_viewScroller = viewScroller;
 		viewScroller.OffsetChanged += OnScrollOffsetChanged;
 		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 
 		_view.SelectionManager.SelectionChanged += OnSelectionChanged;
+		_view.CaretManager.CaretPositionChanged += OnCaretPositionChanged;
+		_view.CaretManager.ActiveViewChanged += OnCaretActiveViewChanged;
 
 		this.Loaded += OnLoaded;
 		this.PointerPressed += OnPointerPressed;
@@ -76,7 +94,10 @@ internal sealed class HexContentView : ContentControl
 	private readonly Brush _selectionBackground = new SolidColorBrush(Color.FromArgb(255, 153, 201, 239));
 	private SnapshotPoint? _anchorPoint;
 
-	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
+	private readonly Line _caret;
+	private readonly Brush _caretStroke = new SolidColorBrush(Colors.Black);
+
+	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
 		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
 		{
@@ -197,7 +218,15 @@ internal sealed class HexContentView : ContentControl
 
 	private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
 	{
-		_anchorPoint = _view.MapFromVisualHex(_view.MapViewportToVisual(e.GetCurrentPoint(this).Position));
+		var pointerPoint = e.GetCurrentPoint(this);
+
+		if (pointerPoint.Properties.IsLeftButtonPressed == true)
+		{
+			_anchorPoint = _view.MapFromVisualHex(_view.MapViewportToVisual(pointerPoint.Position));
+			e.Handled = true;
+		}
+
+		_view.CaretManager.ChangeView(ActiveView.Hex);
 	}
 
 	private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
@@ -206,12 +235,38 @@ internal sealed class HexContentView : ContentControl
 		{
 			var activePoint = _view.MapFromVisualHex(_view.MapViewportToVisual(e.GetCurrentPoint(this).Position));
 			_view.SelectionManager.Select(anchorPoint, activePoint);
+			e.Handled = true;
 		}
 	}
 
 	private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
 	{
-		_anchorPoint = null;
+		var pointerPoint = e.GetCurrentPoint(this);
+		if (pointerPoint.Properties.IsLeftButtonPressed == false)
+		{
+			var activePoint = _view.MapFromVisualHex(_view.MapViewportToVisual(pointerPoint.Position));
+			if (_anchorPoint == activePoint)
+			{
+				_view.CaretManager.MoveTo(activePoint);
+			}
+
+			_anchorPoint = null;
+			e.Handled = true;
+		}
+	}
+	#endregion
+
+	#region Caret
+	private void OnCaretPositionChanged(object? sender, CaretPositionChangedEventArgs e)
+	{
+		var visualPosition = _view.MapToVisualHex(e.CaretPosition.Point);
+		Canvas.SetLeft(_caret, Math.Round(visualPosition.X));
+		Canvas.SetTop(_caret, Math.Round(visualPosition.Y));
+	}
+
+	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)
+	{
+		_caret.Visibility = e.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed;
 	}
 	#endregion
 

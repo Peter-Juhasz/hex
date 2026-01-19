@@ -17,6 +17,8 @@ public static partial class Extensions
 	{
 		public SnapshotPoint Start => new(snapshot, 0);
 
+		public SnapshotPoint End => new(snapshot, snapshot.Length);
+
 		public SnapshotSpan Span => new(snapshot, new(0, snapshot.Length));
 
 		public SnapshotSpan Slice(long offset, long length)

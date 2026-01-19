@@ -3,9 +3,9 @@ using System;
 
 namespace HexEditor.WinUI.Selection;
 
-public class BinarySelectionSpan
+public class SelectionSpan
 {
-	public BinarySelectionSpan(SelectionManager manager, SnapshotPoint anchorPoint, SnapshotPoint activePoint)
+	public SelectionSpan(SelectionManager manager, SnapshotPoint anchorPoint, SnapshotPoint activePoint)
 	{
 		if (anchorPoint.Snapshot != activePoint.Snapshot)
 		{

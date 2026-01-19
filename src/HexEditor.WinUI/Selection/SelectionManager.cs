@@ -11,13 +11,13 @@ public class SelectionManager
 	}
 
 	private readonly WinUIHexView _view;
-	private BinarySelectionSpan? _selection;
+	private SelectionSpan? _selection;
 
 	public event EventHandler<SelectionChangedEventArgs>? SelectionChanged;
 
 	public void Select(SnapshotPoint anchorPoint, SnapshotPoint activePoint)
 	{
-		if (_selection is BinarySelectionSpan existing)
+		if (_selection is SelectionSpan existing)
 		{
 			if (existing.AnchorPoint == anchorPoint && existing.ActivePoint == activePoint)
 			{
@@ -25,18 +25,20 @@ public class SelectionManager
 			}
 		}
 
-		_selection = new BinarySelectionSpan(this, anchorPoint, activePoint);
+		_selection = new SelectionSpan(this, anchorPoint, activePoint);
 		SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(_selection));
 	}
 
 	public void Select(SnapshotSpan span, bool isReversed = false)
 	{
-		_selection = isReversed ? new BinarySelectionSpan(this, span.End, span.Start) : new BinarySelectionSpan(this, span.Start, span.End);
+		_selection = isReversed ? new SelectionSpan(this, span.End, span.Start) : new SelectionSpan(this, span.Start, span.End);
 		SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(_selection));
 	}
 
 	public void Clear()
 	{
+		var oldSelection = _selection;
+
 		_selection = null;
 		SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(null));
 	}
