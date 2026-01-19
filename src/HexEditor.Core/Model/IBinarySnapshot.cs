@@ -6,9 +6,9 @@ public interface IBinarySnapshot
 
 	ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken);
 
-	long Length { get; }
+    long Length { get; }
 
-	IBinarySnapshot Apply(BinaryChange change);
+	IBinarySnapshot? Previous { get; }
 }
 
 public static partial class Extensions

@@ -37,6 +37,7 @@ public static partial class Extensions
 		public SnapshotSpan Slice(long offset, long length) =>
 			new(span.Snapshot, span.Span.Slice(offset, length));
 
+		// TODO bad API desing
 		public ValueTask CopyToAsync(Memory<byte> destination, CancellationToken cancellationToken)
 		{
 			if (span.Span.Length > int.MaxValue)
@@ -55,7 +56,7 @@ public static partial class Extensions
 				destination = destination[..spanLength];
 			}
 
-			return span.Snapshot.CopyToAsync(span.Span.StartOffset, destination, cancellationToken);
+            return span.Snapshot.CopyToAsync(span.Span.StartOffset, destination, cancellationToken);
 		}
 	}
 }
