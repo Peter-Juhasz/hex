@@ -197,7 +197,7 @@ internal sealed class HexContentView : ContentControl
 
 		if (pointerPoint.Properties.IsLeftButtonPressed == true)
 		{
-			_anchorPoint = _view.MapFromVisualHex(_view.MapViewportToVisual(pointerPoint.Position));
+			_anchorPoint = _view.MapFromVisualHex(pointerPoint.Position);
 			e.Handled = true;
 		}
 
@@ -208,7 +208,7 @@ internal sealed class HexContentView : ContentControl
 	{
 		if (_anchorPoint is SnapshotPoint anchorPoint)
 		{
-			var activePoint = _view.MapFromVisualHex(_view.MapViewportToVisual(e.GetCurrentPoint(this).Position));
+			var activePoint = _view.MapFromVisualHex(e.GetCurrentPoint(this).Position);
 			_view.SelectionManager.Select(anchorPoint, activePoint);
 			e.Handled = true;
 		}
@@ -219,7 +219,7 @@ internal sealed class HexContentView : ContentControl
 		var pointerPoint = e.GetCurrentPoint(this);
 		if (pointerPoint.Properties.IsLeftButtonPressed == false)
 		{
-			var activePoint = _view.MapFromVisualHex(_view.MapViewportToVisual(pointerPoint.Position));
+			var activePoint = _view.MapFromVisualHex(pointerPoint.Position);
 			if (_anchorPoint == activePoint)
 			{
 				_view.CaretManager.MoveTo(activePoint);
@@ -287,7 +287,7 @@ internal sealed class HexContentView : ContentControl
 	#endregion
 
 	#region Scrolling
-	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}

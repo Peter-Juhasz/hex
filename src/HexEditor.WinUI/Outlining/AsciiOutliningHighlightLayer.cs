@@ -77,7 +77,7 @@ internal sealed class AsciiOutliningHighlightLayer : ContentControl
 	}
 
 	#region Scrolling
-	private void OnScrollableHeightChanged(object sender, ScrollableHeightChangedEventArgs e)
+	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
 	{
 		_canvas.Height = e.NewHeight;
 	}
