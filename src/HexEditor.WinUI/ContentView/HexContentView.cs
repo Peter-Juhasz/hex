@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using Windows.UI;
@@ -50,17 +51,8 @@ internal sealed class HexContentView : ContentControl
 		};
 		_scrollView.Content = _canvas;
 
-		_caret = new Line()
-		{
-			Stroke = _caretStroke,
-			StrokeThickness = 1,
-			IsHitTestVisible = false,
-			X1 = 0,
-			Y1 = 0,
-			X2 = 0,
-			Y2 = _theme.RowHeight,
-			Visibility = _view.CaretManager.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed,
-		};
+		// create caret
+		_caret = CreateCaret();
 		_canvas.Children.Add(_caret);
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
@@ -95,6 +87,7 @@ internal sealed class HexContentView : ContentControl
 	private SnapshotPoint? _anchorPoint;
 
 	private readonly Line _caret;
+	private Storyboard _caretStoryboard;
 	private readonly Brush _caretStroke = new SolidColorBrush(Colors.Black);
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
@@ -257,11 +250,52 @@ internal sealed class HexContentView : ContentControl
 	#endregion
 
 	#region Caret
+	private Line CreateCaret()
+	{
+		var caret = new Line()
+		{
+			Stroke = _caretStroke,
+			StrokeThickness = 1,
+			IsHitTestVisible = false,
+			X1 = 0,
+			Y1 = 0,
+			X2 = 0,
+			Y2 = _theme.RowHeight,
+			Visibility = _view.CaretManager.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed,
+		};
+
+		var animation = new DoubleAnimationUsingKeyFrames()
+		{
+			Duration = new Duration(TimeSpan.FromMilliseconds(500)),
+			AutoReverse = true,
+			RepeatBehavior = RepeatBehavior.Forever,
+		};
+		animation.KeyFrames.Add(new DiscreteDoubleKeyFrame()
+		{
+			KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(0)),
+			Value = 1,
+		});
+		animation.KeyFrames.Add(new DiscreteDoubleKeyFrame()
+		{
+			KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(250)),
+			Value = 0,
+		});
+
+		var storyboard = new Storyboard();
+		storyboard.Children.Add(animation);
+		Storyboard.SetTarget(animation, caret);
+		Storyboard.SetTargetProperty(animation, nameof(caret.Opacity));
+		storyboard.Begin();
+		_caretStoryboard = storyboard;
+		return caret;
+	}
+
 	private void OnCaretPositionChanged(object? sender, CaretPositionChangedEventArgs e)
 	{
 		var visualPosition = _view.MapToVisualHex(e.CaretPosition.Point);
 		Canvas.SetLeft(_caret, Math.Round(visualPosition.X));
 		Canvas.SetTop(_caret, Math.Round(visualPosition.Y));
+		_caretStoryboard.Seek(TimeSpan.Zero);
 	}
 
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)
