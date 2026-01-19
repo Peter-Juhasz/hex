@@ -12,7 +12,9 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using Windows.System;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Input;
 
 namespace HexEditor.WinUI.ContentView;
@@ -31,6 +33,7 @@ internal sealed class HexContentView : ContentControl
 		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
 		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
+		this.IsTabStop = true;
 
 		_canvas = new Canvas
 		{
@@ -52,6 +55,7 @@ internal sealed class HexContentView : ContentControl
 		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
 		_view.Caret.ActiveViewChanged += OnCaretActiveViewChanged;
 
+		this.KeyDown += OnKeyDown;
 		this.PointerPressed += OnPointerPressed;
 		this.PointerMoved += OnPointerMoved;
 		this.PointerReleased += OnPointerReleased;
@@ -74,7 +78,7 @@ internal sealed class HexContentView : ContentControl
 
 	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
 	{
-		DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+		DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.High, () =>
 		{
 			// remove old rows
 			foreach (var row in e.RemovedRows)
@@ -197,6 +201,8 @@ internal sealed class HexContentView : ContentControl
 
 		if (pointerPoint.Properties.IsLeftButtonPressed == true)
 		{
+			this.Focus(FocusState.Pointer);
+
 			_anchorPoint = _view.MapFromVisualHex(pointerPoint.Position);
 			e.Handled = true;
 		}
@@ -283,6 +289,69 @@ internal sealed class HexContentView : ContentControl
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)
 	{
 		_caret.Visibility = e.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed;
+	}
+	#endregion
+
+	#region Keyboard
+	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
+	{
+		var isControlDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+		var isShiftDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+		var isAltDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down);
+
+		if (isShiftDown)
+		{
+		}
+		else
+		{
+			switch (e.Key)
+			{
+				case VirtualKey.Home when isControlDown:
+					_view.Caret.MoveToHome();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.End when isControlDown:
+					_view.Caret.MoveToEnd();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Home when !isControlDown:
+					_view.Caret.MoveToRowStart();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.End when !isControlDown:
+					_view.Caret.MoveToRowEnd();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Left when !isControlDown:
+					_view.Caret.MoveLeft();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Right when !isControlDown:
+					_view.Caret.MoveRight();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Up when !isControlDown:
+					_view.Caret.MoveUpByRow();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Down when !isControlDown:
+					_view.Caret.MoveDownByRow();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Escape:
+					_view.Selection.Clear();
+					e.Handled = true;
+					break;
+			}
+		}
 	}
 	#endregion
 }

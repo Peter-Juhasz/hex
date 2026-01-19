@@ -91,7 +91,7 @@ public class CaretManager : ICaret
 		}
 	}
 
-	public void MoveUp()
+	public void MoveUpByRow()
 	{
 		var currentRow = _view.GetContainingRow(_caretPosition.Point);
 		if (currentRow.Start.Position > 0)
@@ -103,7 +103,7 @@ public class CaretManager : ICaret
 		}
 	}
 
-	public void MoveDown()
+	public void MoveDownByRow()
 	{
 		var currentRow = _view.GetContainingRow(_caretPosition.Point);
 		if (currentRow.End.Position < _view.Snapshot.Length)

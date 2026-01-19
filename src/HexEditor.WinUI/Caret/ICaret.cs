@@ -13,14 +13,14 @@ public interface ICaret
 
 	void ChangeView(ActiveView activeView);
 
-	void MoveDown();
-	void MoveLeft();
-	void MoveRight();
 	void MoveTo(SnapshotPoint point);
 	void MoveTo(SnapshotPoint point, ActiveView activeView);
-	void MoveToEnd();
+	void MoveLeft();
+	void MoveRight();
+	void MoveUpByRow();
+	void MoveDownByRow();
 	void MoveToHome();
-	void MoveToRowEnd();
+	void MoveToEnd();
 	void MoveToRowStart();
-	void MoveUp();
+	void MoveToRowEnd();
 }

@@ -1,7 +1,6 @@
 using HexEditor.Core.Tagging;
 using HexEditor.Formats;
 using HexEditor.Model;
-using HexEditor.ViewModel;
 using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
@@ -30,6 +29,7 @@ public partial class EditorHost : ContentControl
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
 		this.VerticalContentAlignment = VerticalAlignment.Stretch;
+		this.IsTabStop = true;
 
 		_grid = new Grid()
 		{
@@ -155,6 +155,11 @@ public partial class EditorHost : ContentControl
 	private void OnViewScrollerScrollOffsetChanged(object? sender, ScrollVerticalOffsetChangedEventArgs e)
 	{
 		_queue.Enqueue(c => _view.ScrollToAsync(e.NewVerticalOffset, c));
+
+		if (!_scrollTimer.IsEnabled)
+		{
+			_scrollView.ScrollTo(0, e.NewVerticalOffset);
+		}
 	}
 
 	private void OnModelScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
@@ -163,7 +168,6 @@ public partial class EditorHost : ContentControl
 		DispatcherQueue.TryEnqueue(() =>
 		{
 			_grid.Height = e.NewHeight;
-			//_grid.RowDefinitions[0].Height = new GridLength(e.NewHeight);
 		});
 	}
 
@@ -174,6 +178,8 @@ public partial class EditorHost : ContentControl
 			var newHeight = _scrollView.ActualHeight;
 			_queue.Enqueue(c => _view.ResizeWindowAsync(0, newHeight, c));
 			_scrollView.ScrollPresenter.ViewChanged += OnScrollViewChanged;
+
+			this.Focus(FocusState.Keyboard);
 		});
 	}
 
@@ -197,26 +203,6 @@ public partial class EditorHost : ContentControl
 
 		switch (e.Key)
 		{
-			case VirtualKey.Home when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_view.Caret.MoveToHome();
-				e.Handled = true;
-				break;
-
-			case VirtualKey.End when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_view.Caret.MoveToEnd();
-				e.Handled = true;
-				break;
-
-			case VirtualKey.Home when controlState.HasFlag(CoreVirtualKeyStates.None):
-				_view.Caret.MoveToRowStart();
-				e.Handled = true;
-				break;
-
-			case VirtualKey.End when controlState.HasFlag(CoreVirtualKeyStates.None):
-				_view.Caret.MoveToRowEnd();
-				e.Handled = true;
-				break;
-
 			case VirtualKey.Up when controlState.HasFlag(CoreVirtualKeyStates.Down):
 				_viewScroller.ScrollUpByRow();
 				e.Handled = true;
@@ -224,11 +210,6 @@ public partial class EditorHost : ContentControl
 
 			case VirtualKey.Down when controlState.HasFlag(CoreVirtualKeyStates.Down):
 				_viewScroller.ScrollDownByRow();
-				e.Handled = true;
-				break;
-
-			case VirtualKey.Escape:
-				_view.Selection.Clear();
 				e.Handled = true;
 				break;
 		}
