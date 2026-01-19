@@ -34,7 +34,7 @@ internal sealed class HexContentView : ContentControl
 
 		_canvas = new Canvas
 		{
-			VerticalAlignment = VerticalAlignment.Top,
+			VerticalAlignment = VerticalAlignment.Stretch,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			MinWidth = (theme.Columns * 2) * theme.FontWidth,
 			Background = new SolidColorBrush(Colors.Transparent),
@@ -47,7 +47,6 @@ internal sealed class HexContentView : ContentControl
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		_viewScroller = viewScroller;
-		_viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 
 		_view.Selection.SelectionChanged += OnSelectionChanged;
 		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
@@ -284,13 +283,6 @@ internal sealed class HexContentView : ContentControl
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)
 	{
 		_caret.Visibility = e.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed;
-	}
-	#endregion
-
-	#region Scrolling
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
-	{
-		_canvas.Height = e.NewHeight;
 	}
 	#endregion
 }

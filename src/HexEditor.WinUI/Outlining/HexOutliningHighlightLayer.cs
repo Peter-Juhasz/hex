@@ -23,6 +23,8 @@ internal sealed class HexOutliningHighlightLayer : ContentControl
 
 		_canvas = new Canvas
 		{
+			VerticalAlignment = VerticalAlignment.Stretch,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
 			MinWidth = (theme.Columns * 2) * theme.FontWidth,
 		};
 		this.Content = _canvas;
@@ -32,8 +34,6 @@ internal sealed class HexOutliningHighlightLayer : ContentControl
 
 		outliningMargin.OutliningRegionSelectionRequested += OnOutliningRegionSelectionRequested;
 		outliningMargin.OutliningRegionDismissRequested += OnDismissed;
-
-		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
 
@@ -76,11 +76,4 @@ internal sealed class HexOutliningHighlightLayer : ContentControl
 	{
 		_regionPath?.Visibility = Visibility.Collapsed;
 	}
-
-	#region Scrolling
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
-	{
-		_canvas.Height = e.NewHeight;
-	}
-	#endregion
 }

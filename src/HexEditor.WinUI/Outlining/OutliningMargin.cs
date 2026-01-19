@@ -35,13 +35,13 @@ internal sealed class OutliningMargin : ContentControl
 
 		_canvas = new Canvas
 		{
+			VerticalAlignment = VerticalAlignment.Stretch,
 			Width = _width,
 		};
 		this.Content = _canvas;
 
 		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
 	private readonly double _width = 14;
@@ -249,13 +249,6 @@ internal sealed class OutliningMargin : ContentControl
 			}
 		});
 	}
-
-	#region Scrolling
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
-	{
-		_canvas.Height = e.NewHeight;
-	}
-	#endregion
 }
 
 public class OutliningRegionSelectionRequestedEventArgs(TagSpan<StructureTag> span) : EventArgs

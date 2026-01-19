@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HexEditor.Model;
+using System;
 
 namespace HexEditor.WinUI.Scrolling;
 
@@ -8,10 +9,15 @@ public interface IViewScroller
 	double ViewportHeight { get; }
 	double VerticalOffset { get; }
 
-	void SetScrollableHeight(double newHeight);
+	void ResizeViewport(double newHeight);
+
 	void ScrollBy(double delta);
 	void ScrollTo(double verticalOffset);
-	void ResizeViewport(double newHeight);
+	void ScrollUpByRow();
+	void ScrollDownByRow();
+	void ScrollUpByPage();
+	void ScrollDownByPage();
+	void BringIntoView(SnapshotPoint point);
 
 	event EventHandler<ScrollVerticalOffsetChangedEventArgs>? VerticalOffsetChanged;
 	event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;

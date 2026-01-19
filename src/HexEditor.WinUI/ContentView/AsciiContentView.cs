@@ -31,7 +31,7 @@ internal sealed class AsciiContentView : ContentControl
 
 		_canvas = new Canvas
 		{
-			VerticalAlignment = VerticalAlignment.Top,
+			VerticalAlignment = VerticalAlignment.Stretch,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			MinWidth = theme.Columns * theme.FontWidth,
 			Background = new SolidColorBrush(Colors.Transparent),
@@ -40,7 +40,6 @@ internal sealed class AsciiContentView : ContentControl
 
 		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 
 		_view.Selection.SelectionChanged += OnSelectionChanged;
 		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
@@ -279,13 +278,6 @@ internal sealed class AsciiContentView : ContentControl
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)
 	{
 		_caret.Visibility = e.ActiveView is ActiveView.Ascii ? Visibility.Visible : Visibility.Collapsed;
-	}
-	#endregion
-
-	#region Scrolling
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
-	{
-		_canvas.Height = e.NewHeight;
 	}
 	#endregion
 }

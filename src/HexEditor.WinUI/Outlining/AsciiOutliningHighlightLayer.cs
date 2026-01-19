@@ -26,14 +26,14 @@ internal sealed class AsciiOutliningHighlightLayer : ContentControl
 
 		_canvas = new Canvas
 		{
+			VerticalAlignment = VerticalAlignment.Stretch,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
 			MinWidth = theme.Columns * theme.FontWidth,
 		};
 		this.Content = _canvas;
 
 		outliningMargin.OutliningRegionSelectionRequested += OnOutliningRegionSelectionRequested;
 		outliningMargin.OutliningRegionDismissRequested += OnDismissed;
-
-		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
 
@@ -76,11 +76,4 @@ internal sealed class AsciiOutliningHighlightLayer : ContentControl
 	{
 		_regionPath?.Visibility = Visibility.Collapsed;
 	}
-
-	#region Scrolling
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
-	{
-		_canvas.Height = e.NewHeight;
-	}
-	#endregion
 }

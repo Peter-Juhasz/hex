@@ -12,6 +12,7 @@ public interface ICaret
 	event EventHandler<CaretPositionChangedEventArgs>? CaretPositionChanged;
 
 	void ChangeView(ActiveView activeView);
+
 	void MoveDown();
 	void MoveLeft();
 	void MoveRight();

@@ -61,14 +61,15 @@ public partial class EditorHost : ContentControl
 		_grid.RowDefinitions.Clear();
 		_grid.RowDefinitions.Add(new RowDefinition()
 		{
-			Height = new GridLength(1, GridUnitType.Auto),
+			Height = new GridLength(1, GridUnitType.Star),
 		});
 
 		var taggerProvider = new ReflectionTaggerProvider([typeof(UrlTagger).Assembly]);
 
 		_view = new WinUIHexView(snapshot, _visualTheme);
-		_viewScroller = new ViewScroller();
+		_viewScroller = new ViewScroller(_view, _visualTheme);
 		_viewScroller.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
+		_viewScroller.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 
 		_hexContentView = new HexContentView(_view, _visualTheme, _viewScroller);
 		_outliningMargin = new OutliningMargin(_view, _viewScroller, _visualTheme, taggerProvider, contentType);
@@ -110,7 +111,6 @@ public partial class EditorHost : ContentControl
 		this.Loaded += OnLoaded;
 		this.Unloaded += OnUnloaded;
 
-		_view.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 		this.PreviewKeyDown += OnKeyDown;
 		this.SizeChanged += OnSizeChanged;
 
@@ -157,13 +157,13 @@ public partial class EditorHost : ContentControl
 		_queue.Enqueue(c => _view.ScrollToAsync(e.NewVerticalOffset, c));
 	}
 
-	private void OnModelScrollableHeightChanged(object? sender, HeightChangedEventArgs e)
+	private void OnModelScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
 	{
 		// route to UI thread
 		DispatcherQueue.TryEnqueue(() =>
 		{
 			_grid.Height = e.NewHeight;
-			_viewScroller.SetScrollableHeight(e.NewHeight);
+			//_grid.RowDefinitions[0].Height = new GridLength(e.NewHeight);
 		});
 	}
 
@@ -218,12 +218,12 @@ public partial class EditorHost : ContentControl
 				break;
 
 			case VirtualKey.Up when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_viewScroller.ScrollBy(-_visualTheme.RowHeight);
+				_viewScroller.ScrollUpByRow();
 				e.Handled = true;
 				break;
 
 			case VirtualKey.Down when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_viewScroller.ScrollBy(_visualTheme.RowHeight);
+				_viewScroller.ScrollDownByRow();
 				e.Handled = true;
 				break;
 

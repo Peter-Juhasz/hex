@@ -1,9 +1,21 @@
-﻿using System;
+﻿using HexEditor.Model;
+using HexEditor.ViewModel;
+using System;
 
 namespace HexEditor.WinUI.Scrolling;
 
 internal sealed class ViewScroller : IViewScroller
 {
+	public ViewScroller(WinUIHexView view, VisualTheme theme)
+	{
+		_view = view;
+		_theme = theme;
+		_view.ScrollableHeightChanged += OnScrollableHeightChanged;
+	}
+
+	private readonly WinUIHexView _view;
+	private readonly VisualTheme _theme;
+
 	public event EventHandler<ScrollVerticalOffsetChangedEventArgs>? VerticalOffsetChanged;
 
 	public double VerticalOffset { get; private set; }
@@ -22,17 +34,52 @@ internal sealed class ViewScroller : IViewScroller
 		ScrollTo(Math.Clamp(VerticalOffset + delta, 0, ScrollableHeight));
 	}
 
+	public void ScrollUpByRow()
+	{
+		ScrollBy(-_theme.RowHeight);
+	}
+
+	public void ScrollDownByRow()
+	{
+		ScrollBy(_theme.RowHeight);
+	}
+
+	public void ScrollUpByPage()
+	{
+		ScrollBy(-ViewportHeight);
+	}
+
+	public void ScrollDownByPage()
+	{
+		ScrollBy(ViewportHeight);
+	}
+
+	public void BringIntoView(SnapshotPoint point)
+	{
+		var top = _view.MapToVisualAscii(point).Y;
+		var bottom = top + _theme.RowHeight;
+		if (top < VerticalOffset)
+		{
+			ScrollTo(top);
+		}
+		else if (bottom > VerticalOffset + ViewportHeight)
+		{
+			ScrollTo(bottom - ViewportHeight);
+		}
+	}
+
 
 	public event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;
 
 	public double ScrollableHeight { get; private set; }
 
-	public void SetScrollableHeight(double newHeight)
+
+	private void OnScrollableHeightChanged(object? sender, HeightChangedEventArgs e)
 	{
-		if (ScrollableHeight != newHeight)
+		if (ScrollableHeight != e.NewHeight)
 		{
-			ScrollableHeight = newHeight;
-			ScrollableHeightChanged?.Invoke(this, new ScrollableHeightChangedEventArgs(newHeight));
+			ScrollableHeight = e.NewHeight;
+			ScrollableHeightChanged?.Invoke(this, new ScrollableHeightChangedEventArgs(e.NewHeight));
 		}
 	}
 

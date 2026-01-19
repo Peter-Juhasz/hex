@@ -24,14 +24,14 @@ internal sealed class AddressBarMargin : ContentControl
 		this.Padding = new Thickness(0);
 		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
-		this.VerticalAlignment = VerticalAlignment.Top;
+		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
 		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
 
 		_canvas = new Canvas
 		{
-			VerticalAlignment = VerticalAlignment.Top,
+			VerticalAlignment = VerticalAlignment.Stretch,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			MinWidth = _theme.FontWidth * 8 + 8 * 2,
 			Background = new SolidColorBrush(Colors.Transparent),
@@ -39,8 +39,6 @@ internal sealed class AddressBarMargin : ContentControl
 		this.Content = _canvas;
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		viewScroller.ScrollableHeightChanged += OnScrollableHeightChanged;
-
 		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
 	}
 
@@ -143,13 +141,6 @@ internal sealed class AddressBarMargin : ContentControl
 				}
 			}
 		}
-	}
-	#endregion
-
-	#region Scrolling
-	private void OnScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
-	{
-		_canvas.Height = e.NewHeight;
 	}
 	#endregion
 }
