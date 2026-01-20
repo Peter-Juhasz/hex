@@ -1,6 +1,6 @@
 ﻿namespace HexEditor.Model;
 
-public class StreamBinaryBuffer(Stream stream) : IBinaryDataSource
+public class StreamBinaryDataSource(Stream stream) : IBinaryDataSource
 {
 	public long Length { get; } = stream.Length;
 

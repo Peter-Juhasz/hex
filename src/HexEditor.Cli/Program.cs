@@ -43,7 +43,7 @@ root.SetAction(async (context, ct) =>
 
 	// open file
 	using var handle = File.OpenHandle(path);
-	await using var binaryBuffer = new SafeFileHandleBinaryBuffer(handle);
+	await using var binaryBuffer = new SafeFileHandleBinaryDataSource(handle);
 	var snapshot = new BinaryDataSourceSnapshot(binaryBuffer);
 	var view = new ConsoleHexView(snapshot);
 

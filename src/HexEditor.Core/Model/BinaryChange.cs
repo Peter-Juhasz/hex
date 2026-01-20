@@ -25,6 +25,8 @@ public static partial class Extensions
 
         public long NewLength => change.NewData.Length;
 
+        public long LengthIncrease => change.NewData.Length - change.Span.Length;
+
         public LongSpan OldSpan => change.Span;
 
         public LongSpan NewSpan => new(change.Span.StartOffset, change.NewData.Length);

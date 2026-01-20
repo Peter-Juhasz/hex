@@ -7,6 +7,6 @@ public class MidiContentTypeDefinition() : ContentTypeDefinition(Id)
 {
 	public const string Id = "midi";
 
-	public override ValueTask<bool> MatchesAsync(string? filePath, IBinaryDataSource source, CancellationToken cancellationToken) =>
+	public override ValueTask<bool> MatchesAsync(string? filePath, IBinarySnapshot source, CancellationToken cancellationToken) =>
 		new(MatchByExtension(filePath, [".mid", ".midi"]));
 }

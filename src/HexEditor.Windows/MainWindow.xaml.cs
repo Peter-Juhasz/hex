@@ -37,7 +37,7 @@ public sealed partial class MainWindow : Window
 			if (File.Exists(testFile))
 			{
 				var handle = File.OpenHandle(testFile);
-				var binaryBuffer = await MemoryBinaryBuffer.CreateAsync(new SafeFileHandleBinaryBuffer(handle), default);
+				var binaryBuffer = await MemoryBinaryBuffer.CreateAsync(new SafeFileHandleBinaryDataSource(handle), default);
 				var snapshot = new BinaryDataSourceSnapshot(binaryBuffer);
 				await CreateEditorAsync(testFile, snapshot);
 				break;
@@ -63,7 +63,7 @@ public sealed partial class MainWindow : Window
 			try
 			{
 				var definition = (ContentTypeDefinition)Activator.CreateInstance(contentTypeDefinition)!;
-				if (await definition.MatchesAsync(filePath, snapshot.Source, default))
+				if (await definition.MatchesAsync(filePath, snapshot, default))
 				{
 					contentType = definition.Type;
 					break;
@@ -93,7 +93,7 @@ public sealed partial class MainWindow : Window
 		}
 
 		var handle = File.OpenHandle(file.Path);
-		var binaryBuffer = new SafeFileHandleBinaryBuffer(handle);
+		var binaryBuffer = new SafeFileHandleBinaryDataSource(handle);
 		var snapshot = new BinaryDataSourceSnapshot(binaryBuffer);
 		await CreateEditorAsync(file.Path, snapshot);
 	}

@@ -2,7 +2,7 @@
 
 namespace HexEditor.Model;
 
-public class SafeFileHandleBinaryBuffer(SafeFileHandle handle) : IBinaryDataSource
+public class SafeFileHandleBinaryDataSource(SafeFileHandle handle) : IBinaryDataSource
 {
 	public long Length { get; } = RandomAccess.GetLength(handle);
 

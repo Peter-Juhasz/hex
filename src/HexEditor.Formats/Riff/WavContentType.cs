@@ -7,6 +7,6 @@ public class WavContentTypeDefinition() : ContentTypeDefinition(Id)
 {
 	public const string Id = "wav";
 
-	public override ValueTask<bool> MatchesAsync(string? filePath, IBinaryDataSource source, CancellationToken cancellationToken) =>
+	public override ValueTask<bool> MatchesAsync(string? filePath, IBinarySnapshot source, CancellationToken cancellationToken) =>
 		new(MatchByExtension(filePath, [".wav"]));
 }

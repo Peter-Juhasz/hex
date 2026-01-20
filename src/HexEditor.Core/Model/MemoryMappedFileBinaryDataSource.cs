@@ -6,7 +6,7 @@ namespace HexEditor.Core.Model;
 
 // more efficient implementation is blocked on https://github.com/dotnet/runtime/issues/122815
 
-public class MemoryMappedFileBinaryBuffer(MemoryMappedFile file, int length) : IBinaryDataSource
+public class MemoryMappedFileBinaryDataSource(MemoryMappedFile file, int length) : IBinaryDataSource
 {
 	private readonly ArrayPool<byte> _arrayPool = ArrayPool<byte>.Create();
 

@@ -10,7 +10,7 @@ public abstract class ContentTypeDefinition(
 	public string Type { get; } = type;
 	public string? BaseType { get; } = baseType;
 
-	public abstract ValueTask<bool> MatchesAsync(string? filePath, IBinaryDataSource source, CancellationToken cancellationToken);
+	public abstract ValueTask<bool> MatchesAsync(string? filePath, IBinarySnapshot source, CancellationToken cancellationToken);
 
 	protected static bool MatchByFileName(string? filePath, string fileName, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 	{
