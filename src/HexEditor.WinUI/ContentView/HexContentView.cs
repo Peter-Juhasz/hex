@@ -73,10 +73,10 @@ internal sealed class HexContentView : ContentControl
 	private SnapshotPoint? _anchorPoint;
 
 	private readonly Line _caret;
-	private Storyboard _caretStoryboard;
+	private Storyboard? _caretStoryboard;
 	private readonly Brush _caretStroke = new SolidColorBrush(Colors.Black);
 
-	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
+	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
 	{
 		DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.High, () =>
 		{
@@ -283,7 +283,7 @@ internal sealed class HexContentView : ContentControl
 		var visualPosition = _view.MapToVisualHex(e.CaretPosition.Point);
 		Canvas.SetLeft(_caret, Math.Round(visualPosition.X));
 		Canvas.SetTop(_caret, Math.Round(visualPosition.Y));
-		_caretStoryboard.Seek(TimeSpan.Zero);
+		_caretStoryboard!.Seek(TimeSpan.Zero);
 	}
 
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)

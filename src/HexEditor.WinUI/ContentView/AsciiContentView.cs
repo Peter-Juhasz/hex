@@ -68,10 +68,10 @@ internal sealed class AsciiContentView : ContentControl
 	private SnapshotPoint? _anchorPoint;
 
 	private readonly Line _caret;
-	private Storyboard _caretStoryboard;
+	private Storyboard? _caretStoryboard;
 	private readonly Brush _caretStroke = new SolidColorBrush(Colors.Black);
 
-	private void OnViewVisibleRowsChanged(object sender, VisibleRowsChangedEventArgs e)
+	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
 	{
 		DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
 		{
@@ -278,7 +278,7 @@ internal sealed class AsciiContentView : ContentControl
 		var visualPosition = _view.MapToVisualAscii(e.CaretPosition.Point);
 		Canvas.SetLeft(_caret, Math.Round(visualPosition.X));
 		Canvas.SetTop(_caret, Math.Round(visualPosition.Y));
-		_caretStoryboard.Seek(TimeSpan.Zero);
+		_caretStoryboard!.Seek(TimeSpan.Zero);
 	}
 
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)

@@ -16,7 +16,7 @@ public sealed class SnapshotManagerTest
     }
 
     [TestMethod]
-    public async Task TestMethod()
+    public async Task TestFirstVersion()
     {
         var dataSource = new ByteArrayDataSource([1, 2, 3]);
         var manager = new SnapshotManager(dataSource);
