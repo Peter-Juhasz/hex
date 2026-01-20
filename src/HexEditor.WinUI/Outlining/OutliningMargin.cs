@@ -2,12 +2,12 @@
 using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
-using HexEditor.WinUI.Scrolling;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
@@ -17,34 +17,26 @@ using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
-internal sealed class OutliningMargin : ContentControl
+internal sealed class OutliningMargin : Canvas
 {
-	public OutliningMargin(WinUIHexView view, ViewScroller viewScroller, VisualTheme visualTheme, ReflectionTaggerProvider taggerProvider, string contentType) : base()
+	public OutliningMargin(WinUIHexView view, VisualTheme visualTheme, ITaggerProvider taggerProvider, string contentType) : base()
 	{
 		_theme = visualTheme;
-		this.Padding = new Thickness(0);
-		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
-		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+		this.MinWidth = _width;
 
 		var taggers = taggerProvider.CreateTaggers<StructureTag>(contentType).ToImmutableArray();
 		tagAggregator = new FullCachingTagAggregator<StructureTag>(new ParallelTagAggregator<StructureTag>(taggers));
 
-		_canvas = new Canvas
-		{
-			VerticalAlignment = VerticalAlignment.Stretch,
-			Width = _width,
-		};
-		this.Content = _canvas;
+		_canvas = this;
 
 		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 	}
 
-	private readonly double _width = 14;
+	private readonly double _width = 10;
 	private readonly VisualTheme _theme;
 
 	private readonly Canvas _canvas;
@@ -52,6 +44,7 @@ internal sealed class OutliningMargin : ContentControl
 	private readonly Brush _strokeBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
 	private readonly Brush _transparentBrush = new SolidColorBrush(Colors.Transparent);
 	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
+	private readonly Brush _chevronBrush = new SolidColorBrush(Colors.Black);
 	private readonly WinUIHexView _view;
 
 	private readonly BackgroundTaskQueue _queue = new(default);
@@ -69,7 +62,7 @@ internal sealed class OutliningMargin : ContentControl
 			return;
 		}
 
-		var startOffset = startRowTop + _theme.RowHeight / 2;
+		var startOffset = startRowTop + _theme.RowHeight / 2d;
 		var endRowBottom = endRowTop + _theme.RowHeight;
 		var height = Math.Round(endRowBottom - startRowTop);
 
@@ -86,6 +79,7 @@ internal sealed class OutliningMargin : ContentControl
 		if (span.Tag.Label != null)
 		{
 			ToolTipService.SetToolTip(canvas, span.Tag.Label);
+			ToolTipService.SetPlacement(canvas, PlacementMode.Right);
 		}
 
 		var line = new Path()
@@ -98,31 +92,75 @@ internal sealed class OutliningMargin : ContentControl
 					{
 						IsFilled = false,
 						IsClosed = false,
-						StartPoint = new(_canvas.XamlRoot.SnapToPixels(_width), 0),
+						StartPoint = new(_width - 2, 0),
 						Segments =
 						[
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), 0),
+								Point = new(_width / 2, 0),
 							},
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(_width / 2), height),
+								Point = new(_width / 2, height - 1),
 							},
 							new LineSegment()
 							{
-								Point = new(_canvas.XamlRoot.SnapToPixels(_width), height),
+								Point = new(_width - 2, height - 1),
 							},
 						],
 					}
 				],
+				Transform = null,
 			},
+			Stretch = Stretch.None,
 			Width = _width,
 			Height = height,
 			Stroke = _strokeBrush,
+			Margin = new Thickness(0),
 			StrokeThickness = 1,
+			IsHitTestVisible = false,
 		};
+		Canvas.SetTop(line, _theme.RowHeight / 2d);
+		Canvas.SetLeft(line, 0);
 		canvas.Children.Add(line);
+
+		var chevron = new Path()
+		{
+			Data = new PathGeometry()
+			{
+				Figures =
+				[
+					new PathFigure()
+					{
+						IsFilled = false,
+						IsClosed = false,
+						StartPoint = new(0, _theme.RowHeight / 2 - _width / 2),
+						Segments =
+						[
+							new LineSegment()
+							{
+								Point = new(_width / 2, _theme.RowHeight / 2),
+							},
+							new LineSegment()
+							{
+								Point = new(_width, _theme.RowHeight / 2 - _width / 2),
+							},
+						],
+					}
+				],
+				Transform = null,
+			},
+			Stretch = Stretch.None,
+			Width = _width,
+			Height = _theme.RowHeight,
+			Stroke = _chevronBrush,
+			Margin = new Thickness(0),
+			StrokeThickness = 1,
+			IsHitTestVisible = false,
+		};
+		Canvas.SetTop(chevron, 0);
+		Canvas.SetLeft(chevron, 0);
+		canvas.Children.Add(chevron);
 
 		canvas.PointerEntered += OnPointerEntered;
 		canvas.PointerExited += OnPointerExited;
@@ -148,7 +186,7 @@ internal sealed class OutliningMargin : ContentControl
 	{
 		var line = (Canvas)sender;
 		line.Background = _transparentBrush;
-		OutliningRegionDismissRequested?.Invoke(this, new());
+		OutliningRegionDismissRequested?.Invoke(this, EventArgs.Empty);
 	}
 
 	private void OnPointerEntered(object sender, PointerRoutedEventArgs e)

@@ -9,28 +9,19 @@ using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
-internal sealed class AsciiOutliningHighlightLayer : ContentControl
+internal sealed class AsciiOutliningHighlightLayer : Canvas
 {
-	public AsciiOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme, ViewScroller viewScroller) : base()
+	public AsciiOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme) : base()
 	{
 		_view = view;
 		_theme = theme;
 
-		this.Padding = new Thickness(0);
-		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
-		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
+		this.MinWidth = theme.Columns * theme.FontWidth;
 
-		_canvas = new Canvas
-		{
-			VerticalAlignment = VerticalAlignment.Stretch,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			MinWidth = theme.Columns * theme.FontWidth,
-		};
-		this.Content = _canvas;
+		_canvas = this;
 
 		outliningMargin.OutliningRegionSelectionRequested += OnOutliningRegionSelectionRequested;
 		outliningMargin.OutliningRegionDismissRequested += OnDismissed;

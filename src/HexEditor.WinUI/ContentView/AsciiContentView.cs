@@ -18,28 +18,19 @@ using Windows.UI.Core;
 
 namespace HexEditor.WinUI.ContentView;
 
-internal sealed class AsciiContentView : ContentControl
+internal sealed class AsciiContentView : Canvas
 {
-	public AsciiContentView(WinUIHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
+	public AsciiContentView(WinUIHexView view, VisualTheme theme) : base()
 	{
 		_theme = theme;
-		this.Padding = new Thickness(0);
-		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
-		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
+		this.MinWidth = theme.Columns * theme.FontWidth;
+		this.Background = new SolidColorBrush(Colors.Transparent);
 
-		_canvas = new Canvas
-		{
-			VerticalAlignment = VerticalAlignment.Stretch,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			MinWidth = theme.Columns * theme.FontWidth,
-			Background = new SolidColorBrush(Colors.Transparent),
-		};
-		this.Content = _canvas;
+		_canvas = this;
 
 		_view = view;
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
@@ -296,6 +287,48 @@ internal sealed class AsciiContentView : ContentControl
 
 		if (isShiftDown)
 		{
+			switch (e.Key)
+			{
+				case VirtualKey.Home when isControlDown:
+					_view.Selection.MoveActivePointToHome();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.End when isControlDown:
+					_view.Selection.MoveActivePointToEnd();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Home when !isControlDown:
+					_view.Selection.MoveActivePointToRowStart();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.End when !isControlDown:
+					_view.Selection.MoveActivePointToEnd();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Left when !isControlDown:
+					_view.Selection.MoveActivePointLeft();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Right when !isControlDown:
+					_view.Selection.MoveActivePointRight();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Up when !isControlDown:
+					_view.Selection.MoveActivePointUpByRow();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Down when !isControlDown:
+					_view.Selection.MoveActivePointDownByRow();
+					e.Handled = true;
+					break;
+			}
 		}
 		else
 		{

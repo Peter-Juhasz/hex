@@ -1,7 +1,6 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
 using HexEditor.WinUI.Caret;
-using HexEditor.WinUI.Scrolling;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -15,41 +14,30 @@ using System;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
-using Windows.UI.Input;
 
 namespace HexEditor.WinUI.ContentView;
 
-internal sealed class HexContentView : ContentControl
+internal sealed class HexContentView : Canvas
 {
-	public HexContentView(WinUIHexView view, VisualTheme theme, ViewScroller viewScroller) : base()
+	public HexContentView(WinUIHexView view, VisualTheme theme) : base()
 	{
 		_view = view;
 		_theme = theme;
 
-		this.Padding = new Thickness(0);
-		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
-		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
+		this.MinWidth = (theme.Columns * 2) * theme.FontWidth;
+		this.Background = new SolidColorBrush(Colors.Transparent);
 
-		_canvas = new Canvas
-		{
-			VerticalAlignment = VerticalAlignment.Stretch,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			MinWidth = (theme.Columns * 2) * theme.FontWidth,
-			Background = new SolidColorBrush(Colors.Transparent),
-		};
-		this.Content = _canvas;
+		_canvas = this;
 
 		// create caret
 		_caret = CreateCaret();
 		_canvas.Children.Add(_caret);
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		_viewScroller = viewScroller;
 
 		_view.Selection.SelectionChanged += OnSelectionChanged;
 		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
@@ -62,7 +50,6 @@ internal sealed class HexContentView : ContentControl
 	}
 
 	private readonly Canvas _canvas;
-	private readonly ViewScroller _viewScroller;
 
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly WinUIHexView _view;
@@ -297,10 +284,51 @@ internal sealed class HexContentView : ContentControl
 	{
 		var isControlDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
 		var isShiftDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
-		var isAltDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down);
 
 		if (isShiftDown)
 		{
+			switch (e.Key)
+			{
+				case VirtualKey.Home when isControlDown:
+					_view.Selection.MoveActivePointToHome();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.End when isControlDown:
+					_view.Selection.MoveActivePointToEnd();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Home when !isControlDown:
+					_view.Selection.MoveActivePointToRowStart();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.End when !isControlDown:
+					_view.Selection.MoveActivePointToEnd();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Left when !isControlDown:
+					_view.Selection.MoveActivePointLeft();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Right when !isControlDown:
+					_view.Selection.MoveActivePointRight();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Up when !isControlDown:
+					_view.Selection.MoveActivePointUpByRow();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Down when !isControlDown:
+					_view.Selection.MoveActivePointDownByRow();
+					e.Handled = true;
+					break;
+			}
 		}
 		else
 		{

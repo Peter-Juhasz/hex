@@ -1,7 +1,6 @@
 ﻿using HexEditor.Model;
 using HexEditor.ViewModel;
 using HexEditor.WinUI.Caret;
-using HexEditor.WinUI.Scrolling;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -14,29 +13,20 @@ using Windows.UI;
 
 namespace HexEditor.WinUI.AddressBar;
 
-internal sealed class AddressBarMargin : ContentControl
+internal sealed class AddressBarMargin : Canvas
 {
-	public AddressBarMargin(WinUIHexView view, ViewScroller viewScroller, VisualTheme theme) : base()
+	public AddressBarMargin(WinUIHexView view, VisualTheme theme) : base()
 	{
 		_view = view;
 		_theme = theme;
 
-		this.Padding = new Thickness(0);
-		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
-		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+		this.MinWidth = _theme.FontWidth * 8 + 8 * 2;
+		this.Background = new SolidColorBrush(Colors.Transparent);
 
-		_canvas = new Canvas
-		{
-			VerticalAlignment = VerticalAlignment.Stretch,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			MinWidth = _theme.FontWidth * 8 + 8 * 2,
-			Background = new SolidColorBrush(Colors.Transparent),
-		};
-		this.Content = _canvas;
+		_canvas = this;
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;

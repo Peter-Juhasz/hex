@@ -121,5 +121,7 @@ public class CaretManager : ICaret
 		CaretPositionChanged?.Invoke(this, new CaretPositionChangedEventArgs(caretPosition));
 
 		_view.Selection.Clear();
+
+		_view.Viewport.BringIntoView(caretPosition.Point);
 	}
 }

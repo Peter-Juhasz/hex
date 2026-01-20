@@ -47,7 +47,7 @@ public partial class EditorHost : ContentControl
 		});
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
 		{
-			Width = new GridLength(16, GridUnitType.Pixel),
+			Width = GridLength.Auto
 		});
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
 		{
@@ -67,28 +67,27 @@ public partial class EditorHost : ContentControl
 		var taggerProvider = new ReflectionTaggerProvider([typeof(UrlTagger).Assembly]);
 
 		_view = new WinUIHexView(snapshot, _visualTheme);
-		_viewScroller = new ViewScroller(_view, _visualTheme);
-		_viewScroller.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
-		_viewScroller.ScrollableHeightChanged += OnModelScrollableHeightChanged;
+		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
+		_view.Viewport.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 
-		_hexContentView = new HexContentView(_view, _visualTheme, _viewScroller);
-		_outliningMargin = new OutliningMargin(_view, _viewScroller, _visualTheme, taggerProvider, contentType);
-		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme, _viewScroller);
+		_hexContentView = new HexContentView(_view, _visualTheme);
+		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentType);
+		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_hexOutliningHighlightLayer, 3);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
 
 		Grid.SetColumn(_hexContentView, 3);
 		_grid.Children.Add(_hexContentView);
 
-		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme, _viewScroller);
+		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 4);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
 
-		_asciiContentView = new AsciiContentView(_view, _viewScroller, _visualTheme);
+		_asciiContentView = new AsciiContentView(_view, _visualTheme);
 		Grid.SetColumn(_asciiContentView, 4);
 		_grid.Children.Add(_asciiContentView);
 
-		_addressBarMargin = new AddressBarMargin(_view, _viewScroller, _visualTheme);
+		_addressBarMargin = new AddressBarMargin(_view, _visualTheme);
 		Grid.SetColumn(_addressBarMargin, 0);
 		_grid.Children.Add(_addressBarMargin);
 
@@ -114,14 +113,14 @@ public partial class EditorHost : ContentControl
 		this.PreviewKeyDown += OnKeyDown;
 		this.SizeChanged += OnSizeChanged;
 
-		_scrollTimer.Tick += OnScrollTick;
+		_invalidationTimer.Tick += OnScrollTick;
 	}
 
 	private readonly ScrollView _scrollView;
 	private readonly Grid _grid;
-	private readonly DispatcherTimer _scrollTimer = new()
+	private readonly DispatcherTimer _invalidationTimer = new()
 	{
-		Interval = TimeSpan.FromMilliseconds(10)
+		Interval = TimeSpan.FromMilliseconds(100)
 	};
 
 	private readonly AddressBarMargin _addressBarMargin;
@@ -130,7 +129,6 @@ public partial class EditorHost : ContentControl
 	private readonly HexContentView _hexContentView;
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
-	private readonly ViewScroller _viewScroller;
 
 	private readonly WinUIHexView _view;
 	private readonly BackgroundTaskQueue _queue = new(default);
@@ -148,18 +146,13 @@ public partial class EditorHost : ContentControl
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 	{
 		var newHeight = e.NewSize.Height;
-		_viewScroller.ResizeViewport(newHeight);
-		_queue.Enqueue(c => _view.ResizeWindowAsync(0, newHeight, c));
+		_view.Viewport.Resize(newHeight);
+		_queue.Enqueue(c => _view.InvalidateAsync(c));
 	}
 
 	private void OnViewScrollerScrollOffsetChanged(object? sender, ScrollVerticalOffsetChangedEventArgs e)
 	{
-		_queue.Enqueue(c => _view.ScrollToAsync(e.NewVerticalOffset, c));
-
-		if (!_scrollTimer.IsEnabled)
-		{
-			_scrollView.ScrollTo(0, e.NewVerticalOffset);
-		}
+		_scrollView.ScrollTo(0, e.NewVerticalOffset);
 	}
 
 	private void OnModelScrollableHeightChanged(object? sender, ScrollableHeightChangedEventArgs e)
@@ -176,25 +169,31 @@ public partial class EditorHost : ContentControl
 		DispatcherQueue.TryEnqueue(() =>
 		{
 			var newHeight = _scrollView.ActualHeight;
-			_queue.Enqueue(c => _view.ResizeWindowAsync(0, newHeight, c));
-			_scrollView.ScrollPresenter.ViewChanged += OnScrollViewChanged;
+			_view.Viewport.Resize(newHeight);
+			_queue.Enqueue(c => _view.InvalidateAsync(c));
 
-			this.Focus(FocusState.Keyboard);
+			_grid.Height = _view.ScrollableHeight;
+			_scrollView.ScrollPresenter.ViewChanged += OnScrollViewChanged;
 		});
 	}
 
 	private void OnScrollViewChanged(ScrollPresenter sender, object args)
 	{
-		_scrollTimer.Stop();
-		_scrollTimer.Start();
+		if (_invalidationTimer.IsEnabled)
+		{
+			return;
+		}
+
+		_invalidationTimer.Start();
 	}
 
 	private void OnScrollTick(object? sender, object e)
 	{
-		_scrollTimer.Stop();
+		_invalidationTimer.Stop();
 
 		var offset = Math.Round(_scrollView.ScrollPresenter.VerticalOffset);
-		_viewScroller.ScrollTo(offset);
+		((ViewScroller)_view.Viewport).SynchronizeVerticalOffset(offset);
+		_queue.Enqueue(c => _view.InvalidateAsync(c));
 	}
 
 	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -204,12 +203,12 @@ public partial class EditorHost : ContentControl
 		switch (e.Key)
 		{
 			case VirtualKey.Up when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_viewScroller.ScrollUpByRow();
+				_view.Viewport.ScrollUpByRow();
 				e.Handled = true;
 				break;
 
 			case VirtualKey.Down when controlState.HasFlag(CoreVirtualKeyStates.Down):
-				_viewScroller.ScrollDownByRow();
+				_view.Viewport.ScrollDownByRow();
 				e.Handled = true;
 				break;
 		}

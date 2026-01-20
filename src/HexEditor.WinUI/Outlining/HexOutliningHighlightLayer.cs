@@ -9,25 +9,16 @@ using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
-internal sealed class HexOutliningHighlightLayer : ContentControl
+internal sealed class HexOutliningHighlightLayer : Canvas
 {
-	public HexOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme, ViewScroller viewScroller) : base()
+	public HexOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme) : base()
 	{
-		this.Padding = new Thickness(0);
-		this.CornerRadius = new CornerRadius(0);
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
-		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
+		this.MinWidth = (theme.Columns * 2) * theme.FontWidth;
 
-		_canvas = new Canvas
-		{
-			VerticalAlignment = VerticalAlignment.Stretch,
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			MinWidth = (theme.Columns * 2) * theme.FontWidth,
-		};
-		this.Content = _canvas;
+		_canvas = this;
 
 		_view = view;
 		_theme = theme;

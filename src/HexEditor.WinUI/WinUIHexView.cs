@@ -2,18 +2,18 @@
 using HexEditor.ViewModel;
 using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ContentView;
+using HexEditor.WinUI.Scrolling;
 using HexEditor.WinUI.Selection;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Immutable;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
 namespace HexEditor.WinUI;
 
-public class WinUIHexView : IHexView
+public class WinUIHexView
 {
 	public WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme)
 	{
@@ -22,6 +22,10 @@ public class WinUIHexView : IHexView
 		_theme = theme;
 		Selection = new SelectionManager(this);
 		Caret = new CaretManager(this);
+		Viewport = new ViewScroller(this, theme);
+
+		TotalRowCount = (snapshot.Length / _theme.Columns) + 1;
+		ScrollableHeight = TotalRowCount * _theme.RowHeight;
 	}
 
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
@@ -30,10 +34,6 @@ public class WinUIHexView : IHexView
 	public long TotalRowCount { get; private set; }
 
 	public IBinarySnapshot Snapshot => snapshot;
-
-	public double ViewportHeight { get; private set; }
-	public double ViewportWidth { get; private set; }
-	public double VerticalOffset { get; private set; }
 
 	public double ScrollableHeight { get; private set; }
 
@@ -48,10 +48,14 @@ public class WinUIHexView : IHexView
 
 	public ICaret Caret { get; }
 
+	public IViewport Viewport { get; }
+
+	internal async Task InvalidateAsync(CancellationToken cancellationToken) => await InvalidateAsync(snapshot, cancellationToken);
+
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{
-		var visibleRowCount = (int)(ViewportHeight / _theme.RowHeight) + 2;
-		var firstVisibleRowIndex = (int)(VerticalOffset / _theme.RowHeight);
+		var visibleRowCount = (int)(Viewport.Height / _theme.RowHeight) + 2;
+		var firstVisibleRowIndex = (int)(Viewport.VerticalOffset / _theme.RowHeight);
 		var firstVisibleOffset = firstVisibleRowIndex * _theme.Columns;
 
 		var visibleSpan = snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * _theme.Columns, snapshot.Length - firstVisibleOffset));
@@ -89,7 +93,7 @@ public class WinUIHexView : IHexView
 			// create new row
 			var rowIndex = (int)(processedRelativeOffset / _theme.Columns);
 			var viewRow = RowFormatter.Format(new(
-				View: this,
+				View: this as IHexView,
 				Theme: _theme,
 				Top: (firstVisibleRowIndex + rowIndex) * _theme.RowHeight,
 				Span: rowSpan,
@@ -127,39 +131,6 @@ public class WinUIHexView : IHexView
 		// report changes
 		_visibleRows = totalRowsBuilder.ToImmutable();
 		VisibleRowsChanged?.Invoke(this, new VisibleRowsChangedEventArgs(removedRowsBuilder.ToImmutable(), newRowsBuilder.ToImmutable()));
-	}
-
-	public Task ResizeAsync(int newColumns, int newRows, CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	public Task ResizeWindowAsync(double viewportWidth, double viewportHeight, CancellationToken cancellationToken)
-	{
-		if (ViewportHeight == viewportHeight)
-		{
-			return Task.CompletedTask;
-		}
-
-		ViewportHeight = viewportHeight;
-		ViewportWidth = viewportWidth;
-		var oldHeight = ScrollableHeight;
-		var rowCount = (snapshot.Length / _theme.Columns) + 1;
-		TotalRowCount = rowCount;
-		ScrollableHeight = rowCount * _theme.RowHeight;
-		ScrollableHeightChanged?.Invoke(this, new HeightChangedEventArgs(oldHeight, ScrollableHeight));
-		return InvalidateAsync(snapshot, cancellationToken);
-	}
-
-	public Task ScrollToAsync(double verticalOffset, CancellationToken cancellationToken)
-	{
-		if (VerticalOffset == verticalOffset)
-		{
-			return Task.CompletedTask;
-		}
-
-		VerticalOffset = verticalOffset;
-		return InvalidateAsync(snapshot, cancellationToken);
 	}
 
 	public Point MapToVisualHex(SnapshotPoint point)
@@ -260,47 +231,12 @@ public class WinUIHexView : IHexView
 		];
 	}
 
-	public Point MapViewportToVisual(Point point) => new(
-		x: point.X,
-		y: point.Y + VerticalOffset
-	);
-
 	public SnapshotSpan GetContainingRow(SnapshotPoint point)
 	{
 		var rowIndex = point.Position / _theme.Columns;
 		var rowStart = rowIndex * _theme.Columns;
 		var rowEnd = Math.Min(rowStart + _theme.Columns, snapshot.Length);
 		return new SnapshotSpan(snapshot, new LongSpan(rowStart, rowEnd - rowStart));
-	}
-
-	public Task ScrollDownByRowAsync(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	public Task ScrollUpByRowAsync(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	public Task GoToFirstPageAsync(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	public Task GoToLastPageAsync(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	public Task PageDownAsync(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	public Task PageUpAsync(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
 	}
 }
 

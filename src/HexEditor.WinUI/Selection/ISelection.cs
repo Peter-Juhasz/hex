@@ -11,5 +11,15 @@ public interface ISelection
 
 	void Select(SnapshotPoint anchorPoint, SnapshotPoint activePoint);
 	void Select(SnapshotSpan span, bool isReversed = false);
+	void MoveActivePointLeft();
+	void MoveActivePointRight();
+	void MoveActivePointUpByRow();
+	void MoveActivePointDownByRow();
+	void MoveActivePointToHome();
+	void MoveActivePointToEnd();
+	void MoveActivePointToRowStart();
+	void MoveActivePointToRowEnd();
+	void SelectAll();
 	void Clear();
+	void SelectTo(SnapshotPoint anchorPoint);
 }
