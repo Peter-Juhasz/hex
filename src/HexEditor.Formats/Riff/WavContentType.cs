@@ -1,9 +1,10 @@
-﻿using HexEditor.Core.Model;
+﻿using HexEditor.Core.ContentType;
+using HexEditor.Formats.Text;
 using HexEditor.Model;
 
 namespace HexEditor.Formats.Riff;
 
-public class WavContentTypeDefinition() : ContentTypeDefinition(Id)
+public class WavContentTypeDefinition() : ContentTypeDefinition(Id, baseType: BinaryContentTypeDefinition.Id)
 {
 	public const string Id = "wav";
 

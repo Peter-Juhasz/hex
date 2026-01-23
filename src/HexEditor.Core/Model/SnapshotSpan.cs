@@ -34,8 +34,14 @@ public static partial class Extensions
 
 		public SnapshotPoint End => new(span.Snapshot, span.Span.EndOffset);
 
+		public SnapshotSpan Slice(long offset) =>
+			new(span.Snapshot, span.Span.Slice(offset));
+
 		public SnapshotSpan Slice(long offset, long length) =>
 			new(span.Snapshot, span.Span.Slice(offset, length));
+
+		public bool Contains(SnapshotPoint point) =>
+			span.Snapshot == point.Snapshot && span.Span.Contains(point.Position);
 
 		// TODO bad API desing
 		public ValueTask CopyToAsync(Memory<byte> destination, CancellationToken cancellationToken)

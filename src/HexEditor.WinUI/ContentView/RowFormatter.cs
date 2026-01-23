@@ -1,4 +1,6 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Classification;
+using HexEditor.Core.Hyperlinks;
+using HexEditor.Model;
 using HexEditor.ViewModel;
 using System;
 
@@ -11,11 +13,64 @@ internal class RowFormatter
 		VisualTheme Theme,
 		double Top,
 		SnapshotSpan Span,
-		ReadOnlyMemory<byte> Data
+		ReadOnlyMemory<byte> Data,
+		TagSpanSplitMap Tags
 	);
 
 	public static IHexViewRow Format(FormatContext context)
 	{
+		using var hexRuns = new PooledArrayBuilder<FormattedTextRun>();
+		using var asciiRuns = new PooledArrayBuilder<FormattedTextRun>();
+
+		for (int i = 0; i < context.Span.Span.Length;)
+		{
+			// determine next split point
+			var remainingSpan = context.Span.Slice(i);
+			context.Tags.GetClosestSplitPoint(remainingSpan, out var nextRun, out var tags);
+
+			// compute effective style
+			var effectiveStyle = WinUITextRunStyle.None;
+			foreach (var tagSpan in tags)
+			{
+				if (tagSpan.Tag is ClassificationTag classificationTag)
+				{
+					if (context.Theme.ClassificationStyleMap?.TryGetValue(classificationTag.Type, out var style) == true)
+					{
+						effectiveStyle = WinUITextRunStyle.Merge(effectiveStyle, style);
+					}
+				}
+				else if (tagSpan.Tag is UrlTag)
+				{
+					if (context.Theme.HyperlinkStyle is not null)
+					{
+						effectiveStyle = WinUITextRunStyle.Merge(effectiveStyle, context.Theme.HyperlinkStyle);
+					}
+				}
+			}
+
+			// create runs
+			var memorySpan = context.Data.Slice(i, (int)nextRun.Span.Length);
+			hexRuns.Add(new(
+				Span: nextRun,
+				Data: memorySpan,
+				Text: FormattedTextRun.ToHexString(memorySpan.Span),
+				LeftPosition: context.Theme.FontWidth * i * 2,
+				RenderedWidth: context.Theme.FontWidth * nextRun.Span.Length * 2,
+				Tags: tags,
+				Style: effectiveStyle
+			));
+			asciiRuns.Add(new(
+				Span: nextRun,
+				Data: memorySpan,
+				Text: FormattedTextRun.ToAsciiString(memorySpan.Span),
+				LeftPosition: context.Theme.FontWidth * i,
+				RenderedWidth: context.Theme.FontWidth * nextRun.Span.Length,
+				Tags: tags,
+				Style: effectiveStyle
+			));
+			i += (int)nextRun.Span.Length;
+		}
+
 		return new HexViewRow(
 			context.View,
 			new ViewportBounds(
@@ -26,22 +81,8 @@ internal class RowFormatter
 			),
 			context.Span,
 			context.Data,
-			[new(
-				context.Span,
-				context.Data,
-				FormattedTextRun.ToHexString(context.Data.Span),
-				0,
-				context.Span.Span.Length * 2 * context.Theme.FontWidth,
-				null
-			)],
-			[new(
-				context.Span,
-				context.Data,
-				FormattedTextRun.ToAsciiString(context.Data.Span),
-				0,
-				context.Span.Span.Length * context.Theme.FontWidth,
-				null
-			)]
+			hexRuns.ToImmutableArray(),
+			asciiRuns.ToImmutableArray()
 		);
 	}
 }

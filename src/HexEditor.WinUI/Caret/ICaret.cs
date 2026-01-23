@@ -23,4 +23,8 @@ public interface ICaret
 	void MoveToEnd();
 	void MoveToRowStart();
 	void MoveToRowEnd();
+	void MoveUpByPage();
+	void MoveDownByPage();
+	void MoveToPageTop();
+	void MoveToPageBottom();
 }

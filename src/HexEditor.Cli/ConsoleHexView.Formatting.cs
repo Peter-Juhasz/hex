@@ -39,6 +39,7 @@ internal partial class ConsoleHexView
 					Text: ToHexString(data.Span),
 					LeftPosition: relativeOffset,
 					RenderedWidth: (double)length,
+					Tags: [],
 					Style: lastStyle
 				);
 				builder.Add(formattedSpan);
@@ -58,6 +59,7 @@ internal partial class ConsoleHexView
 				Text: ToHexString(data.Span),
 				LeftPosition: lastOffset,
 				RenderedWidth: (double)length,
+				Tags: [],
 				Style: lastStyle
 			);
 			builder.Add(formattedSpan);

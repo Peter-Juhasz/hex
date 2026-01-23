@@ -1,4 +1,8 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Classification;
+using HexEditor.Core.ContentType;
+using HexEditor.Core.Hyperlinks;
+using HexEditor.Core.Tagging;
+using HexEditor.Model;
 using HexEditor.ViewModel;
 using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ContentView;
@@ -6,16 +10,18 @@ using HexEditor.WinUI.Scrolling;
 using HexEditor.WinUI.Selection;
 using Microsoft.UI.Xaml.Media;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
 namespace HexEditor.WinUI;
 
-public class WinUIHexView
+public class WinUIHexView : IGraphicalHexView
 {
-	public WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme)
+	public WinUIHexView(IBinarySnapshot snapshot, string contentType, VisualTheme theme, ITaggerProvider taggerProvider, IContentTypeRegistry contentTypeRegistry)
 	{
 		this.snapshot = snapshot;
 		ScrollableHeight = theme.RowHeight;
@@ -24,9 +30,16 @@ public class WinUIHexView
 		Caret = new CaretManager(this);
 		Viewport = new ViewScroller(this, theme);
 
+		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
+		_classificationTagAggregator = new SequentialTagAggregator<ClassificationTag>(taggerProvider.CreateTaggers<ClassificationTag>(interestedContentTypes));
+		_urlTagAggregator = new SequentialTagAggregator<UrlTag>(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes));
+
 		TotalRowCount = (snapshot.Length / _theme.Columns) + 1;
 		ScrollableHeight = TotalRowCount * _theme.RowHeight;
 	}
+
+	private readonly ITagAggregator<ClassificationTag> _classificationTagAggregator;
+	private readonly ITagAggregator<UrlTag> _urlTagAggregator;
 
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
 
@@ -54,14 +67,36 @@ public class WinUIHexView
 
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{
+		// calculate visible span
 		var visibleRowCount = (int)(Viewport.Height / _theme.RowHeight) + 2;
 		var firstVisibleRowIndex = (int)(Viewport.VerticalOffset / _theme.RowHeight);
 		var firstVisibleOffset = firstVisibleRowIndex * _theme.Columns;
 
 		var visibleSpan = snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * _theme.Columns, snapshot.Length - firstVisibleOffset));
+
+		// read data into buffer
 		var screenBuffer = new byte[visibleSpan.Span.Length];
 		await visibleSpan.CopyToAsync(screenBuffer, cancellationToken);
 
+		// collect tags
+		var classificationTags = await _classificationTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
+		var urlTags = await _urlTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
+		
+		var allTags = new TagSpan[classificationTags.Length + urlTags.Length];
+		var allTagsIndex = 0;
+		for (int i = 0; i < classificationTags.Length; i++)
+		{
+			allTags[allTagsIndex++] = classificationTags[i];
+		}
+
+		for (int i = 0; i < urlTags.Length; i++)
+		{
+			allTags[allTagsIndex++] = urlTags[i];
+		}
+
+		var screenTagSpanMap = new TagSpanSplitMap(allTags);
+
+		// build rows
 		var oldRows = _visibleRows;
 		var totalRowsBuilder = ImmutableArray.CreateBuilder<IHexViewRow>();
 		var newRowsBuilder = ImmutableArray.CreateBuilder<IHexViewRow>();
@@ -92,12 +127,14 @@ public class WinUIHexView
 
 			// create new row
 			var rowIndex = (int)(processedRelativeOffset / _theme.Columns);
+			var rowTags = screenTagSpanMap.Slice(rowSpan);
 			var viewRow = RowFormatter.Format(new(
 				View: this as IHexView,
 				Theme: _theme,
 				Top: (firstVisibleRowIndex + rowIndex) * _theme.RowHeight,
 				Span: rowSpan,
-				Data: screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length)
+				Data: screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
+				Tags: screenTagSpanMap
 			));
 			totalRowsBuilder.Add(viewRow);
 			newRowsBuilder.Add(viewRow);
@@ -157,6 +194,14 @@ public class WinUIHexView
 		var rowIndex = Math.Clamp((int)(point.Y / _theme.RowHeight), 0, TotalRowCount);
 		var columnIndex = Math.Clamp((int)(point.X / _theme.FontWidth + 1), 0, _theme.Columns);
 		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
+	}
+
+	public SnapshotSpan MapRowFromVisual(double verticalOffset)
+	{
+		var rowIndex = Math.Clamp((int)(verticalOffset / _theme.RowHeight), 0, TotalRowCount);
+		var rowStart = rowIndex * _theme.Columns;
+		var rowEnd = Math.Min(rowStart + _theme.Columns, snapshot.Length);
+		return new SnapshotSpan(snapshot, new LongSpan(rowStart, rowEnd - rowStart));
 	}
 
 	public Point[] MapToVisualHex(SnapshotSpan span)
@@ -241,9 +286,14 @@ public class WinUIHexView
 }
 
 public record class VisualTheme(
-	int Columns,
 	FontFamily FontFamily,
-	double FontSize,
-	double FontWidth,
-	double RowHeight
-);
+	int Columns = 16,
+	double FontSize = 14,
+	double FontWidth = 8.25d,
+	double RowHeight = 24,
+	IReadOnlyDictionary<string, WinUITextRunStyle>? ClassificationStyleMap = null,
+	WinUITextRunStyle? HyperlinkStyle = null
+)
+{
+	public static double FontSizeToWidth(double fontSize) => fontSize * (8.25d / 14d);
+}

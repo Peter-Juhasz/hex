@@ -1,6 +1,6 @@
 ﻿using HexEditor.Model;
 
-namespace HexEditor.Core.Model;
+namespace HexEditor.Core.ContentType;
 
 public abstract class ContentTypeDefinition(
 	string type,

@@ -1,4 +1,5 @@
-﻿using HexEditor.Core.Model;
+﻿using HexEditor.Core.ContentType;
+using HexEditor.Core.Model;
 using HexEditor.Core.Tagging;
 using HexEditor.Model;
 using HexEditor.Structure;

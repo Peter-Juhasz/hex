@@ -1,4 +1,5 @@
-﻿using HexEditor.Core.Tagging;
+﻿using HexEditor.Core.ContentType;
+using HexEditor.Core.Tagging;
 using HexEditor.Model;
 using HexEditor.Structure;
 using HexEditor.ViewModel;
@@ -13,13 +14,14 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
 internal sealed class OutliningMargin : Canvas
 {
-	public OutliningMargin(WinUIHexView view, VisualTheme visualTheme, ITaggerProvider taggerProvider, string contentType) : base()
+	public OutliningMargin(WinUIHexView view, VisualTheme visualTheme, ITaggerProvider taggerProvider, string contentType, IContentTypeRegistry contentTypeRegistry) : base()
 	{
 		_theme = visualTheme;
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -27,7 +29,8 @@ internal sealed class OutliningMargin : Canvas
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
 		this.MinWidth = _width;
 
-		var taggers = taggerProvider.CreateTaggers<StructureTag>(contentType).ToImmutableArray();
+		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
+		var taggers = taggerProvider.CreateTaggers<StructureTag>(interestedContentTypes);
 		tagAggregator = new FullCachingTagAggregator<StructureTag>(new ParallelTagAggregator<StructureTag>(taggers));
 
 		_canvas = this;

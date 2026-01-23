@@ -374,6 +374,26 @@ internal sealed class HexContentView : Canvas
 					e.Handled = true;
 					break;
 
+				case VirtualKey.PageUp when !isControlDown:
+					_view.Caret.MoveUpByPage();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.PageDown when !isControlDown:
+					_view.Caret.MoveDownByPage();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.PageUp when isControlDown:
+					_view.Caret.MoveToPageTop();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.PageDown when isControlDown:
+					_view.Caret.MoveToPageBottom();
+					e.Handled = true;
+					break;
+
 				case VirtualKey.Escape:
 					_view.Selection.Clear();
 					e.Handled = true;

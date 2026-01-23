@@ -1,4 +1,6 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Tagging;
+using HexEditor.Model;
+using System.Collections.Immutable;
 
 namespace HexEditor.ViewModel;
 
@@ -8,6 +10,7 @@ public readonly record struct FormattedTextRun(
 	string Text,
 	double LeftPosition,
 	double RenderedWidth,
+	ImmutableArray<TagSpan> Tags,
 	object? Style
 )
 {

@@ -1,6 +1,8 @@
-﻿namespace HexEditor.Core.Tagging;
+﻿using System.Collections.Immutable;
+
+namespace HexEditor.Core.Tagging;
 
 public interface ITaggerProvider
 {
-	IEnumerable<ITagger<TTag>> CreateTaggers<TTag>(string contentType) where TTag : ITag;
+	ImmutableArray<ITagger<TTag>> CreateTaggers<TTag>(ImmutableArray<string> contentTypes) where TTag : ITag;
 }

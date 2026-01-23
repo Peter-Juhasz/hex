@@ -115,6 +115,46 @@ public class CaretManager : ICaret
 		}
 	}
 
+	public void MoveToPageTop()
+	{
+		var currentRow = _view.GetContainingRow(_caretPosition.Point);
+		var currentRelativeOffset = _caretPosition.Point.Position - currentRow.Start.Position;
+		var firstVisibleRow = _view.MapRowFromVisual(_view.Viewport.VerticalOffset);
+		var newPosition = Math.Min(firstVisibleRow.Start.Position + currentRelativeOffset, firstVisibleRow.End.Position);
+		Set(new CaretPosition(new SnapshotPoint(_view.Snapshot, newPosition)));
+	}
+
+	public void MoveToPageBottom()
+	{
+		var currentRow = _view.GetContainingRow(_caretPosition.Point);
+		var currentRelativeOffset = _caretPosition.Point.Position - currentRow.Start.Position;
+		var lastVisibleRow = _view.MapRowFromVisual(_view.Viewport.VerticalOffset + _view.Viewport.Height - 1);
+		var newPosition = Math.Min(lastVisibleRow.Start.Position + currentRelativeOffset, lastVisibleRow.End.Position);
+		Set(new CaretPosition(new SnapshotPoint(_view.Snapshot, newPosition)));
+	}
+
+	public void MoveUpByPage()
+	{
+		var currentRow = _view.GetContainingRow(_caretPosition.Point);
+		var currentRelativeOffset = _caretPosition.Point.Position - currentRow.Start.Position;
+		var currentPosition = _view.MapToVisualAscii(_caretPosition.Point);
+		var targetY = Math.Max(currentPosition.Y - _view.Viewport.Height, 0);
+		var targetRow = _view.MapRowFromVisual(targetY);
+		var newPosition = Math.Min(targetRow.Start.Position + currentRelativeOffset, targetRow.End.Position);
+		Set(new CaretPosition(new SnapshotPoint(_view.Snapshot, newPosition)));
+	}
+
+	public void MoveDownByPage()
+	{
+		var currentRow = _view.GetContainingRow(_caretPosition.Point);
+		var currentRelativeOffset = _caretPosition.Point.Position - currentRow.Start.Position;
+		var currentPosition = _view.MapToVisualAscii(_caretPosition.Point);
+		var targetY = Math.Min(currentPosition.Y + _view.Viewport.Height, _view.Viewport.ScrollableHeight - 1);
+		var targetRow = _view.MapRowFromVisual(targetY);
+		var newPosition = Math.Min(targetRow.Start.Position + currentRelativeOffset, targetRow.End.Position);
+		Set(new CaretPosition(new SnapshotPoint(_view.Snapshot, newPosition)));
+	}
+
 	private void Set(CaretPosition caretPosition)
 	{
 		_caretPosition = caretPosition;

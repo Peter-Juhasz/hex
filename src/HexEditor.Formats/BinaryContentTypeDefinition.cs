@@ -3,10 +3,10 @@ using HexEditor.Model;
 
 namespace HexEditor.Formats.Text;
 
-public class TextContentTypeDefinition() : ContentTypeDefinition(Id)
+public class BinaryContentTypeDefinition() : ContentTypeDefinition(Id)
 {
-	public const string Id = "text";
+	public const string Id = "binary";
 
 	public override ValueTask<bool> MatchesAsync(string? filePath, IBinarySnapshot source, CancellationToken cancellationToken) =>
-		new(MatchByExtension(filePath, [".txt"]));
+		new(MatchByExtension(filePath, [".bin"]));
 }

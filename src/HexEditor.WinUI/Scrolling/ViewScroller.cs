@@ -84,14 +84,13 @@ internal sealed class ViewScroller : IViewport
 
 	public event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;
 
-	public double ScrollableHeight { get; private set; }
+	public double ScrollableHeight => _view.ScrollableHeight;
 
 
 	private void OnScrollableHeightChanged(object? sender, HeightChangedEventArgs e)
 	{
 		if (ScrollableHeight != e.NewHeight)
 		{
-			ScrollableHeight = e.NewHeight;
 			ScrollableHeightChanged?.Invoke(this, new ScrollableHeightChangedEventArgs(e.NewHeight));
 		}
 	}

@@ -1,3 +1,4 @@
+using HexEditor.Core.ContentType;
 using HexEditor.Core.Tagging;
 using HexEditor.Formats;
 using HexEditor.Model;
@@ -14,6 +15,9 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
+using System.Collections.Frozen;
+using System.Collections.Generic;
+using System.Linq;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
@@ -64,14 +68,20 @@ public partial class EditorHost : ContentControl
 			Height = new GridLength(1, GridUnitType.Star),
 		});
 
+		var contentTypeDefinitionType = typeof(ContentTypeDefinition);
+		var contentTypeRegistry = new ContentTypeRegistry(typeof(UrlTagger).Assembly
+			.GetExportedTypes()
+			.Where(t => contentTypeDefinitionType.IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
+			.Select(t => (ContentTypeDefinition)Activator.CreateInstance(t)!)
+		);
 		var taggerProvider = new ReflectionTaggerProvider([typeof(UrlTagger).Assembly]);
 
-		_view = new WinUIHexView(snapshot, _visualTheme);
+		_view = new WinUIHexView(snapshot, contentType, _visualTheme, taggerProvider, contentTypeRegistry);
 		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
 		_view.Viewport.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 
 		_hexContentView = new HexContentView(_view, _visualTheme);
-		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentType);
+		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentType, contentTypeRegistry);
 		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_hexOutliningHighlightLayer, 3);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
@@ -138,10 +148,19 @@ public partial class EditorHost : ContentControl
 		Columns: 24,
 		FontFamily: new FontFamily("Cascadia Mono"),
 		FontSize: 16,
-		FontWidth: FontSizeToWidth(16),
-		RowHeight: 24
+		FontWidth: VisualTheme.FontSizeToWidth(16),
+		RowHeight: 24,
+		ClassificationStyleMap: new Dictionary<string, WinUITextRunStyle>()
+		{
+			[AsciiClassifier.NonPrintableTag.Type] = new WinUITextRunStyle(
+				Opacity: 0.5
+			),
+		},
+		HyperlinkStyle: new WinUITextRunStyle(
+			Foreground: new SolidColorBrush(Colors.Blue),
+			IsUnderline: true
+		)
 	);
-	private static double FontSizeToWidth(double fontSize) => fontSize * (8.25d / 14d);
 
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 	{

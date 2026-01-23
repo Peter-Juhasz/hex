@@ -1,4 +1,4 @@
-using HexEditor.Core.Model;
+using HexEditor.Core.ContentType;
 using HexEditor.Formats.Text;
 using HexEditor.Model;
 using HexEditor.WinUI;

@@ -1,4 +1,5 @@
-﻿using HexEditor.Core.Model;
+﻿using HexEditor.Core.ContentType;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -10,8 +11,9 @@ public class ReflectionTaggerProvider(
 )
 	: ITaggerProvider
 {
-	public IEnumerable<ITagger<TTag>> CreateTaggers<TTag>(string contentType) where TTag : ITag
+	public ImmutableArray<ITagger<TTag>> CreateTaggers<TTag>(ImmutableArray<string> contentTypes) where TTag : ITag
 	{
+		var builder = ImmutableArray.CreateBuilder<ITagger<TTag>>();
 		var taggerType = typeof(ITagger<TTag>);
 		foreach (var assembly in assemblies)
 		{
@@ -19,7 +21,8 @@ public class ReflectionTaggerProvider(
 				.Where(t => 
 					!t.IsAbstract && !t.IsInterface && 
 					taggerType.IsAssignableFrom(t) &&
-					t.GetCustomAttribute<ContentTypeAttribute>()?.Type == contentType
+					t.GetCustomAttribute<ContentTypeAttribute>() is ContentTypeAttribute attr && 
+					contentTypes.Contains(attr.Type)
 				);
 			foreach (var type in applicableTypes)
 			{
@@ -35,9 +38,10 @@ public class ReflectionTaggerProvider(
 
 				if (tagger != null)
 				{
-					yield return tagger;
+					builder.Add(tagger);
 				}
 			}
 		}
+		return builder.ToImmutable();
 	}
 }
