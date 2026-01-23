@@ -1,6 +1,7 @@
-﻿using HexEditor.Model;
-using HexEditor.ViewModel;
-using HexEditor.WinUI.Caret;
+﻿using HexEditor.Core.Caret;
+using HexEditor.Core.Model;
+using HexEditor.Core.ViewModel;
+using HexEditor.Model;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;

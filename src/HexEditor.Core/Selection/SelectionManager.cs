@@ -1,16 +1,18 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
+using HexEditor.Core.ViewModel;
+using HexEditor.Model;
 using System;
 
-namespace HexEditor.WinUI.Selection;
+namespace HexEditor.Core.Selection;
 
 public class SelectionManager : ISelection
 {
-	public SelectionManager(WinUIHexView view)
+	public SelectionManager(IGraphicalHexView view)
 	{
 		_view = view;
 	}
 
-	private readonly WinUIHexView _view;
+	private readonly IGraphicalHexView _view;
 	private SelectionSpan? _selection;
 
 	public event EventHandler<SelectionChangedEventArgs>? SelectionChanged;

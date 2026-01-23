@@ -1,7 +1,7 @@
 ﻿using HexEditor.Model;
 using System.Collections.Immutable;
 
-namespace HexEditor.ViewModel;
+namespace HexEditor.Core.ViewModel;
 
 public class HexViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedTextRun> hexRuns, ImmutableArray<FormattedTextRun> asciiRuns) : IHexViewRow
 {

@@ -2,7 +2,7 @@
 using HexEditor.Model;
 using System.Collections.Immutable;
 
-namespace HexEditor.ViewModel;
+namespace HexEditor.Core.ViewModel;
 
 public readonly record struct FormattedTextRun(
 	SnapshotSpan Span,

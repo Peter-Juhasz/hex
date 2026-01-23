@@ -1,4 +1,5 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
+using HexEditor.Model;
 using HexEditor.ViewModel;
 using System.CommandLine;
 using System.Text.Json;

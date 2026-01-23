@@ -1,4 +1,4 @@
-﻿namespace HexEditor.ViewModel;
+﻿namespace HexEditor.Core.ViewModel;
 
 public readonly record struct ViewportBounds(
 	double Left,

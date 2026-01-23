@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HexEditor.WinUI.Selection;
+namespace HexEditor.Core.Selection;
 
 public class SelectionChangedEventArgs : EventArgs
 {

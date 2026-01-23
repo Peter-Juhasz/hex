@@ -1,7 +1,8 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
+using HexEditor.Model;
 using System.Collections.Immutable;
 
-namespace HexEditor.ViewModel;
+namespace HexEditor.Core.ViewModel;
 
 public interface IHexViewRow
 {

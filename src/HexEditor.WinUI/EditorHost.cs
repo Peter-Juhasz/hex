@@ -1,9 +1,10 @@
+using HexEditor.Core.Caret;
 using HexEditor.Core.ContentType;
+using HexEditor.Core.Scrolling;
 using HexEditor.Core.Tagging;
 using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.WinUI.AddressBar;
-using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using HexEditor.WinUI.Scrolling;
@@ -16,10 +17,9 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
-using Windows.Foundation;
+using System.Numerics;
 using Windows.System;
 using Windows.UI.Core;
 
@@ -322,22 +322,16 @@ internal static partial class Extensions
 
 	extension(PathFigure figure)
 	{
-		public void Fill(Point[] points)
+		public void Fill(Vector2[] points)
 		{
-			double maxX = points[0].X;
-			double maxY = points[0].Y;
-
 			var segments = new PathSegmentCollection();
 			for (int i = 1; i < points.Length; i++)
 			{
 				var point = points[i];
-				segments.Add(new LineSegment() { Point = point });
-
-				if (point.X > maxX) maxX = point.X;
-				if (point.Y > maxY) maxY = point.Y;
+				segments.Add(new LineSegment() { Point = point.ToPoint() });
 			}
 
-			figure.StartPoint = points[0];
+			figure.StartPoint = points[0].ToPoint();
 			figure.Segments = segments;
 		}
 	}

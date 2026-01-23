@@ -1,7 +1,7 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
 using System;
 
-namespace HexEditor.WinUI.Caret;
+namespace HexEditor.Core.Caret;
 
 public interface ICaret
 {

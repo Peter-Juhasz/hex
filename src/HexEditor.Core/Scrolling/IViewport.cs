@@ -1,8 +1,8 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
 using System;
-using Windows.Foundation;
+using System.Numerics;
 
-namespace HexEditor.WinUI.Scrolling;
+namespace HexEditor.Core.Scrolling;
 
 public interface IViewport
 {
@@ -20,7 +20,7 @@ public interface IViewport
 	void ScrollDownByPage();
 	void BringIntoView(SnapshotPoint point);
 
-	Point MapToVisual(Point point);
+	Vector2 MapToVisual(Vector2 point);
 
 	event EventHandler<ScrollVerticalOffsetChangedEventArgs>? VerticalOffsetChanged;
 	event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;

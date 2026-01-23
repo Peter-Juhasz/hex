@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HexEditor.WinUI.Caret;
+namespace HexEditor.Core.Caret;
 
 public class ActiveViewChangedEventArgs(ActiveView activeView) : EventArgs
 {

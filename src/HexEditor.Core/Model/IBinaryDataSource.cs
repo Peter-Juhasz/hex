@@ -1,4 +1,4 @@
-﻿namespace HexEditor.Model;
+﻿namespace HexEditor.Core.Model;
 
 public interface IBinaryDataSource : IAsyncDisposable
 {

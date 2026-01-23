@@ -1,11 +1,10 @@
-﻿using HexEditor.Core.Tagging;
-using HexEditor.Model;
+﻿using HexEditor.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
-namespace HexEditor.WinUI;
+namespace HexEditor.Core.Tagging;
 
 public class TagSpanSplitMap
 {

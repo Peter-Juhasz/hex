@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using HexEditor.Core.ViewModel;
+using System.Collections.Immutable;
 
 namespace HexEditor.ViewModel;
 

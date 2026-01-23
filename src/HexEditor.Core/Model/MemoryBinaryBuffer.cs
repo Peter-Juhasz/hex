@@ -1,4 +1,4 @@
-﻿namespace HexEditor.Model;
+﻿namespace HexEditor.Core.Model;
 
 public class MemoryBinaryBuffer(ReadOnlyMemory<byte> buffer) : IBinaryDataSource
 {

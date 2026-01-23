@@ -1,6 +1,7 @@
-﻿using System.Collections.Immutable;
+﻿using HexEditor.Model;
+using System.Collections.Immutable;
 
-namespace HexEditor.Model;
+namespace HexEditor.Core.Model;
 
 public class SnapshotManager : ISnapshotManager
 {

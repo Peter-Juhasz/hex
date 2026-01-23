@@ -1,8 +1,8 @@
 ﻿using HexEditor.Core.ContentType;
 using HexEditor.Core.Model;
+using HexEditor.Core.Structure;
 using HexEditor.Core.Tagging;
 using HexEditor.Model;
-using HexEditor.Structure;
 using System.Buffers.Binary;
 using System.Collections.Immutable;
 

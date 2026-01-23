@@ -1,21 +1,23 @@
-﻿using HexEditor.Classification;
+﻿using HexEditor.Core.Caret;
+using HexEditor.Core.Classification;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Hyperlinks;
+using HexEditor.Core.Model;
+using HexEditor.Core.Scrolling;
+using HexEditor.Core.Selection;
 using HexEditor.Core.Tagging;
+using HexEditor.Core.ViewModel;
 using HexEditor.Model;
-using HexEditor.ViewModel;
-using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Scrolling;
-using HexEditor.WinUI.Selection;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation;
 
 namespace HexEditor.WinUI;
 
@@ -170,26 +172,26 @@ public class WinUIHexView : IGraphicalHexView
 		VisibleRowsChanged?.Invoke(this, new VisibleRowsChangedEventArgs(removedRowsBuilder.ToImmutable(), newRowsBuilder.ToImmutable()));
 	}
 
-	public Point MapToVisualHex(SnapshotPoint point)
+	public Vector2 MapToVisualHex(SnapshotPoint point)
 	{
 		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
-		return new Point(columnIndex * 2 * _theme.FontWidth, rowIndex * _theme.RowHeight);
+		return new Vector2((float)(columnIndex * 2 * _theme.FontWidth), (float)(rowIndex * _theme.RowHeight));
 	}
 
-	public Point MapToVisualAscii(SnapshotPoint point)
+	public Vector2 MapToVisualAscii(SnapshotPoint point)
 	{
 		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
-		return new Point(columnIndex * _theme.FontWidth, rowIndex * _theme.RowHeight);
+		return new Vector2((float)(columnIndex * _theme.FontWidth), (float)(rowIndex * _theme.RowHeight));
 	}
 
-	public SnapshotPoint MapFromVisualHex(Point point)
+	public SnapshotPoint MapFromVisualHex(Vector2 point)
 	{
 		var rowIndex = Math.Clamp((int)(point.Y / _theme.RowHeight), 0, TotalRowCount);
 		var columnIndex = Math.Clamp((int)(point.X / (2 * _theme.FontWidth) + 1), 0, _theme.Columns);
 		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
 	}
 
-	public SnapshotPoint MapFromVisualAscii(Point point)
+	public SnapshotPoint MapFromVisualAscii(Vector2 point)
 	{
 		var rowIndex = Math.Clamp((int)(point.Y / _theme.RowHeight), 0, TotalRowCount);
 		var columnIndex = Math.Clamp((int)(point.X / _theme.FontWidth + 1), 0, _theme.Columns);
@@ -204,7 +206,7 @@ public class WinUIHexView : IGraphicalHexView
 		return new SnapshotSpan(snapshot, new LongSpan(rowStart, rowEnd - rowStart));
 	}
 
-	public Point[] MapToVisualHex(SnapshotSpan span)
+	public Vector2[] MapToVisualHex(SnapshotSpan span)
 	{
 		var startPoint = MapToVisualHex(span.Start);
 		var endPoint = MapToVisualHex(span.End);
@@ -218,10 +220,10 @@ public class WinUIHexView : IGraphicalHexView
 		{
 			return
 			[
-				new Point(startPoint.X, startRowTop + 0),
-				new Point(endPoint.X, startRowTop + 0),
-				new Point(endPoint.X, startRowTop + _theme.RowHeight),
-				new Point(startPoint.X, startRowTop + _theme.RowHeight),
+				new(startPoint.X, startRowTop),
+				new(endPoint.X, startRowTop),
+				new(endPoint.X, (float)(startRowTop + _theme.RowHeight)),
+				new(startPoint.X, (float)(startRowTop + _theme.RowHeight)),
 			];
 		}
 
@@ -229,18 +231,18 @@ public class WinUIHexView : IGraphicalHexView
 
 		return
 		[
-			new Point(startPoint.X, startRowTop + 0),
-			new Point(fullRowWidth, startRowTop + 0),
-			new Point(fullRowWidth, startRowTop + height - _theme.RowHeight),
-			new Point(endPoint.X, startRowTop + height - _theme.RowHeight),
-			new Point(endPoint.X, startRowTop + height),
-			new Point(0, startRowTop + height),
-			new Point(0, startRowTop + _theme.RowHeight),
-			new(startPoint.X, startRowTop + _theme.RowHeight),
+			new(startPoint.X, startRowTop + 0),
+			new((float)fullRowWidth, startRowTop + 0),
+			new((float)fullRowWidth, (float)(startRowTop + height - _theme.RowHeight)),
+			new(endPoint.X, (float)(startRowTop + height - _theme.RowHeight)),
+			new(endPoint.X, (float)(startRowTop + height)),
+			new(0, (float)(startRowTop + height)),
+			new(0, (float)(startRowTop + _theme.RowHeight)),
+			new(startPoint.X, (float)(startRowTop + _theme.RowHeight)),
 		];
 	}
 
-	public Point[] MapToVisualAscii(SnapshotSpan span)
+	public Vector2[] MapToVisualAscii(SnapshotSpan span)
 	{
 		var startPoint = MapToVisualAscii(span.Start);
 		var endPoint = MapToVisualAscii(span.End);
@@ -254,10 +256,10 @@ public class WinUIHexView : IGraphicalHexView
 		{
 			return
 			[
-				new Point(startPoint.X, startRowTop + 0),
-				new Point(endPoint.X, startRowTop + 0),
-				new Point(endPoint.X, startRowTop + _theme.RowHeight),
-				new Point(startPoint.X, startRowTop + _theme.RowHeight),
+				new(startPoint.X, startRowTop),
+				new(endPoint.X, startRowTop),
+				new(endPoint.X, (float)(startRowTop + _theme.RowHeight)),
+				new(startPoint.X, (float)(startRowTop + _theme.RowHeight)),
 			];
 		}
 
@@ -265,14 +267,14 @@ public class WinUIHexView : IGraphicalHexView
 
 		return
 		[
-			new Point(startPoint.X, startRowTop + 0),
-			new Point(fullRowWidth, startRowTop + 0),
-			new Point(fullRowWidth, startRowTop + height - _theme.RowHeight),
-			new Point(endPoint.X, startRowTop + height - _theme.RowHeight),
-			new Point(endPoint.X, startRowTop + height),
-			new Point(0, startRowTop + height),
-			new Point(0, startRowTop + _theme.RowHeight),
-			new(startPoint.X, startRowTop + _theme.RowHeight),
+			new(startPoint.X, startRowTop),
+			new((float)fullRowWidth, startRowTop),
+			new((float)fullRowWidth, (float)(startRowTop + height - _theme.RowHeight)),
+			new(endPoint.X, (float)(startRowTop + height - _theme.RowHeight)),
+			new(endPoint.X, (float)(startRowTop + height)),
+			new(0, (float)(startRowTop + height)),
+			new(0, (float)(startRowTop + _theme.RowHeight)),
+			new(startPoint.X, (float)(startRowTop + _theme.RowHeight)),
 		];
 	}
 

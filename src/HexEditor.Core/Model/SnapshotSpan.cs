@@ -1,4 +1,6 @@
-﻿namespace HexEditor.Model;
+﻿using HexEditor.Core.Model;
+
+namespace HexEditor.Model;
 
 public readonly record struct SnapshotSpan(IBinarySnapshot Snapshot, LongSpan Span);
 

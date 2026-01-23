@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32.SafeHandles;
 
-namespace HexEditor.Model;
+namespace HexEditor.Core.Model;
 
 public class SafeFileHandleBinaryDataSource(SafeFileHandle handle) : IBinaryDataSource
 {

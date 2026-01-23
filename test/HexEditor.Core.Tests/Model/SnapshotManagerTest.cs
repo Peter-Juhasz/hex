@@ -1,4 +1,6 @@
 ﻿
+using HexEditor.Core.Model;
+
 namespace HexEditor.Model.Tests;
 
 [TestClass]

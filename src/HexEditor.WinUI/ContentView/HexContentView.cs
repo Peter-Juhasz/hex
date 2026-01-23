@@ -1,6 +1,6 @@
-﻿using HexEditor.Model;
-using HexEditor.ViewModel;
-using HexEditor.WinUI.Caret;
+﻿using HexEditor.Core.Caret;
+using HexEditor.Core.Model;
+using HexEditor.Core.ViewModel;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -11,6 +11,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using System.Numerics;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -149,7 +150,7 @@ internal sealed class HexContentView : Canvas
 	}
 
 	#region Selection
-	private void OnSelectionChanged(object? sender, Selection.SelectionChangedEventArgs e)
+	private void OnSelectionChanged(object? sender, Core.Selection.SelectionChangedEventArgs e)
 	{
 		if (e.Selection == null)
 		{
@@ -190,7 +191,7 @@ internal sealed class HexContentView : Canvas
 		{
 			this.Focus(FocusState.Pointer);
 
-			_anchorPoint = _view.MapFromVisualHex(pointerPoint.Position);
+			_anchorPoint = _view.MapFromVisualHex(pointerPoint.Position.ToVector2());
 			e.Handled = true;
 		}
 
@@ -201,7 +202,7 @@ internal sealed class HexContentView : Canvas
 	{
 		if (_anchorPoint is SnapshotPoint anchorPoint)
 		{
-			var activePoint = _view.MapFromVisualHex(e.GetCurrentPoint(this).Position);
+			var activePoint = _view.MapFromVisualHex(e.GetCurrentPoint(this).Position.ToVector2());
 			_view.Selection.Select(anchorPoint, activePoint);
 			e.Handled = true;
 		}
@@ -212,7 +213,7 @@ internal sealed class HexContentView : Canvas
 		var pointerPoint = e.GetCurrentPoint(this);
 		if (pointerPoint.Properties.IsLeftButtonPressed == false)
 		{
-			var activePoint = _view.MapFromVisualHex(pointerPoint.Position);
+			var activePoint = _view.MapFromVisualHex(pointerPoint.Position.ToVector2());
 			if (_anchorPoint == activePoint)
 			{
 				_view.Caret.MoveTo(activePoint);

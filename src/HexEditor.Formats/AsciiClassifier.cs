@@ -1,4 +1,4 @@
-﻿using HexEditor.Classification;
+﻿using HexEditor.Core.Classification;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Tagging;
 using HexEditor.Formats.Text;
@@ -23,7 +23,7 @@ public sealed class AsciiClassifier : ITagger<ClassificationTag>
 		using var reader = span.CreateChunkReader(512);
 		while (reader.MoveNext(out var memory))
 		{
-			await span.Slice(reader.Position).CopyToAsync(memory, cancellationToken).ConfigureAwait(false);
+			await span.Slice(reader.Position, memory.Length).CopyToAsync(memory, cancellationToken).ConfigureAwait(false);
 
 			var data = memory.Span;
 			int i = 0;

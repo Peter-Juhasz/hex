@@ -1,7 +1,8 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
+using HexEditor.Model;
 using System;
 
-namespace HexEditor.WinUI.Selection;
+namespace HexEditor.Core.Selection;
 
 public interface ISelection
 {

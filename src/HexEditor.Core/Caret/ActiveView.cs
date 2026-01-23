@@ -1,4 +1,4 @@
-﻿namespace HexEditor.WinUI.Caret;
+﻿namespace HexEditor.Core.Caret;
 
 public enum ActiveView
 {

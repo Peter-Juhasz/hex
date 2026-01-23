@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HexEditor.WinUI.Caret;
+namespace HexEditor.Core.Caret;
 
 public class CaretPositionChangedEventArgs(CaretPosition caretPosition) : EventArgs
 {

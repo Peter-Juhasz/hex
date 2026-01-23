@@ -1,20 +1,21 @@
-﻿using HexEditor.Model;
-using HexEditor.ViewModel;
+﻿using HexEditor.Core.Model;
+using HexEditor.Core.Scrolling;
+using HexEditor.Core.ViewModel;
 using System;
-using Windows.Foundation;
+using System.Numerics;
 
 namespace HexEditor.WinUI.Scrolling;
 
 internal sealed class ViewScroller : IViewport
 {
-	public ViewScroller(WinUIHexView view, VisualTheme theme)
+	public ViewScroller(IGraphicalHexView view, VisualTheme theme)
 	{
 		_view = view;
 		_theme = theme;
 		_view.ScrollableHeightChanged += OnScrollableHeightChanged;
 	}
 
-	private readonly WinUIHexView _view;
+	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
 
 	public event EventHandler<ScrollVerticalOffsetChangedEventArgs>? VerticalOffsetChanged;
@@ -75,11 +76,10 @@ internal sealed class ViewScroller : IViewport
 	}
 
 
-	public Point MapToVisual(Point point) => new(
+	public Vector2 MapToVisual(Vector2 point) => new(
 		x: point.X,
-		y: point.Y + VerticalOffset
+		y: (float)(point.Y + VerticalOffset)
 	);
-
 
 
 	public event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;

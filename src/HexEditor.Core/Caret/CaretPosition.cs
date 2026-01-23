@@ -1,5 +1,5 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
 
-namespace HexEditor.WinUI.Caret;
+namespace HexEditor.Core.Caret;
 
 public readonly record struct CaretPosition(SnapshotPoint Point, bool IsHalfByte = false);

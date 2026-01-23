@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HexEditor.WinUI.Scrolling;
+namespace HexEditor.Core.Scrolling;
 
 public class ScrollVerticalOffsetChangedEventArgs(double verticalOffset) : EventArgs
 {

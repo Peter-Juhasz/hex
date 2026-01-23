@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace HexEditor.ViewModel;
+namespace HexEditor.Core.ViewModel;
 
 public interface IHexView
 {

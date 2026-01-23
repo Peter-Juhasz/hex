@@ -1,8 +1,8 @@
 ﻿using HexEditor.Core.ContentType;
+using HexEditor.Core.Structure;
 using HexEditor.Core.Tagging;
+using HexEditor.Core.ViewModel;
 using HexEditor.Model;
-using HexEditor.Structure;
-using HexEditor.ViewModel;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;

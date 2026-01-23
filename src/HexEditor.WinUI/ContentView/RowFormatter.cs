@@ -1,7 +1,8 @@
-﻿using HexEditor.Classification;
+﻿using HexEditor.Core.Classification;
 using HexEditor.Core.Hyperlinks;
+using HexEditor.Core.Tagging;
+using HexEditor.Core.ViewModel;
 using HexEditor.Model;
-using HexEditor.ViewModel;
 using System;
 
 namespace HexEditor.WinUI.ContentView;

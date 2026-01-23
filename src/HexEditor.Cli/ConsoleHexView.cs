@@ -1,5 +1,6 @@
-﻿using HexEditor.Classification;
+﻿using HexEditor.Core.Classification;
 using HexEditor.Core.Tagging;
+using HexEditor.Core.ViewModel;
 using HexEditor.Model;
 using System.Collections.Immutable;
 

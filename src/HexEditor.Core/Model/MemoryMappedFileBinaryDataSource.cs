@@ -1,5 +1,4 @@
-﻿using HexEditor.Model;
-using System.Buffers;
+﻿using System.Buffers;
 using System.IO.MemoryMappedFiles;
 
 namespace HexEditor.Core.Model;

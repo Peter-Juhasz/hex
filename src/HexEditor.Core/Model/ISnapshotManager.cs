@@ -1,4 +1,6 @@
-﻿namespace HexEditor.Model;
+﻿using HexEditor.Model;
+
+namespace HexEditor.Core.Model;
 
 public interface ISnapshotManager
 {

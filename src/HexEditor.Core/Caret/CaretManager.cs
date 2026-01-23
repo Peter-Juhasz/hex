@@ -1,12 +1,14 @@
-﻿using HexEditor.Model;
-using HexEditor.WinUI.Selection;
+﻿using HexEditor.Core.Model;
+using HexEditor.Core.Selection;
+using HexEditor.Core.ViewModel;
+using HexEditor.Model;
 using System;
 
-namespace HexEditor.WinUI.Caret;
+namespace HexEditor.Core.Caret;
 
 public class CaretManager : ICaret
 {
-	public CaretManager(WinUIHexView view)
+	public CaretManager(IGraphicalHexView view)
 	{
 		_view = view;
 
@@ -22,7 +24,7 @@ public class CaretManager : ICaret
 		}
 	}
 
-	private readonly WinUIHexView _view;
+	private readonly IGraphicalHexView _view;
 	private CaretPosition _caretPosition;
 	private ActiveView _activeView = ActiveView.Hex;
 

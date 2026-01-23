@@ -1,4 +1,4 @@
-﻿namespace HexEditor.Model;
+﻿namespace HexEditor.Core.Model;
 
 public class StreamBinaryDataSource(Stream stream) : IBinaryDataSource
 {
