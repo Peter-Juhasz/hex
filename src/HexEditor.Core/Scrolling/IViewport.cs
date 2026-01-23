@@ -1,5 +1,4 @@
 ﻿using HexEditor.Core.Model;
-using System;
 using System.Numerics;
 
 namespace HexEditor.Core.Scrolling;

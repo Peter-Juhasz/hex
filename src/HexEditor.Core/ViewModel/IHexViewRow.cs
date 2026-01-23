@@ -6,7 +6,7 @@ namespace HexEditor.Core.ViewModel;
 
 public interface IHexViewRow
 {
-	IHexView View { get; }
+	IConsoleHexView View { get; }
 
 	SnapshotSpan Extent { get; }
 

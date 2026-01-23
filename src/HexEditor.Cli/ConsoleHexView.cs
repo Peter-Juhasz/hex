@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 
 namespace HexEditor.ViewModel;
 
-internal partial class ConsoleHexView : IHexView
+internal partial class ConsoleHexView : IConsoleHexView
 {
     public ConsoleHexView(IBinarySnapshot viewBuffer)
     {
@@ -17,7 +17,7 @@ internal partial class ConsoleHexView : IHexView
 		_classificationAggregator = new EmptyTagAggregator<ClassificationTag>();
     }
 
-	private const double RowHeight = 1d;
+	private const long RowHeight = 1;
 
     private int Columns = -1;
 	private int Rows = -1;
@@ -30,23 +30,22 @@ internal partial class ConsoleHexView : IHexView
 
 	private ConsoleTheme? _theme;
 	private ImmutableArray<ValueFormattingRule> _rules = [];
-	private ImmutableArray<IHexViewRow> _visibleRows = [];
+	private ImmutableArray<IConsoleHexViewRow> _visibleRows = [];
 
 	public ConsoleTheme? Theme => _theme;
 
-	public ImmutableArray<IHexViewRow> VisibleRows => _visibleRows;
-	public event EventHandler<VisibleRowsChangedEventArgs>? VisibleRowsChanged;
+	public ImmutableArray<IConsoleHexViewRow> VisibleRows => _visibleRows;
 	public event EventHandler<HeightChangedEventArgs>? ScrollableHeightChanged;
 
-	public double ViewportHeight => Console.BufferHeight;
+	public int ViewportHeight => Console.BufferHeight;
 
-	public double ViewportWidth => Console.BufferWidth;
+	public long ViewportWidth => Console.BufferWidth;
 
-	public double ScrollableHeight => TotalRowCount * RowHeight;
+	public long ScrollableHeight => TotalRowCount * RowHeight;
 
 	private readonly ITagAggregator<ClassificationTag> _classificationAggregator;
 
-	public async Task<IHexViewRow?> TryGetRow(long index, CancellationToken cancellationToken)
+	public async Task<IConsoleHexViewRow?> TryGetRow(long index, CancellationToken cancellationToken)
 	{
 		// adjust index with grouping
 		if (_theme?.RowGroupingSize is int groupingSize)
@@ -82,7 +81,7 @@ internal partial class ConsoleHexView : IHexView
 		));
 
 		// TODO: add padding to calculation
-		var row = new HexViewRow(this, new(Left: 0, Top: index, Width: Console.BufferWidth, Height: RowHeight), snapshotSpan, data, formatted, formatted);
+		var row = new ConsoleHexViewRow(this, index, snapshotSpan, data, formatted, formatted);
 		return row;
 	}
 
@@ -127,20 +126,17 @@ internal partial class ConsoleHexView : IHexView
 
 	public SnapshotSpan VisibleSpan => new(_viewBuffer, new(FirstVisibleOffset, VisibleByteCount));
 
-    public Task ResizeWindowAsync(double viewportWidth, double viewportHeight, CancellationToken cancellationToken)
+    public Task ResizeWindowAsync(int viewportWidth, int viewportHeight, CancellationToken cancellationToken)
 	{
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(viewportWidth);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(viewportHeight);
 
-		var newWindowWidth = (int)Math.Floor(viewportWidth);
-		var newWindowHeight = (int)Math.Floor(viewportHeight);
-
-		var newRows = _theme?.Rows ?? newWindowHeight - (
+		var newRows = _theme?.Rows ?? viewportHeight - (
 			(_theme?.Padding?.Top ?? 0) +
 			(_theme?.HexView?.Header?.Visible ?? _theme?.AsciiView?.Header?.Visible == true ? 1 : 0) +
 			(_theme?.Padding?.Bottom ?? 0)
 		);
-		var newColumns = _theme?.Columns ?? CalculateBytesPerRow(newWindowWidth);
+		var newColumns = _theme?.Columns ?? CalculateBytesPerRow(viewportWidth);
 		return ResizeAsync(newColumns: newColumns, newRows: newRows, cancellationToken);
 	}
 

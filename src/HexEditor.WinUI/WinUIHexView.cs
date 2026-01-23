@@ -131,7 +131,7 @@ public class WinUIHexView : IGraphicalHexView
 			var rowIndex = (int)(processedRelativeOffset / _theme.Columns);
 			var rowTags = screenTagSpanMap.Slice(rowSpan);
 			var viewRow = RowFormatter.Format(new(
-				View: this as IHexView,
+				View: this as IConsoleHexView,
 				Theme: _theme,
 				Top: (firstVisibleRowIndex + rowIndex) * _theme.RowHeight,
 				Span: rowSpan,

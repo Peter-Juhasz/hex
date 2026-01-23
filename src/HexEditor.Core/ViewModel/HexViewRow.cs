@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 
 namespace HexEditor.Core.ViewModel;
 
-public class HexViewRow(IHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedTextRun> hexRuns, ImmutableArray<FormattedTextRun> asciiRuns) : IHexViewRow
+public class HexViewRow(IConsoleHexView view, ViewportBounds bounds, SnapshotSpan span, ReadOnlyMemory<byte> dataView, ImmutableArray<FormattedTextRun> hexRuns, ImmutableArray<FormattedTextRun> asciiRuns) : IHexViewRow
 {
-	public IHexView View { get; } = view;
+	public IConsoleHexView View { get; } = view;
 
 	public SnapshotSpan Extent { get; } = span;
 

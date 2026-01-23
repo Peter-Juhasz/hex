@@ -45,6 +45,8 @@ public static partial class Extensions
 		public bool Contains(SnapshotPoint point) =>
 			span.Snapshot == point.Snapshot && span.Span.Contains(point.Position);
 
+		public long Length => span.Span.Length;
+
 		// TODO bad API desing
 		public ValueTask CopyToAsync(Memory<byte> destination, CancellationToken cancellationToken)
 		{

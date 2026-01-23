@@ -85,11 +85,10 @@ internal partial class ConsoleHexView
 	public async Task InvalidateAsync(CancellationToken cancellationToken)
 	{
 		_visibleRows = await CreateVisibleRowsAsync(cancellationToken);
-		VisibleRowsChanged?.Invoke(this, new([], []));
 		Render();
 	}
 
-	private async Task<ImmutableArray<IHexViewRow>> CreateVisibleRowsAsync(CancellationToken cancellationToken)
+	private async Task<ImmutableArray<IConsoleHexViewRow>> CreateVisibleRowsAsync(CancellationToken cancellationToken)
 	{
 		if (Columns == -1)
 		{
@@ -101,7 +100,7 @@ internal partial class ConsoleHexView
 			return [];
 		}
 
-		var rows = new List<IHexViewRow>(RowsPerScreen);
+		var rows = new List<IConsoleHexViewRow>(RowsPerScreen);
 
 		// render rows
 		for (int screenRowIndex = 0; screenRowIndex < RowsPerScreen; screenRowIndex++)
@@ -158,7 +157,7 @@ internal partial class ConsoleHexView
 			foreach (var row in visibleRows)
 			{
 				// empty row for grouping
-				while ((int)row.VisualBounds.Top - firstVisibleRowIndex > screenRowIndex)
+				while (row.Index - firstVisibleRowIndex > screenRowIndex)
 				{
 					RenderSpacing(_theme?.Padding?.Left);
 					RenderEmptyRow();
@@ -331,7 +330,7 @@ internal partial class ConsoleHexView
 	private static readonly string[] UppercaseHexFormatStrings = ["X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16"];
 	private static readonly string[] LowercaseHexFormatStrings = ["x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16"];
 
-	private void RenderRow(IHexViewRow row)
+	private void RenderRow(IConsoleHexViewRow row)
 	{
 		var writer = Console.Out;
 

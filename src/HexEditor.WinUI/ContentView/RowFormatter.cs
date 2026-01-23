@@ -10,7 +10,7 @@ namespace HexEditor.WinUI.ContentView;
 internal class RowFormatter
 {
 	public record struct FormatContext(
-		IHexView View,
+		IConsoleHexView View,
 		VisualTheme Theme,
 		double Top,
 		SnapshotSpan Span,

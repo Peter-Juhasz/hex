@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace HexEditor.WinUI;
+﻿namespace HexEditor;
 
 public sealed class CancellationSeries(CancellationToken cancellationToken) : IDisposable
 {

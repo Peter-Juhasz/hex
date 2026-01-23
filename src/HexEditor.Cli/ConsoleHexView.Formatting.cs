@@ -8,7 +8,7 @@ namespace HexEditor.ViewModel;
 
 internal partial class ConsoleHexView
 {
-	private ImmutableArray<FormattedTextRun> Format(FormatContext context)
+	private ImmutableArray<ConsoleFormattedTextRun> Format(FormatContext context)
 	{
 		var span = context.Span.Span;
 		if (span.Length == 0)
@@ -18,7 +18,7 @@ internal partial class ConsoleHexView
 
 		var memory = context.Data;
 
-		using var builder = new PooledArrayBuilder<FormattedTextRun>();
+		using var builder = new PooledArrayBuilder<ConsoleFormattedTextRun>();
 
 		ConsoleStyle? lastStyle = null;
 		long lastOffset = span.StartOffset;
@@ -34,12 +34,11 @@ internal partial class ConsoleHexView
 			{
 				var length = absoluteOffset - lastOffset;
 				var data = memory.Slice((int)(lastOffset - span.StartOffset), (int)length);
-				var formattedSpan = new FormattedTextRun(
+				var formattedSpan = new ConsoleFormattedTextRun(
 					Span: context.Span.Slice(lastOffset - span.StartOffset, length),
 					Data: data,
 					Text: ToHexString(data.Span),
-					LeftPosition: relativeOffset,
-					RenderedWidth: (double)length,
+					Offset: relativeOffset,
 					Tags: [],
 					Style: lastStyle
 				);
@@ -54,12 +53,11 @@ internal partial class ConsoleHexView
 		{
 			var length = span.EndOffset - lastOffset;
 			var data = memory.Slice((int)(lastOffset - span.StartOffset), (int)length);
-			var formattedSpan = new FormattedTextRun(
+			var formattedSpan = new ConsoleFormattedTextRun(
 				Span: context.Span.Slice(lastOffset - span.StartOffset, length),
 				Data: data, 
 				Text: ToHexString(data.Span),
-				LeftPosition: lastOffset,
-				RenderedWidth: (double)length,
+				Offset: (int)(lastOffset - span.StartOffset),
 				Tags: [],
 				Style: lastStyle
 			);
