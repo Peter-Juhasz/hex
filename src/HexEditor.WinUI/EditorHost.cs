@@ -3,6 +3,7 @@ using HexEditor.Core.Tagging;
 using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.WinUI.AddressBar;
+using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using HexEditor.WinUI.Scrolling;
@@ -28,15 +29,29 @@ public partial class EditorHost : ContentControl
 {
 	public EditorHost(IBinarySnapshot snapshot, string contentType)
 	{
-		this.RequestedTheme = ElementTheme.Light;
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
 		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.IsTabStop = true;
 
+		_outerGrid = new Grid()
+		{
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Stretch,
+		};
+		_outerGrid.RowDefinitions.Add(new RowDefinition()
+		{
+			Height = new GridLength(1, GridUnitType.Star),
+		});
+		_outerGrid.RowDefinitions.Add(new RowDefinition()
+		{
+			Height = GridLength.Auto,
+		});
+
 		_grid = new Grid()
 		{
+			RequestedTheme = ElementTheme.Light,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			VerticalAlignment = VerticalAlignment.Top,
 			Background = new SolidColorBrush(Colors.White),
@@ -62,7 +77,6 @@ public partial class EditorHost : ContentControl
 			Width = new GridLength(1, GridUnitType.Star),
 		});
 
-		_grid.RowDefinitions.Clear();
 		_grid.RowDefinitions.Add(new RowDefinition()
 		{
 			Height = new GridLength(1, GridUnitType.Star),
@@ -104,6 +118,10 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_outliningMargin, 2);
 		_grid.Children.Add(_outliningMargin);
 
+		var statusBar = CreateStatusBar();
+		Grid.SetRow(statusBar, 1);
+		_outerGrid.Children.Add(statusBar);
+
 		_scrollView = new ScrollView()
 		{
 			VerticalAlignment = VerticalAlignment.Stretch,
@@ -115,7 +133,11 @@ public partial class EditorHost : ContentControl
 			VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Auto,
 			Content = _grid,
 		};
-		this.Content = _scrollView;
+
+		Grid.SetRow(_scrollView, 0);
+		_outerGrid.Children.Add(_scrollView);
+
+		this.Content = _outerGrid;
 
 		this.Loaded += OnLoaded;
 		this.Unloaded += OnUnloaded;
@@ -124,10 +146,12 @@ public partial class EditorHost : ContentControl
 		this.SizeChanged += OnSizeChanged;
 
 		_invalidationTimer.Tick += OnScrollTick;
+		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly ScrollView _scrollView;
 	private readonly Grid _grid;
+	private readonly Grid _outerGrid;
 	private readonly DispatcherTimer _invalidationTimer = new()
 	{
 		Interval = TimeSpan.FromMilliseconds(100)
@@ -139,6 +163,8 @@ public partial class EditorHost : ContentControl
 	private readonly HexContentView _hexContentView;
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
+
+	private TextBlock _caretPositionTextBlock;
 
 	private readonly WinUIHexView _view;
 	private readonly BackgroundTaskQueue _queue = new(default);
@@ -161,6 +187,38 @@ public partial class EditorHost : ContentControl
 			IsUnderline: true
 		)
 	);
+
+	private FrameworkElement CreateStatusBar()
+	{
+		var statusBarGrid = new Grid()
+		{
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Bottom,
+			RequestedTheme = ElementTheme.Default,
+		};
+		statusBarGrid.ColumnDefinitions.Add(new ColumnDefinition()
+		{
+			Width = new GridLength(1, GridUnitType.Star),
+		});
+		statusBarGrid.ColumnDefinitions.Add(new ColumnDefinition()
+		{
+			Width = GridLength.Auto,
+		});
+		statusBarGrid.RowDefinitions.Add(new RowDefinition()
+		{
+			Height = GridLength.Auto,
+		});
+		_caretPositionTextBlock = new TextBlock()
+		{
+			Margin = new Thickness(4),
+			VerticalAlignment = VerticalAlignment.Center,
+			HorizontalAlignment = HorizontalAlignment.Right,
+			Text = "Row 00000000, Col 00 (0x00000000)",
+		};
+		Grid.SetColumn(_caretPositionTextBlock, 1);
+		statusBarGrid.Children.Add(_caretPositionTextBlock);
+		return statusBarGrid;
+	}
 
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 	{
@@ -231,6 +289,13 @@ public partial class EditorHost : ContentControl
 				e.Handled = true;
 				break;
 		}
+	}
+
+	private void OnCaretPositionChanged(object? sender, CaretPositionChangedEventArgs e)
+	{
+		var row = _view.GetContainingRow(e.CaretPosition.Point);
+		var column = (int)(e.CaretPosition.Point.Position - row.Start.Position);
+		_caretPositionTextBlock.Text = $"Row {row.Start.Position:X8}, Col {column:X2} (0x{e.CaretPosition.Point.Position:X8})";
 	}
 
 	private void OnUnloaded(object sender, RoutedEventArgs e)
