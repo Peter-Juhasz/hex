@@ -24,8 +24,6 @@ public static partial class ImmutableArrayBuilderPool<T>
 
 		public bool Return(ImmutableArray<T>.Builder list)
 		{
-			var count = list.Count;
-
 			list.Clear();
 
 			if (list.Capacity > DefaultPool.MaximumItemCount)

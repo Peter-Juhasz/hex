@@ -1,16 +1,16 @@
-﻿namespace HexEditor.Model;
+﻿using System.Buffers;
 
-public struct ChunkMemoryReader
+namespace HexEditor.Model;
+
+public struct ChunkMemoryReader : IDisposable
 {
 	public ChunkMemoryReader(long totalLength, int chunkLength)
-		: this(totalLength, new byte[chunkLength])
-	{ }
-	public ChunkMemoryReader(long totalLength, byte[] buffer)
 	{
-		this.totalLength = totalLength;
-		_buffer = buffer;
 		_totalLength = totalLength;
+		_buffer = Pool.Rent(totalLength < int.MaxValue ? Math.Min((int)totalLength, chunkLength) : chunkLength);
 	}
+
+	private static readonly ArrayPool<byte> Pool = ArrayPool<byte>.Shared;
 
 	private long _position = -1L;
 	private readonly long _totalLength;
@@ -18,13 +18,12 @@ public struct ChunkMemoryReader
 	public readonly long TotalLength => _totalLength;
 
 	private readonly byte[] _buffer;
-	private readonly long totalLength;
 
 	public readonly int ChunkLength => _buffer.Length;
 
 	public readonly long Position => _position;
 
-	public readonly Memory<byte> Memory => _buffer.AsMemory(0, (int)Math.Min(ChunkLength, totalLength - _position));
+	public readonly Memory<byte> Memory => _buffer.AsMemory(0, (int)Math.Min(ChunkLength, _totalLength - _position));
 
 	public bool MoveNext(out Memory<byte> memory)
 	{
@@ -37,7 +36,7 @@ public struct ChunkMemoryReader
 			_position += ChunkLength;
 		}
 
-		if (_position < totalLength)
+		if (_position < _totalLength)
 		{
 			memory = Memory;
 			return true;
@@ -45,6 +44,11 @@ public struct ChunkMemoryReader
 
 		memory = default;
 		return false;
+	}
+
+	public void Dispose()
+	{
+		Pool.Return(_buffer);
 	}
 }
 

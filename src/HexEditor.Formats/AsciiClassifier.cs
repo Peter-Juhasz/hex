@@ -1,6 +1,5 @@
 ﻿using HexEditor.Classification;
 using HexEditor.Core.ContentType;
-using HexEditor.Core.Model;
 using HexEditor.Core.Tagging;
 using HexEditor.Formats.Text;
 using HexEditor.Model;
@@ -19,14 +18,12 @@ public sealed class AsciiClassifier : ITagger<ClassificationTag>
 
 	public async Task<ImmutableArray<TagSpan<ClassificationTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		var tags = ImmutableArray.CreateBuilder<TagSpan<ClassificationTag>>();
+		using var _ = ImmutableArrayBuilderPool<TagSpan<ClassificationTag>>.GetPooledObject(out var tags);
 
-		var reader = span.CreateChunkReader(4096);
+		using var reader = span.CreateChunkReader(512);
 		while (reader.MoveNext(out var memory))
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-
-			await span.CopyToAsync(memory, cancellationToken).ConfigureAwait(false);
+			await span.Slice(reader.Position).CopyToAsync(memory, cancellationToken).ConfigureAwait(false);
 
 			var data = memory.Span;
 			int i = 0;
