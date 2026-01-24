@@ -375,6 +375,11 @@ internal sealed class AsciiContentView : Canvas
 					e.Handled = true;
 					break;
 
+				case VirtualKey.A when isControlDown:
+					_view.Selection.SelectAll();
+					e.Handled = true;
+					break;
+
 				case VirtualKey.Escape:
 					_view.Selection.Clear();
 					e.Handled = true;
