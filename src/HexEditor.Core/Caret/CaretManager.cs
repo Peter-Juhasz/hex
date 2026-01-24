@@ -77,7 +77,7 @@ public class CaretManager : ICaret
 		Set(new CaretPosition(row.End));
 	}
 
-	public void MoveLeft()
+	public void MoveToPreviousByte()
 	{
 		if (_caretPosition.Point.Position > 0)
 		{
@@ -85,7 +85,7 @@ public class CaretManager : ICaret
 		}
 	}
 
-	public void MoveRight()
+	public void MoveToNextByte()
 	{
 		if (_caretPosition.Point.Position < _view.Snapshot.Length)
 		{

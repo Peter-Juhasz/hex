@@ -3,6 +3,7 @@ using HexEditor.Core.Hyperlinks;
 using HexEditor.Core.Tagging;
 using HexEditor.Core.ViewModel;
 using HexEditor.Model;
+using HexEditor.WinUI.Theming;
 using System;
 
 namespace HexEditor.WinUI.ContentView;
@@ -10,7 +11,7 @@ namespace HexEditor.WinUI.ContentView;
 internal class RowFormatter
 {
 	public record struct FormatContext(
-		IConsoleHexView View,
+		IGraphicalHexView View,
 		VisualTheme Theme,
 		double Top,
 		SnapshotSpan Span,
@@ -22,6 +23,11 @@ internal class RowFormatter
 	{
 		using var hexRuns = new PooledArrayBuilder<FormattedTextRun>();
 		using var asciiRuns = new PooledArrayBuilder<FormattedTextRun>();
+
+		var hexPrimaryGrouping = context.Theme.HexViewStyle?.PrimaryGrouping ?? 0;
+		var hexSecondaryGrouping = context.Theme.HexViewStyle?.SecondaryGrouping ?? 0;
+		var asciiPrimaryGrouping = context.Theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
+		var asciiSecondaryGrouping = context.Theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
 
 		for (int i = 0; i < context.Span.Span.Length;)
 		{
@@ -49,23 +55,30 @@ internal class RowFormatter
 				}
 			}
 
+			// get data
+			var dataMemory = context.Data.Slice(i, (int)nextRun.Span.Length);
+
 			// create runs
-			var memorySpan = context.Data.Slice(i, (int)nextRun.Span.Length);
+			var hexStartInCharacters = IHexViewRow.CalculateStartIndexOfHexColumnInCharacters(i, hexPrimaryGrouping, hexSecondaryGrouping);
+			var hexEndInCharacters = IHexViewRow.CalculateEndIndexOfHexColumnInCharacters(i + (int)nextRun.Span.Length, hexPrimaryGrouping, hexSecondaryGrouping);
 			hexRuns.Add(new(
 				Span: nextRun,
-				Data: memorySpan,
-				Text: FormattedTextRun.ToHexString(memorySpan.Span),
-				LeftPosition: context.Theme.FontWidth * i * 2,
-				RenderedWidth: context.Theme.FontWidth * nextRun.Span.Length * 2,
+				Data: dataMemory,
+				Text: FormattedTextRun.ToHexString(dataMemory.Span, i, hexPrimaryGrouping, hexSecondaryGrouping),
+				LeftPosition: hexStartInCharacters * context.Theme.FontWidth,
+				RenderedWidth: (hexEndInCharacters - hexStartInCharacters) * context.Theme.FontWidth,
 				Tags: tags,
 				Style: effectiveStyle
 			));
+
+			var asciiStartInCharacters = IHexViewRow.CalculateStartIndexOfAsciiColumnInCharacters(i, asciiPrimaryGrouping, asciiSecondaryGrouping);
+			var asciiEndInCharacters = IHexViewRow.CalculateEndIndexOfAsciiColumnInCharacters(i + (int)nextRun.Span.Length, asciiPrimaryGrouping, asciiSecondaryGrouping);
 			asciiRuns.Add(new(
 				Span: nextRun,
-				Data: memorySpan,
-				Text: FormattedTextRun.ToAsciiString(memorySpan.Span),
-				LeftPosition: context.Theme.FontWidth * i,
-				RenderedWidth: context.Theme.FontWidth * nextRun.Span.Length,
+				Data: dataMemory,
+				Text: FormattedTextRun.ToAsciiString(dataMemory.Span, i, asciiPrimaryGrouping, asciiSecondaryGrouping),
+				LeftPosition: asciiStartInCharacters * context.Theme.FontWidth,
+				RenderedWidth: (asciiEndInCharacters - asciiStartInCharacters) * context.Theme.FontWidth,
 				Tags: tags,
 				Style: effectiveStyle
 			));

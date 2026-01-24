@@ -3,7 +3,6 @@ using HexEditor.Core.Model;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.Selection;
 using HexEditor.Model;
-using System;
 using System.Collections.Immutable;
 using System.Numerics;
 
@@ -31,8 +30,10 @@ public interface IGraphicalHexView
 
 	SnapshotPoint MapFromVisualHex(Vector2 point);
 	SnapshotSpan MapRowFromVisual(double verticalOffset);
-	Vector2 MapToVisualAscii(SnapshotPoint point);
+	long MapRowIndexFromVerticalOffset(double verticalOffset);
+
+	ViewportBounds MapToVisualAscii(SnapshotPoint point);
 	Vector2[] MapToVisualAscii(SnapshotSpan span);
-	Vector2 MapToVisualHex(SnapshotPoint point);
+	ViewportBounds MapToVisualHex(SnapshotPoint point);
 	Vector2[] MapToVisualHex(SnapshotSpan span);
 }

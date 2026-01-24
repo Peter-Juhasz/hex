@@ -1,6 +1,7 @@
 ﻿using HexEditor.Core.Model;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.ViewModel;
+using HexEditor.WinUI.Theming;
 using System;
 using System.Numerics;
 

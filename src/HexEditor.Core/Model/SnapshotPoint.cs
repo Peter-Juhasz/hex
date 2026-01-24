@@ -44,4 +44,19 @@ public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Posit
 		}
 		return new SnapshotPoint(point.Snapshot, newPosition);
 	}
+
+	public static SnapshotPoint operator -(SnapshotPoint left, SnapshotPoint right)
+	{
+		if (left.Snapshot != right.Snapshot)
+		{
+			throw new ArgumentException("SnapshotPoints must belong to the same snapshot.");
+		}
+
+		var newPosition = left.Position - right.Position;
+		if (newPosition < 0 || newPosition > left.Snapshot.Length)
+		{
+			throw new ArgumentOutOfRangeException(nameof(right), "Resulting position is out of bounds.");
+		}
+		return new SnapshotPoint(left.Snapshot, newPosition);
+	}
 }

@@ -8,6 +8,7 @@ using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using HexEditor.WinUI.Scrolling;
+using HexEditor.WinUI.Theming;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -18,6 +19,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Windows.System;
@@ -171,7 +173,7 @@ public partial class EditorHost : ContentControl
 
 
 	private VisualTheme _visualTheme = new(
-		Columns: 24,
+		Columns: 16,
 		FontFamily: new FontFamily("Cascadia Mono"),
 		FontSize: 16,
 		FontWidth: VisualTheme.FontSizeToWidth(16),
@@ -185,9 +187,13 @@ public partial class EditorHost : ContentControl
 		HyperlinkStyle: new WinUITextRunStyle(
 			Foreground: new SolidColorBrush(Colors.Blue),
 			IsUnderline: true
+		),
+		HexViewStyle: new(
+			PrimaryGrouping: 4
 		)
 	);
 
+	[MemberNotNull(nameof(_caretPositionTextBlock))]
 	private FrameworkElement CreateStatusBar()
 	{
 		var statusBarGrid = new Grid()

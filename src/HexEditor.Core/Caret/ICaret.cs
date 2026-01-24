@@ -15,8 +15,8 @@ public interface ICaret
 
 	void MoveTo(SnapshotPoint point);
 	void MoveTo(SnapshotPoint point, ActiveView activeView);
-	void MoveLeft();
-	void MoveRight();
+	void MoveToPreviousByte();
+	void MoveToNextByte();
 	void MoveUpByRow();
 	void MoveDownByRow();
 	void MoveToHome();

@@ -1,6 +1,7 @@
 ﻿using HexEditor.Core.Caret;
 using HexEditor.Core.Model;
 using HexEditor.Core.ViewModel;
+using HexEditor.WinUI.Theming;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -269,8 +270,8 @@ internal sealed class HexContentView : Canvas
 	private void OnCaretPositionChanged(object? sender, CaretPositionChangedEventArgs e)
 	{
 		var visualPosition = _view.MapToVisualHex(e.CaretPosition.Point);
-		Canvas.SetLeft(_caret, Math.Round(visualPosition.X));
-		Canvas.SetTop(_caret, Math.Round(visualPosition.Y));
+		Canvas.SetLeft(_caret, Math.Round(visualPosition.Left));
+		Canvas.SetTop(_caret, Math.Round(visualPosition.Top));
 		_caretStoryboard!.Seek(TimeSpan.Zero);
 	}
 
@@ -306,7 +307,7 @@ internal sealed class HexContentView : Canvas
 					break;
 
 				case VirtualKey.End when !isControlDown:
-					_view.Selection.MoveActivePointToEnd();
+					_view.Selection.MoveActivePointToRowEnd();
 					e.Handled = true;
 					break;
 
@@ -356,12 +357,12 @@ internal sealed class HexContentView : Canvas
 					break;
 
 				case VirtualKey.Left when !isControlDown:
-					_view.Caret.MoveLeft();
+					_view.Caret.MoveToPreviousByte();
 					e.Handled = true;
 					break;
 
 				case VirtualKey.Right when !isControlDown:
-					_view.Caret.MoveRight();
+					_view.Caret.MoveToNextByte();
 					e.Handled = true;
 					break;
 
