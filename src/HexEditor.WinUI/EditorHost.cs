@@ -72,6 +72,10 @@ public partial class EditorHost : ContentControl
 		});
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
 		{
+			Width = new GridLength(8, GridUnitType.Pixel),
+		});
+		_grid.ColumnDefinitions.Add(new ColumnDefinition()
+		{
 			Width = new GridLength(2, GridUnitType.Star),
 		});
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
@@ -99,18 +103,18 @@ public partial class EditorHost : ContentControl
 		_hexContentView = new HexContentView(_view, _visualTheme);
 		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentType, contentTypeRegistry);
 		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
-		Grid.SetColumn(_hexOutliningHighlightLayer, 3);
+		Grid.SetColumn(_hexOutliningHighlightLayer, 4);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
 
-		Grid.SetColumn(_hexContentView, 3);
+		Grid.SetColumn(_hexContentView, 4);
 		_grid.Children.Add(_hexContentView);
 
 		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
-		Grid.SetColumn(_asciiOutliningHighlightLayer, 4);
+		Grid.SetColumn(_asciiOutliningHighlightLayer, 5);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
 
 		_asciiContentView = new AsciiContentView(_view, _visualTheme);
-		Grid.SetColumn(_asciiContentView, 4);
+		Grid.SetColumn(_asciiContentView, 5);
 		_grid.Children.Add(_asciiContentView);
 
 		_addressBarMargin = new AddressBarMargin(_view, _visualTheme);
