@@ -184,6 +184,9 @@ public partial class EditorHost : ContentControl
 			[AsciiClassifier.NonPrintableTag.Type] = new WinUITextRunStyle(
 				Opacity: 0.5
 			),
+			["keyword"] = new WinUITextRunStyle(
+				Foreground: new SolidColorBrush(Colors.Blue)
+			),
 		},
 		HyperlinkStyle: new WinUITextRunStyle(
 			Foreground: new SolidColorBrush(Colors.Blue),

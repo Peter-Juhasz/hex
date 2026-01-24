@@ -1,3 +1,5 @@
-﻿namespace HexEditor.Core.Diagnostics;
+﻿using HexEditor.Core.Tagging;
 
-public record class DiagnosticTag(DiagnosticDescriptor Descriptor);
+namespace HexEditor.Core.Diagnostics;
+
+public record class DiagnosticTag(DiagnosticDescriptor Descriptor) : ITag;
