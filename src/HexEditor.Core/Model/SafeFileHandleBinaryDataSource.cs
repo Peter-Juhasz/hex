@@ -7,7 +7,9 @@ public class SafeFileHandleBinaryDataSource(SafeFileHandle handle) : IBinaryData
 	public long Length { get; } = RandomAccess.GetLength(handle);
 
 	public async ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
-    {
+	{
+		ArgumentOutOfRangeException.ThrowIfNegative(offset);
+
 		var read = await RandomAccess.ReadAsync(handle, destination, offset, cancellationToken).ConfigureAwait(false);
 		if (read < destination.Length)
 		{

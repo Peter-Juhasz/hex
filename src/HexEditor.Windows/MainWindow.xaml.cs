@@ -38,7 +38,7 @@ public sealed partial class MainWindow : Window
 			if (File.Exists(testFile))
 			{
 				var handle = File.OpenHandle(testFile);
-				var binaryBuffer = await MemoryBinaryBuffer.CreateAsync(new SafeFileHandleBinaryDataSource(handle), default);
+				var binaryBuffer = new FullMemoryCachingBinaryBuffer(new SafeFileHandleBinaryDataSource(handle));
 				var snapshot = new BinaryDataSourceSnapshot(binaryBuffer);
 				await CreateEditorAsync(testFile, snapshot);
 				break;

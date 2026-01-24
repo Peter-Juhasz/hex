@@ -11,6 +11,9 @@ public class MemoryMappedFileBinaryDataSource(MemoryMappedFile file, int length)
 
 	public ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
 	{
+		ArgumentOutOfRangeException.ThrowIfNegative(offset);
+		cancellationToken.ThrowIfCancellationRequested();
+
 		using var _accessor = file.CreateViewAccessor(offset, destination.Length, MemoryMappedFileAccess.Read);
 		var buffer = _arrayPool.Rent(destination.Length);
 		try
