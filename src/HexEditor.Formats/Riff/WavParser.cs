@@ -13,7 +13,7 @@ public sealed class WavParser : IPartialSyntaxTreeFactory
 	public async ValueTask<IPartialSyntaxTree?> GetSyntaxTreeAsync(SnapshotSpan span, IPartialSyntaxTree? before, CancellationToken cancellationToken)
 	{
 		var snapshot = span.Snapshot;
-		if (snapshot.Length < 8)
+		if (snapshot.Length < 12)
 		{
 			return null;
 		}
@@ -36,6 +36,17 @@ public sealed class WavParser : IPartialSyntaxTreeFactory
 			return null;
 		}
 
+		// Store type bytes before await
+		byte[] typeBytes = type.ToArray();
+
+		// Verify WAVE format
+		byte[] waveBuffer = new byte[4];
+		await snapshot.CopyToAsync(8, waveBuffer, cancellationToken).ConfigureAwait(false);
+		if (!waveBuffer.AsSpan().SequenceEqual("WAVE"u8))
+		{
+			return null;
+		}
+
 		// Add RIFF chunk
 		var fullExtent = new LongSpan(startOffset, 8 + length);
 		if (fullExtent.IntersectsWith(span.Span))
@@ -45,7 +56,7 @@ public sealed class WavParser : IPartialSyntaxTreeFactory
 			var lengthSpan = fullSpan.Slice(4, 4);
 			builder.Add(new TypeLengthChunkSyntaxNode(
 				Span: fullSpan,
-				TypeToken: new SyntaxToken(typeSpan, type.ToArray()),
+				TypeToken: new SyntaxToken(typeSpan, typeBytes),
 				LengthToken: new Int32SyntaxToken(lengthSpan, length)
 			));
 		}
