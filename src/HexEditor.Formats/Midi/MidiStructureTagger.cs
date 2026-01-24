@@ -1,15 +1,18 @@
-﻿using HexEditor.Core.ContentType;
-using HexEditor.Core.Model;
+﻿using HexEditor.Composition;
+using HexEditor.Core.ContentType;
 using HexEditor.Core.Structure;
+using HexEditor.Core.Syntax;
 using HexEditor.Core.Tagging;
 using HexEditor.Model;
-using System.Buffers.Binary;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
 
 namespace HexEditor.Formats.Midi;
 
 [ContentType(MidiContentTypeDefinition.Id)]
-public sealed class MidiStructureTagger : ITagger<StructureTag>
+public sealed class MidiStructureTagger(
+	[FromKeyedServices(MidiContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
+) : ITagger<StructureTag>
 {
 	private static readonly StructureTag MidiHeaderTag = new("MIDI Header Chunk");
 	private static readonly StructureTag MidiTrackTag = new("MIDI Track Chunk");
@@ -22,54 +25,32 @@ public sealed class MidiStructureTagger : ITagger<StructureTag>
 			return [];
 		}
 
-		long startOffset = 0;
-		byte[] buffer = new byte[8];
-		using var _ = ImmutableArrayBuilderPool<TagSpan<StructureTag>>.GetPooledObject(out var builder);
-		while (startOffset < span.Span.EndOffset)
+		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
+		if (syntaxTree == null)
 		{
-			// try read chunk header
-			await snapshot.CopyToAsync(startOffset, buffer, cancellationToken).ConfigureAwait(false);
-
-			// parse
-			if (!TryParseChunkHeader(buffer, out var type, out var length))
-			{
-				break;
-			}
-
-			var tag = 
-				type.SequenceEqual("MThd"u8) ? MidiHeaderTag :
-				type.SequenceEqual("MTrk"u8) ? MidiTrackTag : 
-				null;
-			if (tag == null)
-			{
-				break;
-			}
-
-			// add span
-			var fullExtent = new LongSpan(startOffset, 8 + length);
-			if (fullExtent.IntersectsWith(span.Span))
-			{
-				builder.Add(new TagSpan<StructureTag>(
-					Span: new(snapshot, fullExtent),
-					Tag: tag
-				));
-			}
-			else if (span.Span.EndOffset < fullExtent.StartOffset)
-			{
-				break;
-			}
-
-			// advance
-			startOffset += fullExtent.Length;
+			return [];
 		}
 
-		return builder.ToImmutable();
-	}
+		if (syntaxTree.Root is not SyntaxNodeList list)
+		{
+			return [];
+		}
 
-	private static bool TryParseChunkHeader(ReadOnlySpan<byte> bytes, out ReadOnlySpan<byte> type, out int length)
-	{
-		type = bytes[..4];
-		length = BinaryPrimitives.ReadInt32BigEndian(bytes[4..8]);
-		return true;
+		using var _ = ImmutableArrayBuilderPool<TagSpan<StructureTag>>.GetPooledObject(out var builder);
+		foreach (var child in list.Children)
+		{
+			if (child is not TypeLengthChunkSyntaxNode chunkNode)
+			{
+				continue;
+			}
+
+			builder.Add(new TagSpan<StructureTag>(child.Span, chunkNode.TypeToken.Data.Span switch
+			{
+				{ } s when s.SequenceEqual("MThd"u8) => MidiHeaderTag,
+				{ } s when s.SequenceEqual("MTrk"u8) => MidiTrackTag,
+				_ => new StructureTag("MIDI Unknown Chunk")
+			}));
+		}
+		return builder.ToImmutable();
 	}
 }

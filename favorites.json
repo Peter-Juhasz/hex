@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "items": [
+    {
+      "name": "ServiceCollectionExtensions.cs",
+      "path": "src\\HexEditor.Composition\\ServiceCollectionExtensions.cs"
+    }
+  ]
+}

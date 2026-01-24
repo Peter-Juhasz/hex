@@ -1,9 +1,9 @@
-﻿using HexEditor.Core.ContentType;
+﻿using HexEditor.Core.Tagging;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace HexEditor.Core.Tagging;
+namespace HexEditor.Composition;
 
 [RequiresUnreferencedCode("Uses reflection to create tagger instances.")]
 public class ReflectionTaggerProvider(

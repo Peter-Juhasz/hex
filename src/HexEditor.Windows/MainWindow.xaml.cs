@@ -1,8 +1,11 @@
+using HexEditor.Composition;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Model;
+using HexEditor.Formats;
 using HexEditor.Formats.Text;
 using HexEditor.Model;
 using HexEditor.WinUI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -53,17 +56,17 @@ public sealed partial class MainWindow : Window
 			MainGrid.Children.Remove(_editor);
 		}
 
+		var services = new ServiceCollection();
+		services.AddHexEditor();
+		services.AddContent(typeof(UrlTagger).Assembly);
+		var serviceProvider = services.BuildServiceProvider();
+
 		// determine content type
-		var contentTypeDefinitionType = typeof(ContentTypeDefinition);
-		var contentTypeDefinitions = typeof(TextContentTypeDefinition).Assembly
-			.GetExportedTypes()
-			.Where(t => !t.IsAbstract && contentTypeDefinitionType.IsAssignableFrom(t));
 		var contentType = "binary";
-		foreach (var contentTypeDefinition in contentTypeDefinitions)
+		foreach (var definition in serviceProvider.GetServices<ContentTypeDefinition>())
 		{
 			try
 			{
-				var definition = (ContentTypeDefinition)Activator.CreateInstance(contentTypeDefinition)!;
 				if (await definition.MatchesAsync(filePath, snapshot, default))
 				{
 					contentType = definition.Type;
@@ -77,7 +80,7 @@ public sealed partial class MainWindow : Window
 		}
 
 		// create editor
-		var editorHost = new WinUI.EditorHost(snapshot, contentType);
+		var editorHost = new WinUI.EditorHost(serviceProvider, snapshot, contentType);
 		Grid.SetRow(editorHost, 2);
 		MainGrid.Children.Add(editorHost);
 		_editor = editorHost;

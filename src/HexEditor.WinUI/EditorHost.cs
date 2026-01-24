@@ -9,6 +9,7 @@ using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using HexEditor.WinUI.Scrolling;
 using HexEditor.WinUI.Theming;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -29,7 +30,7 @@ namespace HexEditor.WinUI;
 
 public partial class EditorHost : ContentControl
 {
-	public EditorHost(IBinarySnapshot snapshot, string contentType)
+	public EditorHost(IServiceProvider serviceProvider, IBinarySnapshot snapshot, string contentType)
 	{
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
@@ -88,13 +89,8 @@ public partial class EditorHost : ContentControl
 			Height = new GridLength(1, GridUnitType.Star),
 		});
 
-		var contentTypeDefinitionType = typeof(ContentTypeDefinition);
-		var contentTypeRegistry = new ContentTypeRegistry(typeof(UrlTagger).Assembly
-			.GetExportedTypes()
-			.Where(t => contentTypeDefinitionType.IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
-			.Select(t => (ContentTypeDefinition)Activator.CreateInstance(t)!)
-		);
-		var taggerProvider = new ReflectionTaggerProvider([typeof(UrlTagger).Assembly]);
+		var contentTypeRegistry = serviceProvider.GetRequiredService<IContentTypeRegistry>();
+		var taggerProvider = serviceProvider.GetRequiredService<ITaggerProvider>();
 
 		_view = new WinUIHexView(snapshot, contentType, _visualTheme, taggerProvider, contentTypeRegistry);
 		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
