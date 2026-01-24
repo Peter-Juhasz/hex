@@ -120,7 +120,7 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_outliningMargin, 2);
 		_grid.Children.Add(_outliningMargin);
 
-		var statusBar = CreateStatusBar();
+		var statusBar = CreateStatusBar(contentType);
 		Grid.SetRow(statusBar, 1);
 		_outerGrid.Children.Add(statusBar);
 
@@ -167,6 +167,7 @@ public partial class EditorHost : ContentControl
 	private readonly AsciiContentView _asciiContentView;
 
 	private TextBlock _caretPositionTextBlock;
+	private TextBlock _contentTypeTextBlock;
 
 	private readonly WinUIHexView _view;
 	private readonly BackgroundTaskQueue _queue = new(default);
@@ -194,7 +195,8 @@ public partial class EditorHost : ContentControl
 	);
 
 	[MemberNotNull(nameof(_caretPositionTextBlock))]
-	private FrameworkElement CreateStatusBar()
+	[MemberNotNull(nameof(_contentTypeTextBlock))]
+	private FrameworkElement CreateStatusBar(string contentType)
 	{
 		var statusBarGrid = new Grid()
 		{
@@ -210,10 +212,15 @@ public partial class EditorHost : ContentControl
 		{
 			Width = GridLength.Auto,
 		});
+		statusBarGrid.ColumnDefinitions.Add(new ColumnDefinition()
+		{
+			Width = GridLength.Auto,
+		});
 		statusBarGrid.RowDefinitions.Add(new RowDefinition()
 		{
 			Height = GridLength.Auto,
 		});
+
 		_caretPositionTextBlock = new TextBlock()
 		{
 			Margin = new Thickness(4),
@@ -223,6 +230,17 @@ public partial class EditorHost : ContentControl
 		};
 		Grid.SetColumn(_caretPositionTextBlock, 1);
 		statusBarGrid.Children.Add(_caretPositionTextBlock);
+
+		_contentTypeTextBlock = new TextBlock()
+		{
+			Margin = new Thickness(4),
+			VerticalAlignment = VerticalAlignment.Center,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Text = contentType,
+		};
+		Grid.SetColumn(_contentTypeTextBlock, 2);
+		statusBarGrid.Children.Add(_contentTypeTextBlock);
+
 		return statusBarGrid;
 	}
 
