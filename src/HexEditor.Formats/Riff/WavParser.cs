@@ -61,7 +61,7 @@ public sealed class WavParser : IPartialSyntaxTreeFactory
 			));
 		}
 
-		// Skip RIFF header (8 bytes) and WAVE format (4 bytes)
+		// Skip RIFF header (4 bytes type + 4 bytes length) and WAVE format identifier (4 bytes)
 		startOffset = 12;
 
 		// Read chunks inside RIFF
