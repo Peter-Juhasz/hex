@@ -1,6 +1,7 @@
 ﻿using HexEditor.Core.Caret;
 using HexEditor.Core.Classification;
 using HexEditor.Core.ContentType;
+using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Hyperlinks;
 using HexEditor.Core.Model;
 using HexEditor.Core.Scrolling;
@@ -33,6 +34,7 @@ public class WinUIHexView : IGraphicalHexView
 
 		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
 		_classificationTagAggregator = new SequentialTagAggregator<ClassificationTag>(taggerProvider.CreateTaggers<ClassificationTag>(interestedContentTypes));
+		_diagnosticTagAggregator = new SequentialTagAggregator<DiagnosticTag>(taggerProvider.CreateTaggers<DiagnosticTag>(interestedContentTypes));
 		_urlTagAggregator = new SequentialTagAggregator<UrlTag>(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes));
 
 		TotalRowCount = (snapshot.Length / _theme.Columns) + 1;
@@ -40,6 +42,7 @@ public class WinUIHexView : IGraphicalHexView
 	}
 
 	private readonly ITagAggregator<ClassificationTag> _classificationTagAggregator;
+	private readonly ITagAggregator<DiagnosticTag> _diagnosticTagAggregator;
 	private readonly ITagAggregator<UrlTag> _urlTagAggregator;
 
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
@@ -81,13 +84,19 @@ public class WinUIHexView : IGraphicalHexView
 
 		// collect tags
 		var classificationTags = await _classificationTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
+		var diagnosticTags = await _diagnosticTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
 		var urlTags = await _urlTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
-		
-		var allTags = new TagSpan[classificationTags.Length + urlTags.Length];
+
+		var allTags = new TagSpan[classificationTags.Length + diagnosticTags.Length + urlTags.Length];
 		var allTagsIndex = 0;
 		for (int i = 0; i < classificationTags.Length; i++)
 		{
 			allTags[allTagsIndex++] = classificationTags[i];
+		}
+
+		for (int i = 0; i < diagnosticTags.Length; i++)
+		{
+			allTags[allTagsIndex++] = diagnosticTags[i];
 		}
 
 		for (int i = 0; i < urlTags.Length; i++)

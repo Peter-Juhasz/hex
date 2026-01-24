@@ -45,7 +45,7 @@ public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Posit
 		return new SnapshotPoint(point.Snapshot, newPosition);
 	}
 
-	public static SnapshotPoint operator -(SnapshotPoint left, SnapshotPoint right)
+	public static long operator -(SnapshotPoint left, SnapshotPoint right)
 	{
 		if (left.Snapshot != right.Snapshot)
 		{
@@ -57,6 +57,6 @@ public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Posit
 		{
 			throw new ArgumentOutOfRangeException(nameof(right), "Resulting position is out of bounds.");
 		}
-		return new SnapshotPoint(left.Snapshot, newPosition);
+		return newPosition;
 	}
 }

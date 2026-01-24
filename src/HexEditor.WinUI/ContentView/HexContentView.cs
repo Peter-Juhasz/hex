@@ -140,6 +140,14 @@ internal sealed class HexContentView : Canvas
 						{
 							hexTextBlock.Opacity = style.Opacity.Value;
 						}
+						if (style.IsUnderline)
+						{
+							hexTextBlock.TextDecorations |= Windows.UI.Text.TextDecorations.Underline;
+						}
+						if (style.IsItalic)
+						{
+							hexTextBlock.FontStyle = Windows.UI.Text.FontStyle.Italic;
+						}
 					}
 					Canvas.SetLeft(hexTextBlock, Math.Round(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);

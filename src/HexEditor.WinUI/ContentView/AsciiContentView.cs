@@ -1,6 +1,8 @@
 ﻿using HexEditor.Core.Caret;
+using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Model;
 using HexEditor.Core.ViewModel;
+using HexEditor.Model;
 using HexEditor.WinUI.Theming;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
@@ -12,6 +14,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using System.Linq;
 using System.Numerics;
 using Windows.System;
 using Windows.UI;
@@ -138,9 +141,45 @@ internal sealed class AsciiContentView : Canvas
 						{
 							hexTextBlock.Opacity = style.Opacity.Value;
 						}
+						if (style.IsUnderline)
+						{
+							hexTextBlock.TextDecorations |= Windows.UI.Text.TextDecorations.Underline;
+						}
+						if (style.IsItalic)
+						{
+							hexTextBlock.FontStyle = Windows.UI.Text.FontStyle.Italic;
+						}
 					}
 					Canvas.SetLeft(hexTextBlock, Math.Round(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);
+
+					foreach (var tagSpan in run.Tags)
+					{
+						switch (tagSpan.Tag)
+						{
+							case DiagnosticTag diagnosticTag:
+								{
+									var startColumn = tagSpan.Span.Start - row.Extent.Start;
+									var endColumn = tagSpan.Span.End - row.Extent.Start;
+									var asciiPrimaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
+									var asciiSecondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
+
+									var underline = new Line()
+									{
+										X1 = IHexViewRow.CalculateAsciiPosition((int)startColumn, _theme.FontWidth, asciiPrimaryGrouping, asciiSecondaryGrouping),
+										Y1 = _theme.RowHeight - 2,
+										X2 = IHexViewRow.CalculateTotalAsciiRowWidth((int)endColumn, _theme.FontWidth, asciiPrimaryGrouping, asciiSecondaryGrouping),
+										Y2 = _theme.RowHeight - 2,
+										Stroke = new SolidColorBrush(Colors.Red),
+										StrokeThickness = 1,
+										IsHitTestVisible = false,
+									};
+									Canvas.SetZIndex(underline, -1);
+									rowCanvas.Children.Add(underline);
+								}
+								break;
+						}
+					}
 				}
 
 				_canvas.Children.Add(rowCanvas);
