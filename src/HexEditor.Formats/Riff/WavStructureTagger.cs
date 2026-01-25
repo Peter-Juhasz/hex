@@ -1,16 +1,19 @@
 ﻿using HexEditor.Composition;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Structure;
+using HexEditor.Core.Syntax;
 using HexEditor.Core.Tagging;
 using HexEditor.Model;
-using System.Buffers.Binary;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
 using System.Text;
 
 namespace HexEditor.Formats.Riff;
 
 [ContentType(WavContentTypeDefinition.Id)]
-public sealed class WavStructureTagger : ITagger<StructureTag>
+public sealed class WavStructureTagger(
+	[FromKeyedServices(WavContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
+) : ITagger<StructureTag>
 {
 	private static readonly StructureTag WavRiffTag = new("WAV RIFF Chunk");
 	private static readonly StructureTag WavFormatTag = new("WAV Format Chunk");
@@ -25,85 +28,34 @@ public sealed class WavStructureTagger : ITagger<StructureTag>
 			return [];
 		}
 
-		long startOffset;
-		byte[] buffer = new byte[8];
+		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
+		if (syntaxTree == null)
+		{
+			return [];
+		}
 
-		// try read RIFF header
-		var riffChunk = await ReadChunkAsync(snapshot.Span, buffer, cancellationToken).ConfigureAwait(false);
-		if (riffChunk == null || !buffer.AsSpan(0, 4).SequenceEqual("RIFF"u8))
+		if (syntaxTree.Root is not SyntaxNodeList list)
 		{
 			return [];
 		}
 
 		using var _ = ImmutableArrayBuilderPool<TagSpan<StructureTag>>.GetPooledObject(out var builder);
-		var fullExtent = new LongSpan(0, 8 + riffChunk.Value.Size);
-		if (span.Span.IntersectsWith(fullExtent))
+		foreach (var child in list.Children)
 		{
-			builder.Add(new TagSpan<StructureTag>(
-				Span: new(snapshot, fullExtent),
-				Tag: WavRiffTag
-			));
-		}
-		startOffset = 8 + 4;
-
-		if (span.Span.EndOffset < startOffset )
-		{
-			return builder.ToImmutable();
-		}
-
-		// try read chunks
-		while (await ReadChunkAsync(snapshot.Slice(startOffset), buffer, cancellationToken).ConfigureAwait(false) is Chunk chunk)
-		{
-			var chunkId = buffer.AsSpan(0, 4);
-			fullExtent = new LongSpan(startOffset, 8 + chunk.Size);
-			if (span.Span.IntersectsWith(fullExtent))
+			if (child is not TypeLengthChunkSyntaxNode chunkNode)
 			{
-				var tag = chunkId switch
-				{
-					_ when chunkId.SequenceEqual("fmt "u8) => WavFormatTag,
-					_ when chunkId.SequenceEqual("fact"u8) => WavFactTag,
-					_ when chunkId.SequenceEqual("data"u8) => WavDataTag,
-					_ => new StructureTag($"WAV {Encoding.ASCII.GetString(chunkId)} Chunk"),
-				};
-				builder.Add(new TagSpan<StructureTag>(
-					Span: new(snapshot, fullExtent),
-					Tag: tag
-				));
+				continue;
 			}
-			startOffset = fullExtent.EndOffset;
-			if (span.Span.EndOffset < startOffset)
-			{
-				break;
-			}
-		}
 
+			builder.Add(new TagSpan<StructureTag>(child.Span, chunkNode.TypeToken.Data.Span switch
+			{
+				{ } s when s.SequenceEqual("RIFF"u8) => WavRiffTag,
+				{ } s when s.SequenceEqual("fmt "u8) => WavFormatTag,
+				{ } s when s.SequenceEqual("fact"u8) => WavFactTag,
+				{ } s when s.SequenceEqual("data"u8) => WavDataTag,
+				_ => new StructureTag($"WAV {Encoding.ASCII.GetString(chunkNode.TypeToken.Data.Span)} Chunk")
+			}));
+		}
 		return builder.ToImmutable();
 	}
-
-	private static bool TryParseChunkHeader(ReadOnlySpan<byte> bytes, out ReadOnlySpan<byte> chunkId, out int chunkSize)
-	{
-		chunkId = bytes[..4];
-		chunkSize = BinaryPrimitives.ReadInt32LittleEndian(bytes[4..8]);
-		return true;
-	}
-
-	private async static Task<Chunk?> ReadChunkAsync(SnapshotSpan remaining, Memory<byte> buffer, CancellationToken cancellationToken)
-	{
-		if (remaining.Span.Length < 8)
-		{
-			return null;
-		}
-
-		var headerSpan = remaining.Slice(0, 8);
-		await headerSpan.Snapshot.CopyToAsync(headerSpan.Span.StartOffset, buffer, cancellationToken).ConfigureAwait(false);
-
-		if (!TryParseChunkHeader(buffer.Span, out var type, out var length))
-		{
-			return null;
-		}
-
-		return new Chunk(length);
-	}
-
-	private record struct Chunk(int Size);
 }
