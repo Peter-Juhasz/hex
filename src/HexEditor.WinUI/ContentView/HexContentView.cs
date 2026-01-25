@@ -37,8 +37,6 @@ internal sealed class HexContentView : Canvas
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
 
-		_view.Selection.SelectionChanged += OnSelectionChanged;
-
 		this.KeyDown += OnKeyDown;
 		this.PointerPressed += OnPointerPressed;
 		this.PointerMoved += OnPointerMoved;
@@ -51,8 +49,6 @@ internal sealed class HexContentView : Canvas
 	private readonly WinUIHexView _view;
 	private readonly VisualTheme _theme;
 
-	private Path? _selectionPath;
-	private readonly Brush _selectionBackground = new SolidColorBrush(Color.FromArgb(255, 153, 201, 239));
 	private SnapshotPoint? _anchorPoint;
 
 	private void OnViewVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
@@ -149,39 +145,6 @@ internal sealed class HexContentView : Canvas
 	}
 
 	#region Selection
-	private void OnSelectionChanged(object? sender, Core.Selection.SelectionChangedEventArgs e)
-	{
-		if (e.Selection == null)
-		{
-			_selectionPath?.Visibility = Visibility.Collapsed;
-			return;
-		}
-
-		if (_selectionPath == null)
-		{
-			_selectionPath = new Path()
-			{
-				Data = new PathGeometry()
-				{
-					Figures = [new PathFigure()
-					{
-						IsFilled = true,
-						IsClosed = true,
-					}],
-				},
-				Fill = _selectionBackground,
-				IsHitTestVisible = false,
-			};
-			Canvas.SetZIndex(_selectionPath, -1);
-			_canvas.Children.Add(_selectionPath);
-		}
-
-		var points = _view.MapToVisualHex(e.Selection.Span);
-		var figure = ((PathGeometry)_selectionPath.Data).Figures[0];
-		figure.Fill(points);
-		_selectionPath.Visibility = Visibility.Visible;
-	}
-
 	private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
 	{
 		var pointerPoint = e.GetCurrentPoint(this);
