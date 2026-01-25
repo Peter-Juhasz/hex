@@ -6,17 +6,17 @@ using HexEditor.Model;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
 
-namespace HexEditor.Formats.Midi;
+namespace HexEditor.Formats.Riff;
 
-[ContentType(MidiContentTypeDefinition.Id)]
-public sealed class MidiDiagnostics(
-	[FromKeyedServices(MidiContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
+[ContentType(WavContentTypeDefinition.Id)]
+public sealed class WavDiagnostics(
+	[FromKeyedServices(WavContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
 ) : ITagger<DiagnosticTag>
 {
 	private static readonly DiagnosticDescriptor UnknownChunkDiagnostic = new(
 		Id: "WAV001",
 		Title: "Unknown WAV Chunk",
-		MessageFormat: "The chunk type '{0}' is not recognized in a WAV file.",
+		MessageFormat: "The chunk type '{0}' is not recognized.",
 		Severity: DiagnosticSeverity.Warning
 	);
 
@@ -56,8 +56,10 @@ public sealed class MidiDiagnostics(
 
 			var isKnownChunk = chunkNode.TypeToken.Data.Span switch
 			{
-				{ } s when s.SequenceEqual("MThd"u8) => true,
-				{ } s when s.SequenceEqual("MTrk"u8) => true,
+				{ } s when s.SequenceEqual("RIFF"u8) => true,
+				{ } s when s.SequenceEqual("fmt "u8) => true,
+				{ } s when s.SequenceEqual("fact"u8) => true,
+				{ } s when s.SequenceEqual("data"u8) => true,
 				_ => false
 			};
 			if (!isKnownChunk)
@@ -69,9 +71,6 @@ public sealed class MidiDiagnostics(
 			{
 				builder.Add(new TagSpan<DiagnosticTag>(chunkNode.LengthToken.Span, new DiagnosticTag(InvalidLengthDiagnostic)));
 			}
-
-			builder.Add(new TagSpan<DiagnosticTag>(chunkNode.LengthToken.Span, new DiagnosticTag(InvalidLengthDiagnostic)));
-
 		}
 		return builder.ToImmutable();
 	}

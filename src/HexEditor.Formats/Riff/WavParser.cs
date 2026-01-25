@@ -1,9 +1,7 @@
 using HexEditor.Composition;
-using HexEditor.Core.ContentType;
 using HexEditor.Core.Syntax;
 using HexEditor.Model;
 using System.Buffers.Binary;
-using System.Collections.Immutable;
 
 namespace HexEditor.Formats.Riff;
 
@@ -19,7 +17,7 @@ public sealed class WavParser : IPartialSyntaxTreeFactory
 		}
 
 		byte[] buffer = new byte[8];
-		using var _ = ImmutableArrayBuilderPool<SyntaxNode>.GetPooledObject(out var builder);
+		using var _ = ImmutableListBuilderPool<SyntaxNode>.GetPooledObject(out var builder);
 
 		// Read RIFF header
 		long startOffset = 0;
@@ -48,7 +46,7 @@ public sealed class WavParser : IPartialSyntaxTreeFactory
 		}
 
 		// Add RIFF chunk
-		var fullExtent = new LongSpan(startOffset, 8 + length);
+		var fullExtent = new LongSpan(startOffset, Math.Min(8 + length, span.Snapshot.Length));
 		if (fullExtent.IntersectsWith(span.Span))
 		{
 			var fullSpan = new SnapshotSpan(snapshot, fullExtent);
@@ -104,7 +102,7 @@ public sealed class WavParser : IPartialSyntaxTreeFactory
 		}
 
 		return new PartialSyntaxTree(
-			new SyntaxNodeList(ImmutableList.CreateRange(builder.ToImmutable()))
+			new SyntaxNodeList(builder.ToImmutable())
 		);
 	}
 

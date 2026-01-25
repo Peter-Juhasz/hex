@@ -10,10 +10,7 @@ public static partial class Extensions
 	{
 		public static SnapshotSpan Create(SnapshotPoint start, SnapshotPoint end)
 		{
-			if (start.Snapshot != end.Snapshot)
-			{
-				throw new ArgumentException("SnapshotPoints must belong to the same snapshot.");
-			}
+			SnapshotMismatchException.ThrowIfMismatch(start.Snapshot, end.Snapshot);
 
 			if (start.Position > end.Position)
 			{
@@ -44,6 +41,9 @@ public static partial class Extensions
 
 		public bool Contains(SnapshotPoint point) =>
 			span.Snapshot == point.Snapshot && span.Span.Contains(point.Position);
+
+		public bool Contains(SnapshotSpan other) =>
+			span.Snapshot == other.Snapshot && span.Span.Contains(other.Span);
 
 		public long Length => span.Span.Length;
 

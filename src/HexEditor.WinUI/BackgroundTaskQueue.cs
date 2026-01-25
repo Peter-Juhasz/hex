@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HexEditor.Core.Model;
+using System;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -37,6 +38,10 @@ internal sealed class BackgroundTaskQueue
 				await workItem.Factory(cancellationToken).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+			{
+				// ignore
+			}
+			catch (SnapshotMismatchException)
 			{
 				// ignore
 			}

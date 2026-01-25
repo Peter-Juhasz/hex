@@ -1,6 +1,7 @@
 ﻿using HexEditor.Core.Model;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.ViewModel;
+using HexEditor.Model;
 using HexEditor.WinUI.Theming;
 using System;
 using System.Numerics;
@@ -81,6 +82,8 @@ internal sealed class ViewScroller : IViewport
 		x: point.X,
 		y: (float)(point.Y + VerticalOffset)
 	);
+
+	public SnapshotSpan VisibleSpan => _view.VisibleSpan;
 
 
 	public event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;

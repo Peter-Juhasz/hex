@@ -6,20 +6,14 @@ public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Posit
 {
 	public static bool operator <(SnapshotPoint a, SnapshotPoint b)
 	{
-		if (a.Snapshot != b.Snapshot)
-		{
-			throw new ArgumentException("SnapshotPoints must belong to the same snapshot.");
-		}
+		SnapshotMismatchException.ThrowIfMismatch(a.Snapshot, b.Snapshot);
 
 		return a.Position < b.Position;
 	}
 
 	public static bool operator >(SnapshotPoint a, SnapshotPoint b)
 	{
-		if (a.Snapshot != b.Snapshot)
-		{
-			throw new ArgumentException("SnapshotPoints must belong to the same snapshot.");
-		}
+		SnapshotMismatchException.ThrowIfMismatch(a.Snapshot, b.Snapshot);
 
 		return a.Position > b.Position;
 	}
@@ -47,10 +41,7 @@ public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Posit
 
 	public static long operator -(SnapshotPoint left, SnapshotPoint right)
 	{
-		if (left.Snapshot != right.Snapshot)
-		{
-			throw new ArgumentException("SnapshotPoints must belong to the same snapshot.");
-		}
+		SnapshotMismatchException.ThrowIfMismatch(left.Snapshot, right.Snapshot);
 
 		var newPosition = left.Position - right.Position;
 		if (newPosition < 0 || newPosition > left.Snapshot.Length)

@@ -2,6 +2,7 @@
 
 public record class DiagnosticDescriptor(
 	string Id,
+	string Title,
 	DiagnosticSeverity Severity,
-	string? Message = null
+	string? MessageFormat = null
 );

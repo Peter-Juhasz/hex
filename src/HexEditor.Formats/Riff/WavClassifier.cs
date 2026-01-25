@@ -6,11 +6,11 @@ using HexEditor.Model;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
 
-namespace HexEditor.Formats.Midi;
+namespace HexEditor.Formats.Riff;
 
-[ContentType(MidiContentTypeDefinition.Id)]
-public sealed class MidiClassifier(
-	[FromKeyedServices(MidiContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
+[ContentType(WavContentTypeDefinition.Id)]
+public sealed class WavClassifier(
+	[FromKeyedServices(WavContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
 ) : ITagger<ClassificationTag>
 {
 	public async Task<ImmutableArray<TagSpan<ClassificationTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
@@ -42,8 +42,10 @@ public sealed class MidiClassifier(
 
 			var isKnownChunk = chunkNode.TypeToken.Data.Span switch
 			{
-				{ } s when s.SequenceEqual("MThd"u8) => true,
-				{ } s when s.SequenceEqual("MTrk"u8) => true,
+				{ } s when s.SequenceEqual("RIFF"u8) => true,
+				{ } s when s.SequenceEqual("fmt "u8) => true,
+				{ } s when s.SequenceEqual("fact"u8) => true,
+				{ } s when s.SequenceEqual("data"u8) => true,
 				_ => false
 			};
 			if (isKnownChunk)

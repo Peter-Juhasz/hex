@@ -34,7 +34,6 @@ public class WinUIHexView : IGraphicalHexView
 
 		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
 		_classificationTagAggregator = new SequentialTagAggregator<ClassificationTag>(taggerProvider.CreateTaggers<ClassificationTag>(interestedContentTypes));
-		_diagnosticTagAggregator = new SequentialTagAggregator<DiagnosticTag>(taggerProvider.CreateTaggers<DiagnosticTag>(interestedContentTypes));
 		_urlTagAggregator = new SequentialTagAggregator<UrlTag>(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes));
 
 		TotalRowCount = (snapshot.Length / _theme.Columns) + 1;
@@ -42,7 +41,6 @@ public class WinUIHexView : IGraphicalHexView
 	}
 
 	private readonly ITagAggregator<ClassificationTag> _classificationTagAggregator;
-	private readonly ITagAggregator<DiagnosticTag> _diagnosticTagAggregator;
 	private readonly ITagAggregator<UrlTag> _urlTagAggregator;
 
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
@@ -67,16 +65,24 @@ public class WinUIHexView : IGraphicalHexView
 
 	public IViewport Viewport { get; }
 
+	public SnapshotSpan VisibleSpan
+	{
+		get
+		{
+			var visibleRowCount = (long)(Viewport.Height / _theme.RowHeight) + 2;
+			var firstVisibleRowIndex = (long)(Viewport.VerticalOffset / _theme.RowHeight);
+			var firstVisibleOffset = firstVisibleRowIndex * _theme.Columns;
+			return snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * _theme.Columns, snapshot.Length - firstVisibleOffset));
+		}
+	}
+
 	internal async Task InvalidateAsync(CancellationToken cancellationToken) => await InvalidateAsync(snapshot, cancellationToken);
 
 	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
 	{
 		// calculate visible span
-		var visibleRowCount = (int)(Viewport.Height / _theme.RowHeight) + 2;
-		var firstVisibleRowIndex = (int)(Viewport.VerticalOffset / _theme.RowHeight);
-		var firstVisibleOffset = firstVisibleRowIndex * _theme.Columns;
-
-		var visibleSpan = snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * _theme.Columns, snapshot.Length - firstVisibleOffset));
+		var visibleSpan = VisibleSpan;
+		var firstVisibleRowIndex = (long)(Viewport.VerticalOffset / _theme.RowHeight);
 
 		// read data into buffer
 		var screenBuffer = new byte[visibleSpan.Span.Length];
@@ -84,19 +90,13 @@ public class WinUIHexView : IGraphicalHexView
 
 		// collect tags
 		var classificationTags = await _classificationTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
-		var diagnosticTags = await _diagnosticTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
 		var urlTags = await _urlTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
 
-		var allTags = new TagSpan[classificationTags.Length + diagnosticTags.Length + urlTags.Length];
+		var allTags = new TagSpan[classificationTags.Length + urlTags.Length];
 		var allTagsIndex = 0;
 		for (int i = 0; i < classificationTags.Length; i++)
 		{
 			allTags[allTagsIndex++] = classificationTags[i];
-		}
-
-		for (int i = 0; i < diagnosticTags.Length; i++)
-		{
-			allTags[allTagsIndex++] = diagnosticTags[i];
 		}
 
 		for (int i = 0; i < urlTags.Length; i++)
@@ -215,6 +215,11 @@ public class WinUIHexView : IGraphicalHexView
 	public long MapRowIndexFromVerticalOffset(double verticalOffset)
 	{
 		return Math.Clamp((long)(verticalOffset / _theme.RowHeight), 0, TotalRowCount);
+	}
+
+	public double MapRowIndexToVerticalOffset(long rowIndex)
+	{
+		return rowIndex * _theme.RowHeight;
 	}
 
 	public SnapshotPoint MapFromVisualHex(Vector2 point)

@@ -1,5 +1,6 @@
 using HexEditor.Core.Caret;
 using HexEditor.Core.ContentType;
+using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.Tagging;
 using HexEditor.Formats;
@@ -8,6 +9,7 @@ using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using HexEditor.WinUI.Scrolling;
+using HexEditor.WinUI.Squiggles;
 using HexEditor.WinUI.Theming;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI;
@@ -20,6 +22,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -92,6 +95,15 @@ public partial class EditorHost : ContentControl
 		var contentTypeRegistry = serviceProvider.GetRequiredService<IContentTypeRegistry>();
 		var taggerProvider = serviceProvider.GetRequiredService<ITaggerProvider>();
 
+		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
+		var diagnosticTagAggregator = new LockingTagAggregator<DiagnosticTag>(
+			new FullCachingTagAggregator<DiagnosticTag>(
+				new ParallelTagAggregator<DiagnosticTag>(
+					taggerProvider.CreateTaggers<DiagnosticTag>(interestedContentTypes)
+				)
+			)
+		);
+
 		_view = new WinUIHexView(snapshot, contentType, _visualTheme, taggerProvider, contentTypeRegistry);
 		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
 		_view.Viewport.ScrollableHeightChanged += OnModelScrollableHeightChanged;
@@ -105,6 +117,10 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_hexContentView, 4);
 		_grid.Children.Add(_hexContentView);
 
+		_hexSquigglesLayer = new HexSquigglesLayer(_view, diagnosticTagAggregator, _visualTheme);
+		Grid.SetColumn(_hexSquigglesLayer, 4);
+		_grid.Children.Add(_hexSquigglesLayer);
+
 		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 5);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
@@ -112,6 +128,10 @@ public partial class EditorHost : ContentControl
 		_asciiContentView = new AsciiContentView(_view, _visualTheme);
 		Grid.SetColumn(_asciiContentView, 5);
 		_grid.Children.Add(_asciiContentView);
+
+		_asciiSquigglesLayer = new AsciiSquigglesLayer(_view, diagnosticTagAggregator, _visualTheme);
+		Grid.SetColumn(_asciiSquigglesLayer, 5);
+		_grid.Children.Add(_asciiSquigglesLayer);
 
 		_addressBarMargin = new AddressBarMargin(_view, _visualTheme);
 		Grid.SetColumn(_addressBarMargin, 0);
@@ -163,8 +183,10 @@ public partial class EditorHost : ContentControl
 	private readonly OutliningMargin _outliningMargin;
 	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
 	private readonly HexContentView _hexContentView;
+	private readonly HexSquigglesLayer _hexSquigglesLayer;
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
+	private readonly AsciiSquigglesLayer _asciiSquigglesLayer;
 
 	private TextBlock _caretPositionTextBlock;
 	private TextBlock _contentTypeTextBlock;

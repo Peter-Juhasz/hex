@@ -12,7 +12,9 @@ public interface IGraphicalHexView
 {
 	IBinarySnapshot Snapshot { get; }
 
-	ImmutableArray<IHexViewRow> VisibleRows { get; }
+	SnapshotSpan VisibleSpan { get; }
+
+	ImmutableArray <IHexViewRow> VisibleRows { get; }
 
 	ISelection Selection { get; }
 
@@ -31,6 +33,7 @@ public interface IGraphicalHexView
 	SnapshotPoint MapFromVisualHex(Vector2 point);
 	SnapshotSpan MapRowFromVisual(double verticalOffset);
 	long MapRowIndexFromVerticalOffset(double verticalOffset);
+	double MapRowIndexToVerticalOffset(long rowIndex);
 
 	ViewportBounds MapToVisualAscii(SnapshotPoint point);
 	Vector2[] MapToVisualAscii(SnapshotSpan span);

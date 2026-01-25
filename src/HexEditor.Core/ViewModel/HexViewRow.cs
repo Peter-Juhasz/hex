@@ -13,6 +13,8 @@ public class HexViewRow(IGraphicalHexView view, ViewportBounds bounds, SnapshotS
 
 	public ViewportBounds VisualBounds { get; } = bounds;
 
+	public double Baseline { get; } = bounds.Bottom - 2d;
+
 	public ImmutableArray<FormattedTextRun> HexRuns { get; } = hexRuns;
 
 	public ImmutableArray<FormattedTextRun> AsciiRuns { get; } = asciiRuns;

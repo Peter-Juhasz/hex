@@ -1,4 +1,5 @@
 ﻿using HexEditor.Core.Model;
+using HexEditor.Model;
 using System.Numerics;
 
 namespace HexEditor.Core.Scrolling;
@@ -20,6 +21,7 @@ public interface IViewport
 	void BringIntoView(SnapshotPoint point);
 
 	Vector2 MapToVisual(Vector2 point);
+	SnapshotSpan VisibleSpan { get; }
 
 	event EventHandler<ScrollVerticalOffsetChangedEventArgs>? VerticalOffsetChanged;
 	event EventHandler<ScrollableHeightChangedEventArgs>? ScrollableHeightChanged;

@@ -1,9 +1,7 @@
 ﻿using HexEditor.Composition;
-using HexEditor.Core.ContentType;
 using HexEditor.Core.Syntax;
 using HexEditor.Model;
 using System.Buffers.Binary;
-using System.Collections.Immutable;
 
 namespace HexEditor.Formats.Midi;
 
@@ -20,7 +18,7 @@ public sealed class MidiParser : IPartialSyntaxTreeFactory
 
 		long startOffset = 0;
 		byte[] buffer = new byte[8];
-		using var _ = ImmutableArrayBuilderPool<SyntaxNode>.GetPooledObject(out var builder);
+		using var _ = ImmutableListBuilderPool<SyntaxNode>.GetPooledObject(out var builder);
 		while (startOffset < span.Span.EndOffset)
 		{
 			// try read chunk header
@@ -55,7 +53,7 @@ public sealed class MidiParser : IPartialSyntaxTreeFactory
 		}
 
 		return new PartialSyntaxTree(
-			new SyntaxNodeList(ImmutableList.CreateRange(builder.ToImmutable()))
+			new SyntaxNodeList(builder.ToImmutable())
 		);
 	}
 

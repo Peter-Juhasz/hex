@@ -152,34 +152,6 @@ internal sealed class AsciiContentView : Canvas
 					}
 					Canvas.SetLeft(hexTextBlock, Math.Round(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);
-
-					foreach (var tagSpan in run.Tags)
-					{
-						switch (tagSpan.Tag)
-						{
-							case DiagnosticTag diagnosticTag:
-								{
-									var startColumn = tagSpan.Span.Start - row.Extent.Start;
-									var endColumn = tagSpan.Span.End - row.Extent.Start;
-									var asciiPrimaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
-									var asciiSecondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
-
-									var underline = new Line()
-									{
-										X1 = IHexViewRow.CalculateAsciiPosition((int)startColumn, _theme.FontWidth, asciiPrimaryGrouping, asciiSecondaryGrouping),
-										Y1 = _theme.RowHeight - 2,
-										X2 = IHexViewRow.CalculateTotalAsciiRowWidth((int)endColumn, _theme.FontWidth, asciiPrimaryGrouping, asciiSecondaryGrouping),
-										Y2 = _theme.RowHeight - 2,
-										Stroke = new SolidColorBrush(Colors.Red),
-										StrokeThickness = 1,
-										IsHitTestVisible = false,
-									};
-									Canvas.SetZIndex(underline, -1);
-									rowCanvas.Children.Add(underline);
-								}
-								break;
-						}
-					}
 				}
 
 				_canvas.Children.Add(rowCanvas);

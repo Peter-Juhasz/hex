@@ -14,6 +14,8 @@ public interface IHexViewRow
 
 	ViewportBounds VisualBounds { get; }
 
+	double Baseline { get; }
+
 	ImmutableArray<FormattedTextRun> HexRuns { get; }
 
 	ImmutableArray<FormattedTextRun> AsciiRuns { get; }
