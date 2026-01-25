@@ -6,6 +6,7 @@ using HexEditor.Core.Tagging;
 using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.WinUI.AddressBar;
+using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using HexEditor.WinUI.Scrolling;
@@ -121,6 +122,10 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_hexSquigglesLayer, 4);
 		_grid.Children.Add(_hexSquigglesLayer);
 
+		_hexCaretLayer = new HexCaretLayer(_view, _visualTheme);
+		Grid.SetColumn(_hexCaretLayer, 4);
+		_grid.Children.Add(_hexCaretLayer);
+
 		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 5);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
@@ -132,6 +137,10 @@ public partial class EditorHost : ContentControl
 		_asciiSquigglesLayer = new AsciiSquigglesLayer(_view, diagnosticTagAggregator, _visualTheme);
 		Grid.SetColumn(_asciiSquigglesLayer, 5);
 		_grid.Children.Add(_asciiSquigglesLayer);
+
+		_asciiCaretLayer = new AsciiCaretLayer(_view, _visualTheme);
+		Grid.SetColumn(_asciiCaretLayer, 5);
+		_grid.Children.Add(_asciiCaretLayer);
 
 		_addressBarMargin = new AddressBarMargin(_view, _visualTheme);
 		Grid.SetColumn(_addressBarMargin, 0);
@@ -184,9 +193,11 @@ public partial class EditorHost : ContentControl
 	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
 	private readonly HexContentView _hexContentView;
 	private readonly HexSquigglesLayer _hexSquigglesLayer;
+	private readonly HexCaretLayer _hexCaretLayer;
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
 	private readonly AsciiSquigglesLayer _asciiSquigglesLayer;
+	private readonly AsciiCaretLayer _asciiCaretLayer;
 
 	private TextBlock _caretPositionTextBlock;
 	private TextBlock _contentTypeTextBlock;
