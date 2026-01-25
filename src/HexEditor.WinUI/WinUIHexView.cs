@@ -186,7 +186,7 @@ public class WinUIHexView : IGraphicalHexView
 
 		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.HexViewStyle?.SecondaryGrouping ?? 0;
-		var x = IHexViewRow.CalculateHexPosition((int)columnIndex, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var x = IHexViewRow.GetVisualLeftOfHexColumn((int)columnIndex, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return new ViewportBounds(
 			Left: x,
@@ -202,7 +202,7 @@ public class WinUIHexView : IGraphicalHexView
 
 		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
-		var x = IHexViewRow.CalculateAsciiPosition((int)columnIndex, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var x = IHexViewRow.GetVisualLeftOfAsciiColumn((int)columnIndex, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return new ViewportBounds(
 			Left: x,
@@ -220,6 +220,33 @@ public class WinUIHexView : IGraphicalHexView
 	public double MapRowIndexToVerticalOffset(long rowIndex)
 	{
 		return rowIndex * _theme.RowHeight;
+	}
+
+	public ImmutableArray<SnapshotSpan> GetRowSegments(SnapshotSpan span)
+	{
+		using var builder = new PooledArrayBuilder<SnapshotSpan>();
+		var firstRow = this.GetContainingRow(span.Start);
+		if (firstRow.End >= span.End)
+		{
+			builder.Add(span);
+			return builder.ToImmutableArray();
+		}
+
+		builder.Add(firstRow.Slice(span.Start - firstRow.Start));
+
+		var remaining = span.Snapshot.Slice(firstRow.End.Position);
+		while (remaining.Length > 0)
+		{
+			var nextRow = remaining.Slice(0, Math.Min(Math.Min(span.End - remaining.Start, _theme.Columns), remaining.Length));
+			builder.Add(nextRow);
+
+			if (nextRow.Length != _theme.Columns)
+			{
+				break;
+			}
+		}
+
+		return builder.ToImmutableArray();
 	}
 
 	public SnapshotPoint MapFromVisualHex(Vector2 point)
@@ -270,7 +297,7 @@ public class WinUIHexView : IGraphicalHexView
 
 		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.HexViewStyle?.SecondaryGrouping ?? 0;
-		var fullRowWidth = IHexViewRow.CalculateTotalHexRowWidth(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return
 		[
@@ -303,7 +330,7 @@ public class WinUIHexView : IGraphicalHexView
 
 		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
-		var fullRowWidth = IHexViewRow.CalculateTotalAsciiRowWidth(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return
 		[

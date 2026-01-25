@@ -1,13 +1,10 @@
-using HexEditor.Core.Selection;
 using HexEditor.Core.ViewModel;
 using HexEditor.WinUI.Theming;
-using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
-using System;
 using Windows.UI;
 
 namespace HexEditor.WinUI.Selection;
@@ -36,7 +33,7 @@ internal sealed class HexSelectionLayer : Canvas
 	private Path? _selectionPath;
 	private readonly Brush _selectionBackground = new SolidColorBrush(Color.FromArgb(255, 153, 201, 239));
 
-	private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+	private void OnSelectionChanged(object? sender, Core.Selection.SelectionChangedEventArgs e)
 	{
 		if (e.Selection == null)
 		{

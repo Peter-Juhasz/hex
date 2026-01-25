@@ -12,6 +12,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace HexEditor.WinUI.Squiggles;
@@ -38,10 +39,15 @@ internal sealed class AsciiSquigglesLayer : Canvas
 
 	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
+
 	private readonly Brush _errorBrush = new SolidColorBrush(Colors.Red);
+	private readonly Brush _warningBrush = new SolidColorBrush(Colors.Green);
+	private readonly Brush _infoBrush = new SolidColorBrush(Colors.Blue);
 
 	private readonly BackgroundTaskQueue _queue = new(default);
 	private readonly ITagAggregator<DiagnosticTag> _diagnosticTagAggregator;
+
+	private readonly Dictionary<TagSpan<DiagnosticTag>, Path[]>	_renderedSegments = new();
 
 	private void OnVisibleRowsChanged(object? sender, VisibleRowsChangedEventArgs e)
 	{
@@ -55,10 +61,18 @@ internal sealed class AsciiSquigglesLayer : Canvas
 
 	private void Invalidate(ImmutableArray<TagSpan<DiagnosticTag>> tags)
 	{
+		if (tags.IsEmpty)
+		{
+			_canvas.Children.Clear();
+			_renderedSegments.Clear();
+			return;
+		}
+
 		for (int i = 0; i < _canvas.Children.Count; i++)
 		{
-			if (_canvas.Children[i] is Path { Tag: TagSpan<DiagnosticTag> tagSpan } path)
+			if (_canvas.Children[i] is Path { Tag: RenderTag renderTag } path)
 			{
+				var tagSpan = renderTag.TagSpan;
 				bool toRemove = true;
 				foreach (var tag in tags)
 				{
@@ -71,6 +85,7 @@ internal sealed class AsciiSquigglesLayer : Canvas
 				if (toRemove)
 				{
 					_canvas.Children.RemoveAt(i);
+					_renderedSegments.Remove(tagSpan);
 					i--;
 				}
 			}
@@ -78,36 +93,77 @@ internal sealed class AsciiSquigglesLayer : Canvas
 
 		foreach (var tagSpan in tags)
 		{
-			// TODO: split across multiple rows
-			var diagnosticTag = tagSpan.Tag;
-			var row = _view.GetContainingRow(tagSpan.Span.Start);
-			var startColumn = tagSpan.Span.Start - row.Start;
-			var endColumn = tagSpan.Span.End - row.Start;
-			var asciiPrimaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
-			var asciiSecondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
-			var x1 = IHexViewRow.CalculateAsciiPosition((int)startColumn, _theme.FontWidth, asciiPrimaryGrouping, asciiSecondaryGrouping);
-			var x2 = IHexViewRow.CalculateAsciiPosition((int)endColumn, _theme.FontWidth, asciiPrimaryGrouping, asciiSecondaryGrouping);
-			var width = x2 - x1;
-			var baseline = _view.MapToVisualAscii(row.Start).Bottom - 3d;
+			using var builder = new PooledArrayBuilder<Path>();
 
-			var underline = new Path()
+			foreach (var segment in _view.GetRowSegments(tagSpan.Span))
 			{
-				Data = SquiggleUnderline.BuildGeometry(
-					width: width,
-					height: 3d,
-					strokeThickness: 1d,
-					wavelength: 6d
-				),
-				Stroke = _errorBrush,
-				StrokeThickness = 1,
-				IsHitTestVisible = false,
-				UseLayoutRounding = true,
-				Tag = tagSpan,
-			};
-			Canvas.SetLeft(underline, Math.Round(x1));
-			Canvas.SetTop(underline, Math.Round(baseline));
-			Canvas.SetZIndex(underline, -1);
-			_canvas.Children.Add(underline);
+				builder.Add(AddSquiggle(tagSpan, segment));
+			}
+
+			_renderedSegments[tagSpan] = builder.ToArray();
 		}
 	}
+
+	private Path AddSquiggle(TagSpan<DiagnosticTag> tagSpan, SnapshotSpan segment)
+	{
+		if (_renderedSegments.TryGetValue(tagSpan, out var paths))
+		{
+			foreach (var path in paths)
+			{
+				if (path.Tag is RenderTag renderTag &&
+					renderTag.TagSpan == tagSpan &&
+					renderTag.Segment == segment
+				)
+				{
+					return path;
+				}
+			}
+		}
+
+		var diagnosticTag = tagSpan.Tag;
+		var brush = diagnosticTag.Descriptor.Severity switch
+		{
+			DiagnosticSeverity.Error => _errorBrush,
+			DiagnosticSeverity.Warning => _warningBrush,
+			DiagnosticSeverity.Information => _infoBrush,
+			_ => _errorBrush,
+		};
+
+		var row = _view.GetContainingRow(segment.Start);
+		var startColumn = segment.Start - row.Start;
+		var endColumn = segment.End - row.Start;
+		if (startColumn == endColumn)
+		{
+			endColumn++;
+		}
+
+		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
+		var x1 = IHexViewRow.GetVisualLeftOfAsciiColumn((int)startColumn, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var x2 = IHexViewRow.GetVisualRightOfAsciiColumn((int)endColumn - 1, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var width = x2 - x1;
+		var baseline = _view.MapToVisualAscii(row.Start).Bottom - 3d;
+
+		var underline = new Path()
+		{
+			Data = SquiggleUnderline.BuildGeometry(
+				width: width,
+				height: 3d,
+				strokeThickness: 1d,
+				wavelength: 6d
+			),
+			Stroke = brush,
+			StrokeThickness = 1,
+			IsHitTestVisible = false,
+			UseLayoutRounding = true,
+			Tag = new RenderTag(tagSpan, segment),
+		};
+		Canvas.SetLeft(underline, Math.Round(x1));
+		Canvas.SetTop(underline, Math.Round(baseline));
+		Canvas.SetZIndex(underline, -1);
+		_canvas.Children.Add(underline);
+		return underline;
+	}
+
+	private sealed record class RenderTag(TagSpan<DiagnosticTag> TagSpan, SnapshotSpan Segment);
 }

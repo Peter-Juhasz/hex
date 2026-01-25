@@ -29,7 +29,7 @@ public interface IGraphicalHexView
 	event EventHandler<HeightChangedEventArgs>? ScrollableHeightChanged;
 
 	SnapshotSpan GetContainingRow(SnapshotPoint point);
-
+	ImmutableArray<SnapshotSpan> GetRowSegments(SnapshotSpan span);
 	SnapshotPoint MapFromVisualHex(Vector2 point);
 	SnapshotSpan MapRowFromVisual(double verticalOffset);
 	long MapRowIndexFromVerticalOffset(double verticalOffset);

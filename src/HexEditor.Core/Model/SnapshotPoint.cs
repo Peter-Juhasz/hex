@@ -18,6 +18,20 @@ public readonly record struct SnapshotPoint(IBinarySnapshot Snapshot, long Posit
 		return a.Position > b.Position;
 	}
 
+	public static bool operator <=(SnapshotPoint a, SnapshotPoint b)
+	{
+		SnapshotMismatchException.ThrowIfMismatch(a.Snapshot, b.Snapshot);
+
+		return a.Position <= b.Position;
+	}
+
+	public static bool operator >=(SnapshotPoint a, SnapshotPoint b)
+	{
+		SnapshotMismatchException.ThrowIfMismatch(a.Snapshot, b.Snapshot);
+
+		return a.Position >= b.Position;
+	}
+
 	public static SnapshotPoint operator +(SnapshotPoint point, long offset)
 	{
 		var newPosition = point.Position + offset;

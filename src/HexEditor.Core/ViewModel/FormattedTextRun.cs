@@ -37,8 +37,8 @@ public readonly record struct FormattedTextRun(
 
 	public static string ToHexString(ReadOnlySpan<byte> data, int startColumnIndex, int primaryGrouping, int secondaryGrouping)
 	{
-		var startOffset = IHexViewRow.CalculateEndIndexOfHexColumnInCharacters(data.Length - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
-		var endOffset = IHexViewRow.CalculateStartIndexOfHexColumnInCharacters(startColumnIndex, primaryGrouping, secondaryGrouping);
+		var startOffset = IHexViewRow.GetEndIndexOfHexColumnInCharacters(data.Length - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
+		var endOffset = IHexViewRow.GetStartIndexOfHexColumnInCharacters(startColumnIndex, primaryGrouping, secondaryGrouping);
 		var stringLength = startOffset - endOffset;
 		return string.Create<ReadOnlySpan<byte>>(stringLength, data, (span, state) =>
 		{
@@ -47,8 +47,8 @@ public readonly record struct FormattedTextRun(
 			{
 				if (i > 0)
 				{
-					var previousGroupingIndex = IHexViewRow.CalculateNextGroupingColumnIndex(i - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
-					var currentGroupingIndex = IHexViewRow.CalculateNextGroupingColumnIndex(i + startColumnIndex, primaryGrouping, secondaryGrouping);
+					var previousGroupingIndex = IHexViewRow.GetNextGroupingColumnIndex(i - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
+					var currentGroupingIndex = IHexViewRow.GetNextGroupingColumnIndex(i + startColumnIndex, primaryGrouping, secondaryGrouping);
 					if (currentGroupingIndex != previousGroupingIndex)
 					{
 						span[spanIndex++] = ' ';
@@ -63,8 +63,8 @@ public readonly record struct FormattedTextRun(
 
 	public static string ToAsciiString(ReadOnlySpan<byte> data, int startColumnIndex, int primaryGrouping, int secondaryGrouping)
 	{
-		var startOffset = IHexViewRow.CalculateEndIndexOfAsciiColumnInCharacters(data.Length - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
-		var endOffset = IHexViewRow.CalculateStartIndexOfAsciiColumnInCharacters(startColumnIndex, primaryGrouping, secondaryGrouping);
+		var startOffset = IHexViewRow.GetEndIndexOfAsciiColumnInCharacters(data.Length - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
+		var endOffset = IHexViewRow.GetStartIndexOfAsciiColumnInCharacters(startColumnIndex, primaryGrouping, secondaryGrouping);
 		var stringLength = startOffset - endOffset;
 		return string.Create<ReadOnlySpan<byte>>(stringLength, data, (span, state) =>
 		{
@@ -73,8 +73,8 @@ public readonly record struct FormattedTextRun(
 			{
 				if (i > 0)
 				{
-					var previousGroupingIndex = IHexViewRow.CalculateNextGroupingColumnIndex(i - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
-					var currentGroupingIndex = IHexViewRow.CalculateNextGroupingColumnIndex(i + startColumnIndex, primaryGrouping, secondaryGrouping);
+					var previousGroupingIndex = IHexViewRow.GetNextGroupingColumnIndex(i - 1 + startColumnIndex, primaryGrouping, secondaryGrouping);
+					var currentGroupingIndex = IHexViewRow.GetNextGroupingColumnIndex(i + startColumnIndex, primaryGrouping, secondaryGrouping);
 					if (currentGroupingIndex != previousGroupingIndex)
 					{
 						span[spanIndex++] = ' ';

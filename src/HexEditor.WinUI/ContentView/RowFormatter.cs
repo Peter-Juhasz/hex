@@ -59,8 +59,8 @@ internal class RowFormatter
 			var dataMemory = context.Data.Slice(i, (int)nextRun.Span.Length);
 
 			// create runs
-			var hexStartInCharacters = IHexViewRow.CalculateStartIndexOfHexColumnInCharacters(i, hexPrimaryGrouping, hexSecondaryGrouping);
-			var hexEndInCharacters = IHexViewRow.CalculateEndIndexOfHexColumnInCharacters(i + (int)nextRun.Span.Length, hexPrimaryGrouping, hexSecondaryGrouping);
+			var hexStartInCharacters = IHexViewRow.GetStartIndexOfHexColumnInCharacters(i, hexPrimaryGrouping, hexSecondaryGrouping);
+			var hexEndInCharacters = IHexViewRow.GetEndIndexOfHexColumnInCharacters(i + (int)nextRun.Span.Length, hexPrimaryGrouping, hexSecondaryGrouping);
 			hexRuns.Add(new(
 				Span: nextRun,
 				Data: dataMemory,
@@ -71,8 +71,8 @@ internal class RowFormatter
 				Style: effectiveStyle
 			));
 
-			var asciiStartInCharacters = IHexViewRow.CalculateStartIndexOfAsciiColumnInCharacters(i, asciiPrimaryGrouping, asciiSecondaryGrouping);
-			var asciiEndInCharacters = IHexViewRow.CalculateEndIndexOfAsciiColumnInCharacters(i + (int)nextRun.Span.Length, asciiPrimaryGrouping, asciiSecondaryGrouping);
+			var asciiStartInCharacters = IHexViewRow.GetStartIndexOfAsciiColumnInCharacters(i, asciiPrimaryGrouping, asciiSecondaryGrouping);
+			var asciiEndInCharacters = IHexViewRow.GetEndIndexOfAsciiColumnInCharacters(i + (int)nextRun.Span.Length, asciiPrimaryGrouping, asciiSecondaryGrouping);
 			asciiRuns.Add(new(
 				Span: nextRun,
 				Data: dataMemory,

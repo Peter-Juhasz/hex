@@ -116,16 +116,16 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_hexOutliningHighlightLayer, 4);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
 
-		Grid.SetColumn(_hexContentView, 4);
-		_grid.Children.Add(_hexContentView);
+		_hexSelectionLayer = new HexSelectionLayer(_view, _visualTheme);
+		Grid.SetColumn(_hexSelectionLayer, 4);
+		_grid.Children.Add(_hexSelectionLayer);
 
 		_hexSquigglesLayer = new HexSquigglesLayer(_view, diagnosticTagAggregator, _visualTheme);
 		Grid.SetColumn(_hexSquigglesLayer, 4);
 		_grid.Children.Add(_hexSquigglesLayer);
 
-		_hexSelectionLayer = new HexSelectionLayer(_view, _visualTheme);
-		Grid.SetColumn(_hexSelectionLayer, 4);
-		_grid.Children.Add(_hexSelectionLayer);
+		Grid.SetColumn(_hexContentView, 4);
+		_grid.Children.Add(_hexContentView);
 
 		_hexCaretLayer = new HexCaretLayer(_view, _visualTheme);
 		Grid.SetColumn(_hexCaretLayer, 4);
@@ -135,17 +135,17 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 5);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
 
-		_asciiContentView = new AsciiContentView(_view, _visualTheme);
-		Grid.SetColumn(_asciiContentView, 5);
-		_grid.Children.Add(_asciiContentView);
+		_asciiSelectionLayer = new AsciiSelectionLayer(_view, _visualTheme);
+		Grid.SetColumn(_asciiSelectionLayer, 5);
+		_grid.Children.Add(_asciiSelectionLayer);
 
 		_asciiSquigglesLayer = new AsciiSquigglesLayer(_view, diagnosticTagAggregator, _visualTheme);
 		Grid.SetColumn(_asciiSquigglesLayer, 5);
 		_grid.Children.Add(_asciiSquigglesLayer);
 
-		_asciiSelectionLayer = new AsciiSelectionLayer(_view, _visualTheme);
-		Grid.SetColumn(_asciiSelectionLayer, 5);
-		_grid.Children.Add(_asciiSelectionLayer);
+		_asciiContentView = new AsciiContentView(_view, _visualTheme);
+		Grid.SetColumn(_asciiContentView, 5);
+		_grid.Children.Add(_asciiContentView);
 
 		_asciiCaretLayer = new AsciiCaretLayer(_view, _visualTheme);
 		Grid.SetColumn(_asciiCaretLayer, 5);

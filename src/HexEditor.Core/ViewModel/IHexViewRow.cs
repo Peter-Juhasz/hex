@@ -82,7 +82,7 @@ public interface IHexViewRow
 		return bytesBefore;
 	}
 
-	static int CalculateNextGroupingColumnIndex(int currentColumnIndex, int primaryGrouping, int secondaryGrouping)
+	static int GetNextGroupingColumnIndex(int currentColumnIndex, int primaryGrouping, int secondaryGrouping)
 	{
 		if (primaryGrouping == 0)
 		{
@@ -99,7 +99,7 @@ public interface IHexViewRow
 		return Math.Min(nextPrimary, nextSecondary);
 	}
 
-	static int CalculateStartIndexOfAsciiColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping)
+	static int GetStartIndexOfAsciiColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping)
 	{
 		if (primaryGrouping == 0)
 		{
@@ -113,10 +113,10 @@ public interface IHexViewRow
 		return columnIndex + offset;
 	}
 
-	static int CalculateEndIndexOfAsciiColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping) =>
-		CalculateStartIndexOfAsciiColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping) + 1;
+	static int GetEndIndexOfAsciiColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping) =>
+		GetStartIndexOfAsciiColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping) + 1;
 
-	static int CalculateStartIndexOfHexColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping)
+	static int GetStartIndexOfHexColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping)
 	{
 		if (primaryGrouping == 0)
 		{
@@ -130,41 +130,53 @@ public interface IHexViewRow
 		return columnIndex * 2 + offset;
 	}
 
-	static int CalculateEndIndexOfHexColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping) =>
-		CalculateStartIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping) + 2;
+	static int GetEndIndexOfHexColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping) =>
+		GetStartIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping) + 2;
 
-	static double CalculateHexPosition(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
+	static double GetVisualLeftOfHexColumn(int columnIndex, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		var start = CalculateStartIndexOfHexColumnInCharacters(columns, primaryGrouping, secondaryGrouping);
+		var start = GetStartIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping);
 		return fontWidth * start;
 	}
 
-	static double CalculateTotalHexRowWidth(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
+	static double GetVisualRightOfHexColumn(int columnIndex, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		var end = CalculateEndIndexOfHexColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
-		return fontWidth * end;
-	}
-
-	static double CalculateAsciiPosition(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
-	{
-		var start = CalculateStartIndexOfAsciiColumnInCharacters(columns, primaryGrouping, secondaryGrouping);
+		var start = GetEndIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping);
 		return fontWidth * start;
 	}
 
-	static double CalculateTotalAsciiRowWidth(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
+	static double GetTotalVisualWidthOfHexRow(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		var end = CalculateTotalCharactersInAsciiRow(columns - 1, primaryGrouping, secondaryGrouping);
+		var end = GetEndIndexOfHexColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
 		return fontWidth * end;
 	}
 
-	static int CalculateTotalCharactersInHexRow(int columns, int primaryGrouping, int secondaryGrouping)
+	static double GetVisualLeftOfAsciiColumn(int columnIndex, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		return CalculateEndIndexOfHexColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
+		var start = GetStartIndexOfAsciiColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping);
+		return fontWidth * start;
 	}
 
-	static int CalculateTotalCharactersInAsciiRow(int columns, int primaryGrouping, int secondaryGrouping)
+	static double GetVisualRightOfAsciiColumn(int columnIndex, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		return CalculateEndIndexOfAsciiColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
+		var start = GetEndIndexOfAsciiColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping);
+		return fontWidth * start;
+	}
+
+	static double GetTotalVisualWidthOfAsciiRow(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
+	{
+		var end = GetTotalCharactersInAsciiRow(columns - 1, primaryGrouping, secondaryGrouping);
+		return fontWidth * end;
+	}
+
+	static int GetTotalCharactersInHexRow(int columns, int primaryGrouping, int secondaryGrouping)
+	{
+		return GetEndIndexOfHexColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
+	}
+
+	static int GetTotalCharactersInAsciiRow(int columns, int primaryGrouping, int secondaryGrouping)
+	{
+		return GetEndIndexOfAsciiColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
 	}
 
 	static int GetColumnIndexFromHexPosition(double xCoordinate, double fontWidth, int primaryGrouping, int secondaryGrouping)
@@ -176,8 +188,8 @@ public interface IHexViewRow
 		var approximateColumn = (int)(xCoordinate / (fontWidth * 2));
 		while (true)
 		{
-			var startX = CalculateHexPosition(approximateColumn, fontWidth, primaryGrouping, secondaryGrouping);
-			var endX = CalculateHexPosition(approximateColumn + 1, fontWidth, primaryGrouping, secondaryGrouping);
+			var startX = GetVisualLeftOfHexColumn(approximateColumn, fontWidth, primaryGrouping, secondaryGrouping);
+			var endX = GetVisualLeftOfHexColumn(approximateColumn + 1, fontWidth, primaryGrouping, secondaryGrouping);
 			if (xCoordinate >= startX && xCoordinate < endX)
 			{
 				return approximateColumn;
@@ -202,8 +214,8 @@ public interface IHexViewRow
 		var approximateColumn = (int)(xCoordinate / fontWidth);
 		while (true)
 		{
-			var startX = CalculateAsciiPosition(approximateColumn, fontWidth, primaryGrouping, secondaryGrouping);
-			var endX = CalculateAsciiPosition(approximateColumn + 1, fontWidth, primaryGrouping, secondaryGrouping);
+			var startX = GetVisualLeftOfAsciiColumn(approximateColumn, fontWidth, primaryGrouping, secondaryGrouping);
+			var endX = GetVisualLeftOfAsciiColumn(approximateColumn + 1, fontWidth, primaryGrouping, secondaryGrouping);
 			if (xCoordinate >= startX && xCoordinate < endX)
 			{
 				return approximateColumn;

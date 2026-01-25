@@ -20,7 +20,7 @@ public class HexViewRowTests
 	[DataRow(5, 2, 2, 0)] // 0000 |00
 	public void CalculateStartIndexOfHexColumnInCharacters(int expected, int columnIndex, int primaryGrouping, int secondaryGrouping)
 	{
-		Assert.AreEqual(expected, IHexViewRow.CalculateStartIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping));
+		Assert.AreEqual(expected, IHexViewRow.GetStartIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping));
 	}
 
 	[TestMethod]
@@ -38,7 +38,7 @@ public class HexViewRowTests
 	[DataRow(7, 2, 2, 0)] // 0000 00|
 	public void CalculateEndIndexOfHexColumnInCharacters(int expected, int columnIndex, int primaryGrouping, int secondaryGrouping)
 	{
-		Assert.AreEqual(expected, IHexViewRow.CalculateEndIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping));
+		Assert.AreEqual(expected, IHexViewRow.GetEndIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping));
 	}
 
 	[TestMethod]
