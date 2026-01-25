@@ -111,19 +111,8 @@ public interface IHexViewRow
 		return columnIndex + offset;
 	}
 
-	static int CalculateEndIndexOfAsciiColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping)
-	{
-		if (primaryGrouping == 0)
-		{
-			return columnIndex + 1;
-		}
-		int offset = columnIndex / primaryGrouping;
-		if (secondaryGrouping != 0)
-		{
-			offset += columnIndex / secondaryGrouping;
-		}
-		return columnIndex + 1 + offset;
-	}
+	static int CalculateEndIndexOfAsciiColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping) =>
+		CalculateStartIndexOfAsciiColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping) + 1;
 
 	static int CalculateStartIndexOfHexColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping)
 	{
@@ -139,20 +128,8 @@ public interface IHexViewRow
 		return columnIndex * 2 + offset;
 	}
 
-	static int CalculateEndIndexOfHexColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping)
-	{
-		if (primaryGrouping == 0)
-		{
-			return columnIndex * 2 + 2;
-		}
-		int offset = (columnIndex / primaryGrouping) * 1;
-		if (secondaryGrouping != 0)
-		{
-			offset += (columnIndex / secondaryGrouping) * 1;
-		}
-		return columnIndex * 2 + 2 + offset;
-	}
-
+	static int CalculateEndIndexOfHexColumnInCharacters(int columnIndex, int primaryGrouping, int secondaryGrouping) =>
+		CalculateStartIndexOfHexColumnInCharacters(columnIndex, primaryGrouping, secondaryGrouping) + 2;
 
 	static double CalculateHexPosition(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
@@ -162,7 +139,7 @@ public interface IHexViewRow
 
 	static double CalculateTotalHexRowWidth(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		var end = CalculateEndIndexOfHexColumnInCharacters(columns, primaryGrouping, secondaryGrouping);
+		var end = CalculateEndIndexOfHexColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
 		return fontWidth * end;
 	}
 
@@ -174,18 +151,18 @@ public interface IHexViewRow
 
 	static double CalculateTotalAsciiRowWidth(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		var end = CalculateTotalCharactersInAsciiRow(columns, primaryGrouping, secondaryGrouping);
+		var end = CalculateTotalCharactersInAsciiRow(columns - 1, primaryGrouping, secondaryGrouping);
 		return fontWidth * end;
 	}
 
 	static int CalculateTotalCharactersInHexRow(int columns, int primaryGrouping, int secondaryGrouping)
 	{
-		return CalculateEndIndexOfHexColumnInCharacters(columns, primaryGrouping, secondaryGrouping);
+		return CalculateEndIndexOfHexColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
 	}
 
 	static int CalculateTotalCharactersInAsciiRow(int columns, int primaryGrouping, int secondaryGrouping)
 	{
-		return CalculateEndIndexOfAsciiColumnInCharacters(columns, primaryGrouping, secondaryGrouping);
+		return CalculateEndIndexOfAsciiColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
 	}
 
 	static int GetColumnIndexFromHexPosition(double xCoordinate, double fontWidth, int primaryGrouping, int secondaryGrouping)

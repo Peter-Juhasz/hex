@@ -1,4 +1,4 @@
-﻿name: CLI
+﻿name: Windows
 
 env:
   PROJECT_NAME: 'HexEditor.Windows'
