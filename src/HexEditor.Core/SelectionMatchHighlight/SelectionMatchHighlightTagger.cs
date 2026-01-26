@@ -41,7 +41,8 @@ public class SelectionMatchHighlightTagger(IViewAccessor viewAccessor) : ITagger
 		}
 
 		// Use a buffer-based approach for efficiency
-		const int bufferSize = 64 * 1024; // 64KB buffer
+		const int bufferSize = 64 * 1024; // 64KB buffer for processing
+		// Buffer is larger to allow overlap for detecting matches at boundaries
 		var buffer = new byte[bufferSize + selectionLength - 1];
 		
 		for (long bufferStart = searchStart; bufferStart < searchEnd; )
@@ -73,8 +74,16 @@ public class SelectionMatchHighlightTagger(IViewAccessor viewAccessor) : ITagger
 				}
 			}
 
-			// Move to the next buffer, overlapping by selectionLength-1 to catch matches at boundaries
-			bufferStart += bufferSize;
+			// Move to the next buffer, overlapping by (selectionLength - 1) to catch matches at boundaries
+			// We advance by bufferSize bytes, but the next read will include the last (selectionLength - 1) bytes again
+			var advance = Math.Min(bufferSize, remainingBytes);
+			bufferStart += advance;
+			
+			// If we've processed less than bufferSize, we're done
+			if (advance < bufferSize)
+			{
+				break;
+			}
 		}
 
 		return [.. matches];
