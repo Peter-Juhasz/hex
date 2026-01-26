@@ -3,6 +3,7 @@ using HexEditor.Core.ContentType;
 using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Hyperlinks;
 using HexEditor.Core.QuickInfo;
+using HexEditor.Core.ReferenceHighlight;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.Tagging;
 using HexEditor.Core.ViewModel;
@@ -123,15 +124,28 @@ public partial class EditorHost : ContentControl
 			)
 		);
 
+		var referenceTagAggregator = new LockingTagAggregator<ReferenceTag>(
+			new PostFilteringTagAggregator<ReferenceTag>(
+				new ParallelTagAggregator<ReferenceTag>(
+					taggerProvider.CreateTaggers<ReferenceTag>(interestedContentTypes)
+				)
+			)
+		);
+
 		_view = new WinUIHexView(snapshot, _visualTheme, taggerProvider, contentTypeRegistry);
 		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
 		_view.Viewport.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 
 		_hexContentView = new HexContentView(_view, _visualTheme, quickInfoTagAggregator);
 		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentTypeRegistry);
+
 		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_hexOutliningHighlightLayer, 4);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
+
+		_hexReferenceHighlightLayer = new HexReferenceHighlightLayer(_view, referenceTagAggregator, _visualTheme);
+		Grid.SetColumn(_hexReferenceHighlightLayer, 4);
+		_grid.Children.Add(_hexReferenceHighlightLayer);
 
 		_hexSelectionLayer = new HexSelectionLayer(_view, _visualTheme);
 		Grid.SetColumn(_hexSelectionLayer, 4);
@@ -151,6 +165,10 @@ public partial class EditorHost : ContentControl
 		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 5);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
+
+		_asciiReferenceHighlightLayer = new AsciiReferenceHighlightLayer(_view, referenceTagAggregator, _visualTheme);
+		Grid.SetColumn(_asciiReferenceHighlightLayer, 5);
+		_grid.Children.Add(_asciiReferenceHighlightLayer);
 
 		_asciiSelectionLayer = new AsciiSelectionLayer(_view, _visualTheme);
 		Grid.SetColumn(_asciiSelectionLayer, 5);
@@ -215,13 +233,18 @@ public partial class EditorHost : ContentControl
 	};
 
 	private readonly AddressBarMargin _addressBarMargin;
+
 	private readonly OutliningMargin _outliningMargin;
+
 	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
+	private readonly HexReferenceHighlightLayer _hexReferenceHighlightLayer;
 	private readonly HexContentView _hexContentView;
 	private readonly HexSquigglesLayer _hexSquigglesLayer;
 	private readonly HexSelectionLayer _hexSelectionLayer;
 	private readonly HexCaretLayer _hexCaretLayer;
+
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
+	private readonly AsciiReferenceHighlightLayer _asciiReferenceHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
 	private readonly AsciiSquigglesLayer _asciiSquigglesLayer;
 	private readonly AsciiSelectionLayer _asciiSelectionLayer;

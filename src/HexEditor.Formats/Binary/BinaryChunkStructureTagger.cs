@@ -19,13 +19,8 @@ public abstract class BinaryChunkStructureTagger(
 			return [];
 		}
 
-		if (syntaxTree.Root is not SyntaxNodeList list)
-		{
-			return [];
-		}
-
-		using var _ = ImmutableArrayBuilderPool<TagSpan<StructureTag>>.GetPooledObject(out var builder);
-		foreach (var child in list.Children)
+		using var builder = new PooledArrayBuilder<TagSpan<StructureTag>>();
+		foreach (var child in syntaxTree.Root.DescendantsAndSelf<TypeLengthChunkSyntaxNode>())
 		{
 			if (!span.OverlapsWith(child.Span))
 			{
@@ -44,7 +39,7 @@ public abstract class BinaryChunkStructureTagger(
 
 			builder.Add(new TagSpan<StructureTag>(child.Span, GetTag(chunkNode.TypeToken.Data.Span)));
 		}
-		return builder.ToImmutable();
+		return builder.ToImmutableArray();
 	}
 
 	protected abstract StructureTag GetTag(ReadOnlySpan<byte> type);

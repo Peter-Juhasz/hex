@@ -42,7 +42,7 @@ public static partial class Extensions
 			return overlapStart < overlapEnd;
 		}
 
-		public bool Contains(long offset) => offset >= span.StartOffset && offset < span.EndOffset;
+		public bool Contains(long offset) => offset >= span.StartOffset && offset <= span.EndOffset;
 
 		public bool Contains(LongSpan other) => other.StartOffset >= span.StartOffset && other.EndOffset <= span.EndOffset;
 

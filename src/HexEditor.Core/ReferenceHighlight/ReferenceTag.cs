@@ -2,8 +2,9 @@
 
 namespace HexEditor.Core.ReferenceHighlight;
 
-public record class ReferenceTag() : ITag;
+public record class ReferenceTag() : ITag
+{
+	public static readonly ReferenceTag ReferenceDefinitionTag = new();
 
-public record class ReferenceDefinitionTag() : ReferenceTag();
-
-public record class ReferenceUsageTag() : ReferenceTag();
+	public static readonly ReferenceTag ReferenceUsageTag = new();
+}

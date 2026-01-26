@@ -3,12 +3,7 @@ using System;
 
 namespace HexEditor.WinUI;
 
-public interface IViewAccessor
-{
-	IGraphicalHexView View { get; }
-}
-
-public class IndirectViewAccessor(Func<IGraphicalHexView> viewGetter) : IViewAccessor
+public sealed class IndirectViewAccessor(Func<IGraphicalHexView> viewGetter) : IViewAccessor
 {
 	private IGraphicalHexView? _view;
 

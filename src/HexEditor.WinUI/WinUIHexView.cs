@@ -287,15 +287,15 @@ public class WinUIHexView : IGraphicalHexView
 		}
 
 		var startPoint = MapToVisualHex(span.Start);
-		var endPoint = MapToVisualHex(span.End);
+		var endPoint = MapToVisualHex(span.End - 1);
 
 		if (double.AreApproximatelyEqual(startPoint.Y, endPoint.Y, 1d))
 		{
 			return
 			[
 				startPoint.TopLeft,
-				endPoint.TopLeft,
-				endPoint.BottomLeft,
+				endPoint.TopRight,
+				endPoint.BottomRight,
 				startPoint.BottomLeft,
 			];
 		}
@@ -309,8 +309,8 @@ public class WinUIHexView : IGraphicalHexView
 			startPoint.TopLeft,
 			new((float)fullRowWidth, (float)startPoint.Top),
 			new((float)fullRowWidth, (float)endPoint.Top),
-			endPoint.TopLeft,
-			endPoint.BottomLeft,
+			endPoint.TopRight,
+			endPoint.BottomRight,
 			new(0, (float)endPoint.Bottom),
 			new(0, (float)startPoint.Bottom),
 			startPoint.BottomLeft,
@@ -325,15 +325,15 @@ public class WinUIHexView : IGraphicalHexView
 		}
 
 		var startPoint = MapToVisualAscii(span.Start);
-		var endPoint = MapToVisualAscii(span.End);
+		var endPoint = MapToVisualAscii(span.End - 1);
 
 		if (double.AreApproximatelyEqual(startPoint.Y, endPoint.Y, 1d))
 		{
 			return
 			[
 				startPoint.TopLeft,
-				endPoint.TopLeft,
-				endPoint.BottomLeft,
+				endPoint.TopRight,
+				endPoint.BottomRight,
 				startPoint.BottomLeft,
 			];
 		}
@@ -347,8 +347,8 @@ public class WinUIHexView : IGraphicalHexView
 			startPoint.TopLeft,
 			new((float)fullRowWidth, (float)startPoint.Top),
 			new((float)fullRowWidth, (float)endPoint.Top),
-			endPoint.TopLeft,
-			endPoint.BottomLeft,
+			endPoint.TopRight,
+			endPoint.BottomRight,
 			new(0, (float)endPoint.Bottom),
 			new(0, (float)startPoint.Bottom),
 			startPoint.BottomLeft,

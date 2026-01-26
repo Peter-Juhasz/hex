@@ -24,7 +24,15 @@ public sealed class SequentialTagAggregator<TTag>(
 		var results = new ImmutableArray<TagSpan<TTag>>[taggers.Length];
 		for (int i = 0; i < taggers.Length; i++)
 		{
-			await CollectAsync(results, i, taggers[i], span, cancellationToken).ConfigureAwait(false);
+			try
+			{
+				var tagger = taggers[i];
+				results[i] = await tagger.GetTagsAsync(span, cancellationToken).ConfigureAwait(false);
+			}
+			catch (Exception)
+			{
+				// TODO: log
+			}
 		}
 
 		var totalCount = 0;
@@ -41,14 +49,5 @@ public sealed class SequentialTagAggregator<TTag>(
 			offset += result.Length;
 		}
 		return ImmutableCollectionsMarshal.AsImmutableArray(final);
-	}
-
-	private static async Task CollectAsync(ImmutableArray<TagSpan<TTag>>[] results, int index, ITagger<TTag> tagger, SnapshotSpan span, CancellationToken cancellationToken)
-	{
-		try
-		{
-			results[index] = await tagger.GetTagsAsync(span, cancellationToken).ConfigureAwait(false);
-		}
-		catch { }
 	}
 }

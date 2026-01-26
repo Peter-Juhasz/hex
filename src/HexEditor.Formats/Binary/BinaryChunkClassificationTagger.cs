@@ -1,7 +1,7 @@
 ﻿using HexEditor.Core.Classification;
+using HexEditor.Core.Structure;
 using HexEditor.Core.Syntax;
 using HexEditor.Core.Tagging;
-using HexEditor.Formats.Binary;
 using HexEditor.Model;
 using System.Collections.Immutable;
 
@@ -19,13 +19,8 @@ public abstract class BinaryChunkClassificationTagger(
 			return [];
 		}
 
-		if (syntaxTree.Root is not SyntaxNodeList list)
-		{
-			return [];
-		}
-
-		using var _ = ImmutableArrayBuilderPool<TagSpan<ClassificationTag>>.GetPooledObject(out var builder);
-		foreach (var child in list.Children)
+		using var builder = new PooledArrayBuilder<TagSpan<ClassificationTag>>();
+		foreach (var child in syntaxTree.Root.DescendantsAndSelf<TypeLengthChunkSyntaxNode>())
 		{
 			if (!span.OverlapsWith(child.Span))
 			{
@@ -47,6 +42,6 @@ public abstract class BinaryChunkClassificationTagger(
 				builder.Add(new TagSpan<ClassificationTag>(chunkNode.TypeToken.Span, ClassificationTag.KeywordTag));
 			}
 		}
-		return builder.ToImmutable();
+		return builder.ToImmutableArray();
 	}
 }

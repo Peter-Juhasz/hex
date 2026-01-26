@@ -3,6 +3,7 @@ using HexEditor.Core.ContentType;
 using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Model;
 using HexEditor.Core.Tagging;
+using HexEditor.Core.ViewModel;
 using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.WinUI;

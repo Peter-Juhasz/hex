@@ -41,7 +41,7 @@ public sealed class WavDiagnostics(
 			return [];
 		}
 
-		using var _ = ImmutableArrayBuilderPool<TagSpan<DiagnosticTag>>.GetPooledObject(out var builder);
+		using var builder = new PooledArrayBuilder<TagSpan<DiagnosticTag>>();
 		foreach (var child in list.Children)
 		{
 			if (child is not TypeLengthChunkSyntaxNode chunkNode)
@@ -67,6 +67,6 @@ public sealed class WavDiagnostics(
 				builder.Add(new TagSpan<DiagnosticTag>(chunkNode.LengthToken.Span, new DiagnosticTag(InvalidLengthDiagnostic)));
 			}
 		}
-		return builder.ToImmutable();
+		return builder.ToImmutableArray();
 	}
 }

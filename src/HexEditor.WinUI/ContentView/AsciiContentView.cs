@@ -1,8 +1,6 @@
 ﻿using HexEditor.Core.Caret;
-using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Model;
 using HexEditor.Core.ViewModel;
-using HexEditor.Model;
 using HexEditor.WinUI.Theming;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
@@ -11,13 +9,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Linq;
 using System.Numerics;
 using Windows.System;
-using Windows.UI;
 using Windows.UI.Core;
 
 namespace HexEditor.WinUI.ContentView;
@@ -31,7 +26,7 @@ internal sealed class AsciiContentView : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
-		this.MinWidth = theme.Columns * theme.FontWidth;
+		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(theme.Columns, theme.FontWidth, theme.AsciiViewStyle?.PrimaryGrouping ?? 0, theme.AsciiViewStyle?.SecondaryGrouping ?? 0);
 		this.Background = new SolidColorBrush(Colors.Transparent);
 
 		_canvas = this;
