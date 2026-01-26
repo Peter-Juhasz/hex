@@ -168,17 +168,19 @@ public class SelectionMatchHighlightTaggerTests
 	public async Task GetTagsAsync_MatchAtBufferBoundary_FindsMatch()
 	{
 		// Arrange - Create data that will span across buffer boundaries
-		// Buffer size is 64KB, so create data larger than that with a pattern at the boundary
+		// Buffer size is 64KB, so create data larger than that with patterns at the boundary
 		var bufferSize = 64 * 1024;
 		var pattern = new byte[] { 0xAA, 0xBB, 0xCC };
 		var data = new byte[bufferSize + 100];
 		
-		// Fill with zeros
-		Array.Fill(data, (byte)0);
+		// Fill with filler bytes (0xFF) to avoid accidental matches
+		Array.Fill(data, (byte)0xFF);
 		
-		// Place pattern at buffer boundary (just before, at, and after 64KB mark)
-		Array.Copy(pattern, 0, data, bufferSize - 2, pattern.Length); // Pattern spans boundary
-		Array.Copy(pattern, 0, data, bufferSize + 10, pattern.Length); // Pattern after boundary
+		// Place NON-OVERLAPPING patterns at different positions around the buffer boundary
+		Array.Copy(pattern, 0, data, bufferSize - 10, pattern.Length); // Pattern well before boundary
+		Array.Copy(pattern, 0, data, bufferSize - 2, pattern.Length);   // Pattern spans boundary (at 65534)
+		Array.Copy(pattern, 0, data, bufferSize + 5, pattern.Length);   // Pattern well after boundary
+		Array.Copy(pattern, 0, data, bufferSize + 20, pattern.Length);  // Another pattern after boundary
 		
 		var dataSource = new ByteArrayDataSource(data);
 		var manager = new SnapshotManager(dataSource);
@@ -187,11 +189,12 @@ public class SelectionMatchHighlightTaggerTests
 		var selection = new MockSelection();
 		var view = new MockView { Snapshot = snapshot, Selection = selection };
 		
+		// Select the first occurrence of the pattern
 		var selectionManager = new SelectionManager(view);
 		var selectionSpan = new SelectionSpan(
 			selectionManager,
-			new SnapshotPoint(snapshot, bufferSize - 2),
-			new SnapshotPoint(snapshot, bufferSize - 2 + pattern.Length)
+			new SnapshotPoint(snapshot, bufferSize - 10),
+			new SnapshotPoint(snapshot, bufferSize - 10 + pattern.Length)
 		);
 		selection.Span = selectionSpan;
 
@@ -203,9 +206,11 @@ public class SelectionMatchHighlightTaggerTests
 		// Act
 		var tags = await tagger.GetTagsAsync(span, CancellationToken.None);
 
-		// Assert - Should find both matches
-		Assert.AreEqual(2, tags.Length);
-		Assert.AreEqual(bufferSize - 2, tags[0].Span.Span.StartOffset);
-		Assert.AreEqual(bufferSize + 10, tags[1].Span.Span.StartOffset);
+		// Assert - Should find all 4 matches
+		Assert.AreEqual(4, tags.Length);
+		Assert.AreEqual(bufferSize - 10, tags[0].Span.Span.StartOffset);
+		Assert.AreEqual(bufferSize - 2, tags[1].Span.Span.StartOffset);
+		Assert.AreEqual(bufferSize + 5, tags[2].Span.Span.StartOffset);
+		Assert.AreEqual(bufferSize + 20, tags[3].Span.Span.StartOffset);
 	}
 }
