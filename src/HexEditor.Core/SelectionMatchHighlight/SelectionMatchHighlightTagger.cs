@@ -32,11 +32,19 @@ public class SelectionMatchHighlightTagger(IViewAccessor viewAccessor) : ITagger
 		// Find all matching spans within the requested span
 		var matches = new List<TagSpan<SelectionMatchHighlightTag>>();
 		
-		// Search for matches in the requested span
+		// Check if selection is larger than the search span
 		var searchStart = span.Span.StartOffset;
 		var searchEnd = span.Span.EndOffset;
+		if (selectionLength > searchEnd - searchStart)
+		{
+			return [];
+		}
+
+		// Use a buffer-based approach for efficiency
+		const int bufferSize = 64 * 1024; // 64KB buffer
+		var buffer = new byte[bufferSize + selectionLength - 1];
 		
-		for (long offset = searchStart; offset <= searchEnd - selectionLength; offset++)
+		for (long bufferStart = searchStart; bufferStart < searchEnd; )
 		{
 			// Check if we should cancel
 			if (cancellationToken.IsCancellationRequested)
@@ -44,16 +52,29 @@ public class SelectionMatchHighlightTagger(IViewAccessor viewAccessor) : ITagger
 				break;
 			}
 
-			// Read bytes at current offset
-			var currentBytes = new byte[selectionLength];
-			var currentSpan = new SnapshotSpan(span.Snapshot, new LongSpan(offset, selectionLength));
-			await currentSpan.CopyToAsync(currentBytes, cancellationToken).ConfigureAwait(false);
+			// Calculate how much to read
+			var remainingBytes = searchEnd - bufferStart;
+			var bytesToRead = (int)Math.Min(buffer.Length, remainingBytes);
+			
+			// Read a chunk of data
+			var bufferSpan = new SnapshotSpan(span.Snapshot, new LongSpan(bufferStart, bytesToRead));
+			await bufferSpan.CopyToAsync(buffer.AsMemory(0, bytesToRead), cancellationToken).ConfigureAwait(false);
 
-			// Check if bytes match
-			if (currentBytes.AsSpan().SequenceEqual(selectionBytes))
+			// Search for matches in the buffer
+			var searchLimit = bytesToRead - selectionLength + 1;
+			for (int i = 0; i < searchLimit; i++)
 			{
-				matches.Add(new TagSpan<SelectionMatchHighlightTag>(currentSpan, SelectionMatchHighlightTag.Instance));
+				// Check if bytes match
+				if (buffer.AsSpan(i, selectionLength).SequenceEqual(selectionBytes))
+				{
+					var matchOffset = bufferStart + i;
+					var matchSpan = new SnapshotSpan(span.Snapshot, new LongSpan(matchOffset, selectionLength));
+					matches.Add(new TagSpan<SelectionMatchHighlightTag>(matchSpan, SelectionMatchHighlightTag.Instance));
+				}
 			}
+
+			// Move to the next buffer, overlapping by selectionLength-1 to catch matches at boundaries
+			bufferStart += bufferSize;
 		}
 
 		return [.. matches];
