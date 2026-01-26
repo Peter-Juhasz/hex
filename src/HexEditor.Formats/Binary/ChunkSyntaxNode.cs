@@ -1,7 +1,7 @@
 ﻿using HexEditor.Core.Syntax;
 using HexEditor.Model;
 
-namespace HexEditor.Formats;
+namespace HexEditor.Formats.Binary;
 
 public record class TypeLengthChunkSyntaxNode(
 	SnapshotSpan Span,

@@ -89,6 +89,6 @@ internal sealed class AsciiCaretLayer : Canvas
 
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)
 	{
-		_caret.Visibility = e.ActiveView is ActiveView.Ascii ? Visibility.Visible : Visibility.Collapsed;
+		this.Visibility = e.ActiveView is ActiveView.Ascii ? Visibility.Visible : Visibility.Collapsed;
 	}
 }

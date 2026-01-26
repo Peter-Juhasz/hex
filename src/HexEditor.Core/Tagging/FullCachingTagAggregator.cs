@@ -11,16 +11,33 @@ public sealed class FullCachingTagAggregator<TTag>(
 {
 	private CacheItem? _lastCached;
 
-	public async ValueTask<ImmutableArray<TagSpan<TTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	public ValueTask<ImmutableArray<TagSpan<TTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
 		var currentSnapshot = span.Snapshot;
-		if (_lastCached is not { } cacheItem || cacheItem.Snapshot != currentSnapshot)
+		if (_lastCached is { } cacheItem && cacheItem.Snapshot == currentSnapshot)
 		{
-			var tags = await inner.GetTagsAsync(currentSnapshot.Span, cancellationToken).ConfigureAwait(false);
-			cacheItem = new CacheItem(currentSnapshot, ImmutableCollectionsMarshal.AsArray(tags) ?? []);
-			_lastCached = cacheItem;
+			using var result = new PooledArrayBuilder<TagSpan<TTag>>();
+			foreach (var tag in cacheItem.Tags)
+			{
+				if (tag.Span.Span.OverlapsWith(span.Span))
+				{
+					result.Add(tag);
+				}
+			}
+			return new(result.ToImmutableArray());
 		}
-		var result = ImmutableArray.CreateBuilder<TagSpan<TTag>>();
+
+		return GetCoreAsync(span, cancellationToken);
+	}
+
+	private async ValueTask<ImmutableArray<TagSpan<TTag>>> GetCoreAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	{
+		var currentSnapshot = span.Snapshot;
+		var tags = await inner.GetTagsAsync(currentSnapshot.Span, cancellationToken).ConfigureAwait(false);
+		var cacheItem = new CacheItem(currentSnapshot, ImmutableCollectionsMarshal.AsArray(tags) ?? []);
+		_lastCached = cacheItem;
+
+		using var result = new PooledArrayBuilder<TagSpan<TTag>>();
 		foreach (var tag in cacheItem.Tags)
 		{
 			if (tag.Span.Span.OverlapsWith(span.Span))
@@ -28,7 +45,7 @@ public sealed class FullCachingTagAggregator<TTag>(
 				result.Add(tag);
 			}
 		}
-		return result.ToImmutable();
+		return result.ToImmutableArray();
 	}
 
 	private record class CacheItem(IBinarySnapshot Snapshot, TagSpan<TTag>[] Tags);

@@ -16,7 +16,7 @@ internal class RowFormatter
 		double Top,
 		SnapshotSpan Span,
 		ReadOnlyMemory<byte> Data,
-		TagSpanSplitMap Tags
+		TagIntersectionMap Tags
 	);
 
 	public static IHexViewRow Format(FormatContext context)

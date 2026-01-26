@@ -22,7 +22,7 @@ namespace HexEditor.WinUI.Outlining;
 
 internal sealed class OutliningMargin : Canvas
 {
-	public OutliningMargin(WinUIHexView view, VisualTheme visualTheme, ITaggerProvider taggerProvider, string contentType, IContentTypeRegistry contentTypeRegistry) : base()
+	public OutliningMargin(IGraphicalHexView view, VisualTheme visualTheme, ITaggerProvider taggerProvider, IContentTypeRegistry contentTypeRegistry) : base()
 	{
 		_theme = visualTheme;
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -30,7 +30,7 @@ internal sealed class OutliningMargin : Canvas
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
 		this.MinWidth = _width;
 
-		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
+		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(view.Snapshot.Source.ContentType).Select(t => t.Type).ToImmutableArray();
 		var taggers = taggerProvider.CreateTaggers<StructureTag>(interestedContentTypes);
 		tagAggregator = new FullCachingTagAggregator<StructureTag>(new ParallelTagAggregator<StructureTag>(taggers));
 
@@ -49,7 +49,7 @@ internal sealed class OutliningMargin : Canvas
 	private readonly Brush _transparentBrush = new SolidColorBrush(Colors.Transparent);
 	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
 	private readonly Brush _chevronBrush = new SolidColorBrush(Colors.Black);
-	private readonly WinUIHexView _view;
+	private readonly IGraphicalHexView _view;
 
 	private readonly BackgroundTaskQueue _queue = new(default);
 	private readonly ITagAggregator<StructureTag> tagAggregator;

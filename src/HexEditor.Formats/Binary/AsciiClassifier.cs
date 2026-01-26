@@ -1,12 +1,10 @@
 ﻿using HexEditor.Composition;
 using HexEditor.Core.Classification;
-using HexEditor.Core.ContentType;
 using HexEditor.Core.Tagging;
-using HexEditor.Formats.Text;
 using HexEditor.Model;
 using System.Collections.Immutable;
 
-namespace HexEditor.Formats;
+namespace HexEditor.Formats.Binary;
 
 [ContentType(BinaryContentTypeDefinition.Id)]
 public sealed class AsciiClassifier : ITagger<ClassificationTag>

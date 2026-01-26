@@ -1,9 +1,12 @@
 using HexEditor.Core.Caret;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Diagnostics;
+using HexEditor.Core.Hyperlinks;
+using HexEditor.Core.QuickInfo;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.Tagging;
-using HexEditor.Formats;
+using HexEditor.Core.ViewModel;
+using HexEditor.Formats.Binary;
 using HexEditor.Model;
 using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.Caret;
@@ -35,7 +38,12 @@ namespace HexEditor.WinUI;
 
 public partial class EditorHost : ContentControl
 {
-	public EditorHost(IServiceProvider serviceProvider, IBinarySnapshot snapshot, string contentType)
+	public EditorHost(
+		IServiceProvider serviceProvider,
+		IBinarySnapshot snapshot,
+		ITaggerProvider taggerProvider,
+		IContentTypeRegistry contentTypeRegistry
+	)
 	{
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
@@ -94,10 +102,7 @@ public partial class EditorHost : ContentControl
 			Height = new GridLength(1, GridUnitType.Star),
 		});
 
-		var contentTypeRegistry = serviceProvider.GetRequiredService<IContentTypeRegistry>();
-		var taggerProvider = serviceProvider.GetRequiredService<ITaggerProvider>();
-
-		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
+		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(snapshot.Source.ContentType).Select(t => t.Type).ToImmutableArray();
 		var diagnosticTagAggregator = new LockingTagAggregator<DiagnosticTag>(
 			new FullCachingTagAggregator<DiagnosticTag>(
 				new ParallelTagAggregator<DiagnosticTag>(
@@ -106,12 +111,24 @@ public partial class EditorHost : ContentControl
 			)
 		);
 
-		_view = new WinUIHexView(snapshot, contentType, _visualTheme, taggerProvider, contentTypeRegistry);
+		var quickInfoTagAggregator = new LockingTagAggregator<QuickInfoTag>(
+			new LastCallCachingTagAggregator<QuickInfoTag>(
+				new PostFilteringTagAggregator<QuickInfoTag>(
+					new ParallelTagAggregator<QuickInfoTag>(
+						taggerProvider.CreateTaggers<QuickInfoTag>(interestedContentTypes)
+							.AddRange(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes).Select(t => new UrlToQuickInfoAdapter(t)))
+							.AddRange(taggerProvider.CreateTaggers<DiagnosticTag>(interestedContentTypes).Select(t => new DiagnosticToQuickInfoAdapter(t)))
+					)
+				)
+			)
+		);
+
+		_view = new WinUIHexView(snapshot, _visualTheme, taggerProvider, contentTypeRegistry);
 		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
 		_view.Viewport.ScrollableHeightChanged += OnModelScrollableHeightChanged;
 
-		_hexContentView = new HexContentView(_view, _visualTheme);
-		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentType, contentTypeRegistry);
+		_hexContentView = new HexContentView(_view, _visualTheme, quickInfoTagAggregator);
+		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentTypeRegistry);
 		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_hexOutliningHighlightLayer, 4);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
@@ -158,7 +175,7 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_outliningMargin, 2);
 		_grid.Children.Add(_outliningMargin);
 
-		var statusBar = CreateStatusBar(contentType);
+		var statusBar = CreateStatusBar(snapshot.Source.ContentType);
 		Grid.SetRow(statusBar, 1);
 		_outerGrid.Children.Add(statusBar);
 
@@ -216,6 +233,8 @@ public partial class EditorHost : ContentControl
 	private readonly WinUIHexView _view;
 	private readonly BackgroundTaskQueue _queue = new(default);
 
+	public IGraphicalHexView View => _view;
+
 
 	private VisualTheme _visualTheme = new(
 		Columns: 16,
@@ -243,7 +262,7 @@ public partial class EditorHost : ContentControl
 
 	[MemberNotNull(nameof(_caretPositionTextBlock))]
 	[MemberNotNull(nameof(_contentTypeTextBlock))]
-	private FrameworkElement CreateStatusBar(string contentType)
+	private FrameworkElement CreateStatusBar(ContentTypeDefinition? contentType)
 	{
 		var statusBarGrid = new Grid()
 		{
@@ -283,7 +302,7 @@ public partial class EditorHost : ContentControl
 			Margin = new Thickness(4),
 			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = contentType,
+			Text = contentType?.Type,
 		};
 		Grid.SetColumn(_contentTypeTextBlock, 2);
 		statusBarGrid.Children.Add(_contentTypeTextBlock);

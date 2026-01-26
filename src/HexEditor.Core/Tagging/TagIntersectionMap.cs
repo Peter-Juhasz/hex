@@ -1,26 +1,24 @@
 ﻿using HexEditor.Model;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
 namespace HexEditor.Core.Tagging;
 
-public class TagSpanSplitMap
+public class TagIntersectionMap
 {
-	public TagSpanSplitMap(IEnumerable<TagSpan> spans)
+	public TagIntersectionMap(IEnumerable<TagSpan> spans)
 	{
 		_spans = [.. spans];
 		_spans.Sort(TagSpanComparer.Instance);
 	}
-	private TagSpanSplitMap(TagSpan[] spans)
+	private TagIntersectionMap(TagSpan[] spans)
 	{
 		_spans = spans;
 	}
 
 	private readonly TagSpan[] _spans;
 
-	private static readonly TagSpanSplitMap Empty = new(Array.Empty<TagSpan>());
+	private static readonly TagIntersectionMap Empty = new(Array.Empty<TagSpan>());
 
 	public ImmutableArray<TagSpan> GetOverlappingTags(SnapshotSpan span)
 	{
@@ -39,7 +37,7 @@ public class TagSpanSplitMap
 		return builder.ToImmutableArray();
 	}
 
-	public TagSpanSplitMap Slice(SnapshotSpan span)
+	public TagIntersectionMap Slice(SnapshotSpan span)
 	{
 		var overlappingTags = GetOverlappingTags(span);
 		if (overlappingTags.IsEmpty)
@@ -47,7 +45,7 @@ public class TagSpanSplitMap
 			return Empty;
 		}
 
-		return new TagSpanSplitMap(ImmutableCollectionsMarshal.AsArray(overlappingTags)!);
+		return new TagIntersectionMap(ImmutableCollectionsMarshal.AsArray(overlappingTags)!);
 	}
 
 	public void GetClosestSplitPoint(SnapshotSpan span, out SnapshotSpan firstSpan, out ImmutableArray<TagSpan> tags)

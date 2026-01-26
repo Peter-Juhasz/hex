@@ -14,11 +14,18 @@ public record class VisualTheme(
 	Brush? Background = null,
 	Brush? Foreground = null,
 	HexViewStyle? HexViewStyle = null,
-	AsciiViewStyle? AsciiViewStyle = null
+	AsciiViewStyle? AsciiViewStyle = null,
+	AddressMarginStyle? AddressMarginStyle = null
 )
 {
 	public static double FontSizeToWidth(double fontSize) => fontSize * (8.25d / 14d);
 }
+
+public record class AddressMarginStyle(
+	FontFamily? FontFamily = null,
+	Brush? Background = null,
+	Brush? Foreground = null
+);
 
 public record class HexViewStyle(
 	FontFamily? FontFamily = null,

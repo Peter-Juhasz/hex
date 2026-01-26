@@ -89,6 +89,6 @@ internal sealed class HexCaretLayer : Canvas
 
 	private void OnCaretActiveViewChanged(object? sender, ActiveViewChangedEventArgs e)
 	{
-		_caret.Visibility = e.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed;
+		this.Visibility = e.ActiveView is ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed;
 	}
 }

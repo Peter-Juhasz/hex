@@ -11,6 +11,16 @@ public sealed class SequentialTagAggregator<TTag>(
 {
 	public async ValueTask<ImmutableArray<TagSpan<TTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
+		if (taggers.IsEmpty)
+		{
+			return [];
+		}
+
+		if (taggers is [var single])
+		{
+			return await single.GetTagsAsync(span, cancellationToken).ConfigureAwait(false);
+		}
+
 		var results = new ImmutableArray<TagSpan<TTag>>[taggers.Length];
 		for (int i = 0; i < taggers.Length; i++)
 		{

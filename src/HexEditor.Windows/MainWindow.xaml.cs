@@ -1,8 +1,9 @@
 using HexEditor.Composition;
 using HexEditor.Core.ContentType;
+using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Model;
+using HexEditor.Core.Tagging;
 using HexEditor.Formats;
-using HexEditor.Formats.Text;
 using HexEditor.Model;
 using HexEditor.WinUI;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Windows.Storage.Pickers;
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -59,28 +61,31 @@ public sealed partial class MainWindow : Window
 		var services = new ServiceCollection();
 		services.AddHexEditor();
 		services.AddContent(typeof(UrlTagger).Assembly);
+		services.AddSingleton<IViewAccessor>(new IndirectViewAccessor(() => _editor!.View));
 		var serviceProvider = services.BuildServiceProvider();
 
 		// determine content type
-		var contentType = "binary";
-		foreach (var definition in serviceProvider.GetServices<ContentTypeDefinition>())
+		var contentTypeRegistry = serviceProvider.GetRequiredService<IContentTypeRegistry>();
+		var contentType = await contentTypeRegistry.MatchAsync(filePath, snapshot, default);
+		if (contentType != null)
 		{
-			try
-			{
-				if (await definition.MatchesAsync(filePath, snapshot, default))
-				{
-					contentType = definition.Type;
-					break;
-				}
-			}
-			catch (Exception ex) 
-			{ 
-				// TODO: log
-			}
+			var newSource = new BinaryDataSourceWithContentType(snapshot.Source, contentType);
+			snapshot = new BinaryDataSourceSnapshot(newSource);
 		}
+		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
+
+		// create tag aggregators
+		var taggerProvider = serviceProvider.GetRequiredService<ITaggerProvider>();
+		var diagnosticTagAggregator = new LockingTagAggregator<DiagnosticTag>(
+			new FullCachingTagAggregator<DiagnosticTag>(
+				new ParallelTagAggregator<DiagnosticTag>(
+					taggerProvider.CreateTaggers<DiagnosticTag>(interestedContentTypes)
+				)
+			)
+		);
 
 		// create editor
-		var editorHost = new WinUI.EditorHost(serviceProvider, snapshot, contentType);
+		var editorHost = new WinUI.EditorHost(serviceProvider, snapshot, taggerProvider, contentTypeRegistry);
 		Grid.SetRow(editorHost, 2);
 		MainGrid.Children.Add(editorHost);
 		_editor = editorHost;

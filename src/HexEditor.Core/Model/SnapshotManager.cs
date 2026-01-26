@@ -44,6 +44,8 @@ public class SnapshotManager : ISnapshotManager
 
 public class BinarySnapshot(SnapshotManager snapshotManager, BinarySnapshot? previous, BinaryChange? Change) : IBinarySnapshot
 {
+    public IBinaryDataSource Source => snapshotManager.DataSource;
+
     public long Length { get; } = snapshotManager.DataSource.Length + (Change.HasValue ? Change.Value.LengthIncrease : 0);
 
     public IBinarySnapshot? Previous => previous;

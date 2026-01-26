@@ -37,10 +37,7 @@ internal sealed class HexSelectionLayer : Canvas
 	{
 		if (e.Selection == null)
 		{
-			if (_selectionPath != null)
-			{
-				_selectionPath.Visibility = Visibility.Collapsed;
-			}
+			this.Visibility = Visibility.Collapsed;
 			return;
 		}
 
@@ -66,6 +63,6 @@ internal sealed class HexSelectionLayer : Canvas
 		var points = _view.MapToVisualHex(e.Selection.Span);
 		var figure = ((PathGeometry)_selectionPath.Data).Figures[0];
 		figure.Fill(points);
-		_selectionPath.Visibility = Visibility.Visible;
+		this.Visibility = Visibility.Visible;
 	}
 }

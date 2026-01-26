@@ -24,7 +24,7 @@ namespace HexEditor.WinUI.ContentView;
 
 internal sealed class AsciiContentView : Canvas
 {
-	public AsciiContentView(WinUIHexView view, VisualTheme theme) : base()
+	public AsciiContentView(IGraphicalHexView view, VisualTheme theme) : base()
 	{
 		_theme = theme;
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -48,7 +48,7 @@ internal sealed class AsciiContentView : Canvas
 	private readonly Canvas _canvas;
 
 	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
-	private readonly WinUIHexView _view;
+	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
 
 	private SnapshotPoint? _anchorPoint;

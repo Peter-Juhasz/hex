@@ -4,7 +4,10 @@ namespace HexEditor.Core.Syntax;
 
 public abstract record class SyntaxNode(
 	SnapshotSpan Span
-);
+)
+{
+	public virtual IEnumerable<SyntaxNode> EnumerateChildren() => [];
+}
 
 public readonly record struct SyntaxToken(
 	SnapshotSpan Span,

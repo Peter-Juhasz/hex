@@ -1,7 +1,7 @@
 ﻿using HexEditor.Core.ContentType;
 using HexEditor.Model;
 
-namespace HexEditor.Formats.Text;
+namespace HexEditor.Formats.Binary;
 
 public class BinaryContentTypeDefinition() : ContentTypeDefinition(Id)
 {

@@ -1,6 +1,8 @@
-﻿namespace HexEditor.Core.ReferenceHighlight;
+﻿using HexEditor.Core.Tagging;
 
-public record class ReferenceTag();
+namespace HexEditor.Core.ReferenceHighlight;
+
+public record class ReferenceTag() : ITag;
 
 public record class ReferenceDefinitionTag() : ReferenceTag();
 

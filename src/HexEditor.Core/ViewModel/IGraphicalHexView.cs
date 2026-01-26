@@ -30,6 +30,7 @@ public interface IGraphicalHexView
 
 	SnapshotSpan GetContainingRow(SnapshotPoint point);
 	ImmutableArray<SnapshotSpan> GetRowSegments(SnapshotSpan span);
+	SnapshotPoint MapFromVisualAscii(Vector2 point);
 	SnapshotPoint MapFromVisualHex(Vector2 point);
 	SnapshotSpan MapRowFromVisual(double verticalOffset);
 	long MapRowIndexFromVerticalOffset(double verticalOffset);

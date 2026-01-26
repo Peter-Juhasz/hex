@@ -23,7 +23,7 @@ namespace HexEditor.WinUI;
 
 public class WinUIHexView : IGraphicalHexView
 {
-	public WinUIHexView(IBinarySnapshot snapshot, string contentType, VisualTheme theme, ITaggerProvider taggerProvider, IContentTypeRegistry contentTypeRegistry)
+	public WinUIHexView(IBinarySnapshot snapshot, VisualTheme theme, ITaggerProvider taggerProvider, IContentTypeRegistry contentTypeRegistry)
 	{
 		this.snapshot = snapshot;
 		ScrollableHeight = theme.RowHeight;
@@ -32,7 +32,7 @@ public class WinUIHexView : IGraphicalHexView
 		Caret = new CaretManager(this);
 		Viewport = new ViewScroller(this, theme);
 
-		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(contentType).Select(t => t.Type).ToImmutableArray();
+		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(snapshot.Source.ContentType).Select(t => t.Type).ToImmutableArray();
 		_classificationTagAggregator = new SequentialTagAggregator<ClassificationTag>(taggerProvider.CreateTaggers<ClassificationTag>(interestedContentTypes));
 		_urlTagAggregator = new SequentialTagAggregator<UrlTag>(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes));
 
@@ -104,7 +104,7 @@ public class WinUIHexView : IGraphicalHexView
 			allTags[allTagsIndex++] = urlTags[i];
 		}
 
-		var screenTagSpanMap = new TagSpanSplitMap(allTags);
+		var screenTagSpanMap = new TagIntersectionMap(allTags);
 
 		// build rows
 		var oldRows = _visibleRows;
@@ -281,6 +281,11 @@ public class WinUIHexView : IGraphicalHexView
 
 	public Vector2[] MapToVisualHex(SnapshotSpan span)
 	{
+		if (span.IsEmpty)
+		{
+			return [];
+		}
+
 		var startPoint = MapToVisualHex(span.Start);
 		var endPoint = MapToVisualHex(span.End);
 
@@ -314,6 +319,11 @@ public class WinUIHexView : IGraphicalHexView
 
 	public Vector2[] MapToVisualAscii(SnapshotSpan span)
 	{
+		if (span.IsEmpty)
+		{
+			return [];
+		}
+
 		var startPoint = MapToVisualAscii(span.Start);
 		var endPoint = MapToVisualAscii(span.End);
 

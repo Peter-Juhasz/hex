@@ -64,6 +64,7 @@ internal sealed class HexSquigglesLayer : Canvas
 		{
 			_canvas.Children.Clear();
 			_renderedSegments.Clear();
+			this.Visibility = Visibility.Collapsed;
 			return;
 		}
 
@@ -101,6 +102,7 @@ internal sealed class HexSquigglesLayer : Canvas
 
 			_renderedSegments[tagSpan] = builder.ToArray();
 		}
+		this.Visibility = Visibility.Visible;
 	}
 
 	private Path AddSquiggle(TagSpan<DiagnosticTag> tagSpan, SnapshotSpan segment)

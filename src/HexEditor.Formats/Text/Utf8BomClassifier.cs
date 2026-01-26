@@ -3,11 +3,10 @@ using HexEditor.Core.Classification;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Model;
 using HexEditor.Core.Tagging;
-using HexEditor.Formats.Text;
 using HexEditor.Model;
 using System.Collections.Immutable;
 
-namespace HexEditor.Formats;
+namespace HexEditor.Formats.Text;
 
 [ContentType(TextContentTypeDefinition.Id)]
 public sealed class Utf8BomClassifier : ITagger<ClassificationTag>

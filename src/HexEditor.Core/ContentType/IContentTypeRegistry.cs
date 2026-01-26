@@ -1,4 +1,6 @@
-﻿namespace HexEditor.Core.ContentType;
+﻿using HexEditor.Model;
+
+namespace HexEditor.Core.ContentType;
 
 public interface IContentTypeRegistry
 {
@@ -6,5 +8,7 @@ public interface IContentTypeRegistry
 
 	IEnumerable<ContentTypeDefinition> GetAllDefinitions();
 
-	IEnumerable<ContentTypeDefinition> GetBaseTypesAndSelf(string type);
+	IEnumerable<ContentTypeDefinition> GetBaseTypesAndSelf(ContentTypeDefinition? type);
+
+	Task<ContentTypeDefinition?> MatchAsync(string? filePath, IBinarySnapshot snapshot, CancellationToken cancellationToken);
 }

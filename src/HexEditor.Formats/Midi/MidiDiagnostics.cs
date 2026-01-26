@@ -2,6 +2,7 @@
 using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Syntax;
 using HexEditor.Core.Tagging;
+using HexEditor.Formats.Binary;
 using HexEditor.Model;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
@@ -29,12 +30,6 @@ public sealed class MidiDiagnostics(
 
 	public async Task<ImmutableArray<TagSpan<DiagnosticTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		var snapshot = span.Snapshot;
-		if (snapshot.Length < 8)
-		{
-			return [];
-		}
-
 		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
 		if (syntaxTree == null)
 		{

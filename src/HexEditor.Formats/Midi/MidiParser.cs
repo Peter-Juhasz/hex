@@ -1,5 +1,6 @@
 ﻿using HexEditor.Composition;
 using HexEditor.Core.Syntax;
+using HexEditor.Formats.Binary;
 using HexEditor.Model;
 using System.Buffers.Binary;
 

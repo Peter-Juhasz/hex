@@ -1,4 +1,5 @@
-﻿using HexEditor.WinUI.Theming;
+﻿using HexEditor.Core.ViewModel;
+using HexEditor.WinUI.Theming;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,7 +12,7 @@ namespace HexEditor.WinUI.Outlining;
 
 internal sealed class HexOutliningHighlightLayer : Canvas
 {
-	public HexOutliningHighlightLayer(WinUIHexView view, OutliningMargin outliningMargin, VisualTheme theme) : base()
+	public HexOutliningHighlightLayer(IGraphicalHexView view, OutliningMargin outliningMargin, VisualTheme theme) : base()
 	{
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
@@ -30,7 +31,7 @@ internal sealed class HexOutliningHighlightLayer : Canvas
 
 	private readonly Canvas _canvas;
 
-	private readonly WinUIHexView _view;
+	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
 	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
 
@@ -60,11 +61,11 @@ internal sealed class HexOutliningHighlightLayer : Canvas
 		var points = _view.MapToVisualHex(e.Span.Span);
 		var figure = ((PathGeometry)_regionPath.Data).Figures[0];
 		figure.Fill(points);
-		_regionPath.Visibility = Visibility.Visible;
+		this.Visibility = Visibility.Visible;
 	}
 
 	private void OnDismissed(object? sender, EventArgs e)
 	{
-		_regionPath?.Visibility = Visibility.Collapsed;
+		this.Visibility = Visibility.Collapsed;
 	}
 }

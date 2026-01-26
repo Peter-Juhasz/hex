@@ -2,7 +2,39 @@
 
 namespace HexEditor.Model;
 
-public readonly record struct SnapshotSpan(IBinarySnapshot Snapshot, LongSpan Span);
+public readonly struct SnapshotSpan : IEquatable<SnapshotSpan>
+{
+	public SnapshotSpan(IBinarySnapshot snapshot, LongSpan span)
+	{
+		ArgumentOutOfRangeException.ThrowIfGreaterThan(span.EndOffset, snapshot.Length);
+
+		Snapshot = snapshot;
+		Span = span;
+	}
+
+	public static SnapshotSpan Create(SnapshotPoint point, long length) =>
+		new(point.Snapshot, new LongSpan(point.Position, length));
+
+	public IBinarySnapshot Snapshot { get; }
+	public LongSpan Span { get; }
+
+
+	public SnapshotPoint this[long offset] => new(Snapshot, Span.StartOffset + offset);
+
+
+	public bool Equals(SnapshotSpan other) => this == other;
+
+	public override bool Equals(object? obj) => obj is SnapshotSpan other && this == other;
+
+	public override int GetHashCode() => HashCode.Combine(Snapshot, Span);
+
+
+	public static bool operator ==(SnapshotSpan left, SnapshotSpan right) =>
+		left.Snapshot == right.Snapshot && left.Span == right.Span;
+
+	public static bool operator !=(SnapshotSpan left, SnapshotSpan right) =>
+		!(left == right);
+}
 
 public static partial class Extensions
 {
@@ -15,11 +47,6 @@ public static partial class Extensions
 			if (start.Position > end.Position)
 			{
 				throw new ArgumentOutOfRangeException(nameof(end), "End position must be greater than or equal to start position.");
-			}
-
-			if (start.Position < 0 || end.Position < 0 || start.Position > start.Snapshot.Length || end.Position > end.Snapshot.Length)
-			{
-				throw new ArgumentOutOfRangeException("SnapshotPoint positions must be within the bounds of the snapshot.");
 			}
 
 			var span = new LongSpan(start.Position, end.Position - start.Position);
@@ -39,13 +66,20 @@ public static partial class Extensions
 		public SnapshotSpan Slice(long offset, long length) =>
 			new(span.Snapshot, span.Span.Slice(offset, length));
 
+		// TODO: throw or not?
+
 		public bool Contains(SnapshotPoint point) =>
 			span.Snapshot == point.Snapshot && span.Span.Contains(point.Position);
 
 		public bool Contains(SnapshotSpan other) =>
 			span.Snapshot == other.Snapshot && span.Span.Contains(other.Span);
 
+		public bool OverlapsWith(SnapshotSpan other) =>
+			span.Snapshot == other.Snapshot && span.Span.OverlapsWith(other.Span);
+
 		public long Length => span.Span.Length;
+
+		public bool IsEmpty => span.Span.IsEmpty;
 
 		// TODO bad API desing
 		public ValueTask CopyToAsync(Memory<byte> destination, CancellationToken cancellationToken)

@@ -1,5 +1,5 @@
 ﻿using HexEditor.Core.ContentType;
-using HexEditor.Formats.Text;
+using HexEditor.Formats.Binary;
 using HexEditor.Model;
 
 namespace HexEditor.Formats.Midi;

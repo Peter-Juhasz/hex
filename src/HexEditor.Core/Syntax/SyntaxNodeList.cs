@@ -13,4 +13,6 @@ public record class SyntaxNodeList(
 		children
 	)
 	{ }
+
+	public override IEnumerable<SyntaxNode> EnumerateChildren() => Children;
 }

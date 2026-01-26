@@ -83,6 +83,11 @@ internal sealed class ViewScroller : IViewport
 		y: (float)(point.Y + VerticalOffset)
 	);
 
+	public Vector2 MapToViewport(Vector2 point) => new(
+		x: point.X,
+		y: (float)(point.Y - VerticalOffset)
+	);
+
 	public SnapshotSpan VisibleSpan => _view.VisibleSpan;
 
 

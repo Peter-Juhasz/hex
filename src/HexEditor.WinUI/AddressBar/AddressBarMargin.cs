@@ -17,7 +17,7 @@ namespace HexEditor.WinUI.AddressBar;
 
 internal sealed class AddressBarMargin : Canvas
 {
-	public AddressBarMargin(WinUIHexView view, VisualTheme theme) : base()
+	public AddressBarMargin(IGraphicalHexView view, VisualTheme theme) : base()
 	{
 		_view = view;
 		_theme = theme;
@@ -39,7 +39,7 @@ internal sealed class AddressBarMargin : Canvas
 
 	private readonly Brush _foregroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
 	private readonly Brush _caretForegroundBrush = new SolidColorBrush(Colors.Black);
-	private readonly WinUIHexView _view;
+	private readonly IGraphicalHexView _view;
 
 	private TextBlock? _previouslyActiveTextBlock;
 
