@@ -20,14 +20,15 @@ public class SnapshotManager : ISnapshotManager
     public void ApplyChange(BinaryChange change)
     {
         this._currentSnapshot = new BinarySnapshot(this, this._currentSnapshot, change);
-    }
+        this.Changed?.Invoke(this, new SnapshotChangedEventArgs(this._currentSnapshot));
+	}
 
     public void Save()
     {
         throw new NotImplementedException();
     }
 
-    public void Undo()
+    public IBinarySnapshot Undo()
     {
         throw new NotImplementedException();
     }
@@ -40,6 +41,8 @@ public class SnapshotManager : ISnapshotManager
         }
         throw new NotImplementedException();
     }
+
+    public event EventHandler<SnapshotChangedEventArgs>? Changed;
 }
 
 public class BinarySnapshot(SnapshotManager snapshotManager, BinarySnapshot? previous, BinaryChange? Change) : IBinarySnapshot
@@ -50,7 +53,7 @@ public class BinarySnapshot(SnapshotManager snapshotManager, BinarySnapshot? pre
 
     public IBinarySnapshot? Previous => previous;
 
-    public ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
+	public ValueTask CopyToAsync(long offset, Memory<byte> destination, CancellationToken cancellationToken)
     {
         return snapshotManager.CopyToAsync(this, offset, destination, cancellationToken);
     }

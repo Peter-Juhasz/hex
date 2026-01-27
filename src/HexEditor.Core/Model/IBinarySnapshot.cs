@@ -11,6 +11,8 @@ public interface IBinarySnapshot
     long Length { get; }
 
 	IBinarySnapshot? Previous { get; }
+
+	IBinarySnapshot Apply(BinaryEdit edit) => throw new NotImplementedException();
 }
 
 public static partial class Extensions
