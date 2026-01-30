@@ -1,7 +1,6 @@
 ﻿using HexEditor.Core.Caret;
 using HexEditor.Core.Classification;
 using HexEditor.Core.ContentType;
-using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Hyperlinks;
 using HexEditor.Core.Model;
 using HexEditor.Core.Scrolling;
@@ -61,7 +60,11 @@ public class WinUIHexView : IGraphicalHexView
 
 	public ISelection Selection { get; }
 
+	public ISnapshotManager SnapshotManager { get; }
+
 	public ICaret Caret { get; }
+
+	public int Columns => _theme.Columns;
 
 	public IViewport Viewport { get; }
 
@@ -76,9 +79,7 @@ public class WinUIHexView : IGraphicalHexView
 		}
 	}
 
-	internal async Task InvalidateAsync(CancellationToken cancellationToken) => await InvalidateAsync(snapshot, cancellationToken);
-
-	internal async Task InvalidateAsync(IBinarySnapshot snapshot, CancellationToken cancellationToken)
+	internal async Task InvalidateAsync(CancellationToken cancellationToken)
 	{
 		// calculate visible span
 		var visibleSpan = VisibleSpan;
@@ -182,6 +183,8 @@ public class WinUIHexView : IGraphicalHexView
 
 	public ViewportBounds MapToVisualHex(SnapshotPoint point)
 	{
+		SnapshotMismatchException.ThrowIfMismatch(Snapshot, point.Snapshot);
+
 		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
 
 		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
@@ -198,6 +201,8 @@ public class WinUIHexView : IGraphicalHexView
 
 	public ViewportBounds MapToVisualAscii(SnapshotPoint point)
 	{
+		SnapshotMismatchException.ThrowIfMismatch(Snapshot, point.Snapshot);
+
 		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
 
 		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
@@ -224,6 +229,8 @@ public class WinUIHexView : IGraphicalHexView
 
 	public ImmutableArray<SnapshotSpan> GetRowSegments(SnapshotSpan span)
 	{
+		SnapshotMismatchException.ThrowIfMismatch(Snapshot, span.Snapshot);
+
 		using var builder = new PooledArrayBuilder<SnapshotSpan>();
 		var firstRow = this.GetContainingRow(span.Start);
 		if (firstRow.End >= span.End)
@@ -281,6 +288,8 @@ public class WinUIHexView : IGraphicalHexView
 
 	public Vector2[] MapToVisualHex(SnapshotSpan span)
 	{
+		SnapshotMismatchException.ThrowIfMismatch(Snapshot, span.Snapshot);
+
 		if (span.IsEmpty)
 		{
 			return [];
@@ -319,6 +328,8 @@ public class WinUIHexView : IGraphicalHexView
 
 	public Vector2[] MapToVisualAscii(SnapshotSpan span)
 	{
+		SnapshotMismatchException.ThrowIfMismatch(Snapshot, span.Snapshot);
+
 		if (span.IsEmpty)
 		{
 			return [];
@@ -357,6 +368,8 @@ public class WinUIHexView : IGraphicalHexView
 
 	public SnapshotSpan GetContainingRow(SnapshotPoint point)
 	{
+		SnapshotMismatchException.ThrowIfMismatch(Snapshot, point.Snapshot);
+
 		var rowIndex = point.Position / _theme.Columns;
 		var rowStart = rowIndex * _theme.Columns;
 		var rowEnd = Math.Min(rowStart + _theme.Columns, snapshot.Length);

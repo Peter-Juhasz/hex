@@ -15,16 +15,25 @@ public interface ICaret
 
 	void MoveTo(SnapshotPoint point);
 	void MoveTo(SnapshotPoint point, ActiveView activeView);
+
 	void MoveToPreviousByte();
 	void MoveToNextByte();
+
 	void MoveUpByRow();
 	void MoveDownByRow();
+
+	void MoveToPreviousColumnGroup();
+	void MoveToNextColumnGroup();
+
 	void MoveToHome();
 	void MoveToEnd();
+
 	void MoveToRowStart();
 	void MoveToRowEnd();
+
 	void MoveUpByPage();
 	void MoveDownByPage();
+
 	void MoveToPageTop();
 	void MoveToPageBottom();
 }

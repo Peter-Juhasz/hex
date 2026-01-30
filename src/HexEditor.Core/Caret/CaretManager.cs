@@ -11,7 +11,7 @@ public class CaretManager : ICaret
 	public CaretManager(IGraphicalHexView view)
 	{
 		_view = view;
-
+		_caretPosition = new(new SnapshotPoint(_view.Snapshot, 0));
 		_view.Selection.SelectionChanged += OnSelectionChanged;
 	}
 
@@ -90,6 +90,22 @@ public class CaretManager : ICaret
 		if (_caretPosition.Point.Position < _view.Snapshot.Length)
 		{
 			Set(new CaretPosition(_caretPosition.Point + 1));
+		}
+	}
+
+	public void MoveToPreviousColumnGroup()
+	{
+		if (_caretPosition.Point.Position > 0)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+	public void MoveToNextColumnGroup()
+	{
+		if (_caretPosition.Point.Position < _view.Snapshot.Length)
+		{
+			throw new NotImplementedException();
 		}
 	}
 

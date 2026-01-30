@@ -2,6 +2,7 @@ using HexEditor.Core.Caret;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Diagnostics;
 using HexEditor.Core.Hyperlinks;
+using HexEditor.Core.Model;
 using HexEditor.Core.QuickInfo;
 using HexEditor.Core.ReferenceHighlight;
 using HexEditor.Core.Scrolling;
@@ -113,28 +114,33 @@ public partial class EditorHost : ContentControl
 		);
 
 		var quickInfoTagAggregator = new LockingTagAggregator<QuickInfoTag>(
-			new LastCallCachingTagAggregator<QuickInfoTag>(
+			new LastCallWithEditorStateCachingTagAggregator<QuickInfoTag>(
 				new PostFilteringTagAggregator<QuickInfoTag>(
 					new ParallelTagAggregator<QuickInfoTag>(
 						taggerProvider.CreateTaggers<QuickInfoTag>(interestedContentTypes)
 							.AddRange(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes).Select(t => new UrlToQuickInfoAdapter(t)))
 							.AddRange(taggerProvider.CreateTaggers<DiagnosticTag>(interestedContentTypes).Select(t => new DiagnosticToQuickInfoAdapter(t)))
 					)
-				)
+				),
+				serviceProvider.GetRequiredService<IViewAccessor>()
 			)
 		);
 
 		var referenceTagAggregator = new LockingTagAggregator<ReferenceTag>(
-			new PostFilteringTagAggregator<ReferenceTag>(
-				new ParallelTagAggregator<ReferenceTag>(
-					taggerProvider.CreateTaggers<ReferenceTag>(interestedContentTypes)
-				)
+			new LastCallWithEditorStateCachingTagAggregator<ReferenceTag>(
+				new PostFilteringTagAggregator<ReferenceTag>(
+					new ParallelTagAggregator<ReferenceTag>(
+						taggerProvider.CreateTaggers<ReferenceTag>(interestedContentTypes)
+					)
+				),
+				serviceProvider.GetRequiredService<IViewAccessor>()
 			)
 		);
 
 		_view = new WinUIHexView(snapshot, _visualTheme, taggerProvider, contentTypeRegistry);
 		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
 		_view.Viewport.ScrollableHeightChanged += OnModelScrollableHeightChanged;
+		//_view.SnapshotManager.Changed += OnActiveSnapshotChanged;
 
 		_hexContentView = new HexContentView(_view, _visualTheme, quickInfoTagAggregator);
 		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentTypeRegistry);
@@ -337,6 +343,11 @@ public partial class EditorHost : ContentControl
 	{
 		var newHeight = e.NewSize.Height;
 		_view.Viewport.Resize(newHeight);
+		_queue.Enqueue(c => _view.InvalidateAsync(c));
+	}
+
+	private void OnActiveSnapshotChanged(object? sender, SnapshotChangedEventArgs e)
+	{
 		_queue.Enqueue(c => _view.InvalidateAsync(c));
 	}
 

@@ -12,13 +12,17 @@ public interface IGraphicalHexView
 {
 	IBinarySnapshot Snapshot { get; }
 
+	ISnapshotManager SnapshotManager { get; }
+
 	SnapshotSpan VisibleSpan { get; }
 
-	ImmutableArray <IHexViewRow> VisibleRows { get; }
+	ImmutableArray<IHexViewRow> VisibleRows { get; }
 
 	ISelection Selection { get; }
 
 	ICaret Caret { get; }
+
+	int Columns { get; }
 
 	IViewport Viewport { get; }
 

@@ -59,14 +59,24 @@ public class SelectionManager : ISelection
 		Select(GetAnchorPointOrCaret(), activePoint);
 	}
 
-	public void MoveActivePointLeft()
+	public void MoveActivePointToPreviousByte()
 	{
 		SelectTo(GetActivePointOrCaret() - 1);
 	}
 
-	public void MoveActivePointRight()
+	public void MoveActivePointToNextByte()
 	{
 		SelectTo(GetActivePointOrCaret() + 1);
+	}
+
+	public void MoveActivePointToPreviousColumnGroup()
+	{
+		throw new InvalidOperationException();
+	}
+
+	public void MoveActivePointToNextColumnGroup()
+	{
+		throw new InvalidOperationException();
 	}
 
 	public void MoveActivePointToHome()
@@ -117,6 +127,14 @@ public class SelectionManager : ISelection
 			var newPosition = Math.Min(nextRow.Start.Position + currentRelativeOffset, nextRow.End.Position);
 			SelectTo(new SnapshotPoint(_view.Snapshot, newPosition));
 		}
+	}
+
+	public void Replace(ReadOnlySpan<byte> data)
+	{
+		var sourceSpan = _selection?.Span ?? SnapshotSpan.Create(_view.Caret.Position.Point, 0);
+		var change = new BinaryChange(sourceSpan.Span, data.ToArray());
+		var edit = new BinaryEdit([change]);
+		_view.SnapshotManager.Apply(edit);
 	}
 
 	public void SelectAll()

@@ -8,19 +8,33 @@ public interface ISelection
 {
 	SelectionSpan? Span { get; }
 
+	bool IsEmpty => Span is null or { Span.IsEmpty: true };
+
 	event EventHandler<SelectionChangedEventArgs>? SelectionChanged;
 
 	void Select(SnapshotPoint anchorPoint, SnapshotPoint activePoint);
 	void Select(SnapshotSpan span, bool isReversed = false);
-	void MoveActivePointLeft();
-	void MoveActivePointRight();
+
+	void MoveActivePointToPreviousByte();
+	void MoveActivePointToNextByte();
+
 	void MoveActivePointUpByRow();
 	void MoveActivePointDownByRow();
+
 	void MoveActivePointToHome();
 	void MoveActivePointToEnd();
+
 	void MoveActivePointToRowStart();
 	void MoveActivePointToRowEnd();
-	void SelectAll();
-	void Clear();
+
+	void MoveActivePointToPreviousColumnGroup();
+	void MoveActivePointToNextColumnGroup();
+
 	void SelectTo(SnapshotPoint anchorPoint);
+
+	void SelectAll();
+
+	void Replace(ReadOnlySpan<byte> data);
+
+	void Clear();
 }

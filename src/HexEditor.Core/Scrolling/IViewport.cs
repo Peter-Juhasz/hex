@@ -20,8 +20,8 @@ public interface IViewport
 	void ScrollDownByPage();
 	void BringIntoView(SnapshotPoint point);
 
-	Vector2 MapToVisual(Vector2 point);
-	Vector2 MapToViewport(Vector2 point);
+	Vector2 TranslateFromViewportToVisual(Vector2 point);
+	Vector2 TranslateFromVisualToViewport(Vector2 point);
 	SnapshotSpan VisibleSpan { get; }
 
 	event EventHandler<ScrollVerticalOffsetChangedEventArgs>? VerticalOffsetChanged;

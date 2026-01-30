@@ -12,6 +12,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Numerics;
+using System.Text;
 using Windows.System;
 using Windows.UI.Core;
 
@@ -38,6 +39,7 @@ internal sealed class AsciiContentView : Canvas
 		this.PointerPressed += OnPointerPressed;
 		this.PointerMoved += OnPointerMoved;
 		this.PointerReleased += OnPointerReleased;
+		this.CharacterReceived += OnCharacterReceived;
 	}
 
 	private readonly Canvas _canvas;
@@ -216,12 +218,22 @@ internal sealed class AsciiContentView : Canvas
 					break;
 
 				case VirtualKey.Left when !isControlDown:
-					_view.Selection.MoveActivePointLeft();
+					_view.Selection.MoveActivePointToPreviousByte();
 					e.Handled = true;
 					break;
 
 				case VirtualKey.Right when !isControlDown:
-					_view.Selection.MoveActivePointRight();
+					_view.Selection.MoveActivePointToNextByte();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Left when isControlDown:
+					_view.Selection.MoveActivePointToPreviousColumnGroup();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Right when isControlDown:
+					_view.Selection.MoveActivePointToNextColumnGroup();
 					e.Handled = true;
 					break;
 
@@ -270,6 +282,16 @@ internal sealed class AsciiContentView : Canvas
 					e.Handled = true;
 					break;
 
+				case VirtualKey.Left when isControlDown:
+					_view.Caret.MoveToPreviousColumnGroup();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Right when isControlDown:
+					_view.Caret.MoveToNextColumnGroup();
+					e.Handled = true;
+					break;
+
 				case VirtualKey.Up when !isControlDown:
 					_view.Caret.MoveUpByRow();
 					e.Handled = true;
@@ -291,6 +313,14 @@ internal sealed class AsciiContentView : Canvas
 					break;
 			}
 		}
+	}
+
+	private void OnCharacterReceived(UIElement sender, CharacterReceivedRoutedEventArgs args)
+	{
+		var ch = args.Character;
+		ReadOnlySpan<byte> data = Char.IsAscii(ch) ?[(byte)ch] : Encoding.UTF8.GetBytes(ch.ToString());
+		_view.Selection.Replace(data);
+		args.Handled = true;
 	}
 	#endregion
 }

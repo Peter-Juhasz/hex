@@ -301,7 +301,7 @@ internal sealed class HexContentView : Canvas
 
 		_quickInfoFlyout.ShowAt(this, new FlyoutShowOptions()
 		{
-			Position = _view.Viewport.MapToViewport(new Vector2(minX, maxY)).ToPoint(),
+			Position = _view.Viewport.TranslateFromVisualToViewport(new Vector2(minX, maxY)).ToPoint(),
 			ShowMode = FlyoutShowMode.Transient,
 			Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft,
 		});
@@ -339,12 +339,22 @@ internal sealed class HexContentView : Canvas
 					break;
 
 				case VirtualKey.Left when !isControlDown:
-					_view.Selection.MoveActivePointLeft();
+					_view.Selection.MoveActivePointToPreviousByte();
 					e.Handled = true;
 					break;
 
 				case VirtualKey.Right when !isControlDown:
-					_view.Selection.MoveActivePointRight();
+					_view.Selection.MoveActivePointToNextByte();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Left when isControlDown:
+					_view.Selection.MoveActivePointToPreviousColumnGroup();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Right when isControlDown:
+					_view.Selection.MoveActivePointToNextColumnGroup();
 					e.Handled = true;
 					break;
 
@@ -390,6 +400,16 @@ internal sealed class HexContentView : Canvas
 
 				case VirtualKey.Right when !isControlDown:
 					_view.Caret.MoveToNextByte();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Left when isControlDown:
+					_view.Caret.MoveToPreviousColumnGroup();
+					e.Handled = true;
+					break;
+
+				case VirtualKey.Right when isControlDown:
+					_view.Caret.MoveToNextColumnGroup();
 					e.Handled = true;
 					break;
 

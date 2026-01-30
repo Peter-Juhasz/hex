@@ -78,12 +78,12 @@ internal sealed class ViewScroller : IViewport
 	}
 
 
-	public Vector2 MapToVisual(Vector2 point) => new(
+	public Vector2 TranslateFromViewportToVisual(Vector2 point) => new(
 		x: point.X,
 		y: (float)(point.Y + VerticalOffset)
 	);
 
-	public Vector2 MapToViewport(Vector2 point) => new(
+	public Vector2 TranslateFromVisualToViewport(Vector2 point) => new(
 		x: point.X,
 		y: (float)(point.Y - VerticalOffset)
 	);
