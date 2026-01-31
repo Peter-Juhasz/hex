@@ -15,6 +15,7 @@ using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ColumnHighlight;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
+using HexEditor.WinUI.RowHighlight;
 using HexEditor.WinUI.Scrolling;
 using HexEditor.WinUI.Selection;
 using HexEditor.WinUI.Squiggles;
@@ -148,6 +149,14 @@ public partial class EditorHost : ContentControl
 		_hexContentView = new HexContentView(_view, _visualTheme, quickInfoTagAggregator);
 		_outliningMargin = new OutliningMargin(_view, _visualTheme, taggerProvider, contentTypeRegistry);
 
+		if (_visualTheme.RowHighlight != null)
+		{
+			_rowHighlightLayer = new RowHighlightLayer(_view, _visualTheme);
+			Grid.SetColumn(_rowHighlightLayer, 0);
+			Grid.SetColumnSpan(_rowHighlightLayer, _grid.ColumnDefinitions.Count);
+			_grid.Children.Add(_rowHighlightLayer);
+		}
+
 		_hexOutliningHighlightLayer = new HexOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_hexOutliningHighlightLayer, 4);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
@@ -259,9 +268,11 @@ public partial class EditorHost : ContentControl
 
 	private readonly OutliningMargin _outliningMargin;
 
+	private readonly RowHighlightLayer? _rowHighlightLayer;
+
 	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
 	private readonly HexReferenceHighlightLayer _hexReferenceHighlightLayer;
-	private readonly HexColumnHighlightLayer _hexColumnHighlightLayer;
+	private readonly HexColumnHighlightLayer? _hexColumnHighlightLayer;
 	private readonly HexContentView _hexContentView;
 	private readonly HexSquigglesLayer _hexSquigglesLayer;
 	private readonly HexSelectionLayer _hexSelectionLayer;
@@ -269,7 +280,7 @@ public partial class EditorHost : ContentControl
 
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiReferenceHighlightLayer _asciiReferenceHighlightLayer;
-	private readonly AsciiColumnHighlightLayer _asciiColumnHighlightLayer;
+	private readonly AsciiColumnHighlightLayer? _asciiColumnHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
 	private readonly AsciiSquigglesLayer _asciiSquigglesLayer;
 	private readonly AsciiSelectionLayer _asciiSelectionLayer;

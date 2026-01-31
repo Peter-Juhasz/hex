@@ -15,7 +15,8 @@ public record class VisualTheme(
 	Brush? Foreground = null,
 	HexViewStyle? HexViewStyle = null,
 	AsciiViewStyle? AsciiViewStyle = null,
-	AddressMarginStyle? AddressMarginStyle = null
+	AddressMarginStyle? AddressMarginStyle = null,
+	RowHighlightStyle? RowHighlight = null
 )
 {
 	public static double FontSizeToWidth(double fontSize) => fontSize * (8.25d / 14d);
@@ -46,6 +47,13 @@ public record class AsciiViewStyle(
 );
 
 public record class ColumnHighlightStyle(
+	Brush? Background = null,
+	Brush? BorderBrush = null,
+	double? BorderThickness = null,
+	double? Opacity = null
+);
+
+public record class RowHighlightStyle(
 	Brush? Background = null,
 	Brush? BorderBrush = null,
 	double? BorderThickness = null,
