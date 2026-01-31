@@ -32,7 +32,8 @@ public record class HexViewStyle(
 	Brush? Background = null,
 	Brush? Foreground = null,
 	int? PrimaryGrouping = null,
-	int? SecondaryGrouping = null
+	int? SecondaryGrouping = null,
+	ColumnHighlightStyle? ColumnHighlight = null
 );
 
 public record class AsciiViewStyle(
@@ -40,5 +41,13 @@ public record class AsciiViewStyle(
 	Brush? Background = null,
 	Brush? Foreground = null,
 	int? PrimaryGrouping = null,
-	int? SecondaryGrouping = null
+	int? SecondaryGrouping = null,
+	ColumnHighlightStyle? ColumnHighlight = null
+);
+
+public record class ColumnHighlightStyle(
+	Brush? Background = null,
+	Brush? BorderBrush = null,
+	double? BorderThickness = null,
+	double? Opacity = null
 );

@@ -12,6 +12,7 @@ using HexEditor.Formats.Binary;
 using HexEditor.Model;
 using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.Caret;
+using HexEditor.WinUI.ColumnHighlight;
 using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Outlining;
 using HexEditor.WinUI.Scrolling;
@@ -35,6 +36,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Windows.System;
+using Windows.UI;
 using Windows.UI.Core;
 
 namespace HexEditor.WinUI;
@@ -150,6 +152,13 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_hexOutliningHighlightLayer, 4);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
 
+		if (_visualTheme.HexViewStyle?.ColumnHighlight != null)
+		{
+			_hexColumnHighlightLayer = new HexColumnHighlightLayer(_view, _visualTheme);
+			Grid.SetColumn(_hexColumnHighlightLayer, 4);
+			_grid.Children.Add(_hexColumnHighlightLayer);
+		}
+
 		_hexReferenceHighlightLayer = new HexReferenceHighlightLayer(_view, referenceTagAggregator, _visualTheme);
 		Grid.SetColumn(_hexReferenceHighlightLayer, 4);
 		_grid.Children.Add(_hexReferenceHighlightLayer);
@@ -172,6 +181,13 @@ public partial class EditorHost : ContentControl
 		_asciiOutliningHighlightLayer = new AsciiOutliningHighlightLayer(_view, _outliningMargin, _visualTheme);
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 5);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
+
+		if (_visualTheme.AsciiViewStyle?.ColumnHighlight != null)
+		{
+			_asciiColumnHighlightLayer = new AsciiColumnHighlightLayer(_view, _visualTheme);
+			Grid.SetColumn(_asciiColumnHighlightLayer, 5);
+			_grid.Children.Add(_asciiColumnHighlightLayer);
+		}
 
 		_asciiReferenceHighlightLayer = new AsciiReferenceHighlightLayer(_view, referenceTagAggregator, _visualTheme);
 		Grid.SetColumn(_asciiReferenceHighlightLayer, 5);
@@ -245,6 +261,7 @@ public partial class EditorHost : ContentControl
 
 	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
 	private readonly HexReferenceHighlightLayer _hexReferenceHighlightLayer;
+	private readonly HexColumnHighlightLayer _hexColumnHighlightLayer;
 	private readonly HexContentView _hexContentView;
 	private readonly HexSquigglesLayer _hexSquigglesLayer;
 	private readonly HexSelectionLayer _hexSelectionLayer;
@@ -252,6 +269,7 @@ public partial class EditorHost : ContentControl
 
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiReferenceHighlightLayer _asciiReferenceHighlightLayer;
+	private readonly AsciiColumnHighlightLayer _asciiColumnHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
 	private readonly AsciiSquigglesLayer _asciiSquigglesLayer;
 	private readonly AsciiSelectionLayer _asciiSelectionLayer;
