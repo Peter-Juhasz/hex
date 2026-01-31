@@ -1,7 +1,6 @@
 ﻿using HexEditor.Core.Structure;
 using HexEditor.Core.Syntax;
 using HexEditor.Core.Tagging;
-using HexEditor.Formats.Binary;
 using HexEditor.Model;
 using System.Collections.Immutable;
 
@@ -9,16 +8,10 @@ namespace HexEditor.Formats.Binary;
 
 public abstract class BinaryChunkStructureTagger(
 	IPartialSyntaxTreeProvider syntaxTreeProvider
-) : ITagger<StructureTag>
+) : AbstractSyntaxTreeTagger<StructureTag>(syntaxTreeProvider)
 {
-	public async Task<ImmutableArray<TagSpan<StructureTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	protected override ImmutableArray<TagSpan<StructureTag>> GetTags(IPartialSyntaxTree syntaxTree, SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
-		if (syntaxTree == null)
-		{
-			return [];
-		}
-
 		using var builder = new PooledArrayBuilder<TagSpan<StructureTag>>();
 		foreach (var child in syntaxTree.Root.DescendantsAndSelf<TypeLengthChunkSyntaxNode>())
 		{

@@ -68,14 +68,23 @@ public static partial class Extensions
 
 		// TODO: throw or not?
 
-		public bool Contains(SnapshotPoint point) =>
-			span.Snapshot == point.Snapshot && span.Span.Contains(point.Position);
+		public bool Contains(SnapshotPoint point)
+		{
+			SnapshotMismatchException.ThrowIfMismatch(span.Snapshot, point.Snapshot);
+			return span.Span.Contains(point.Position);
+		}
 
-		public bool Contains(SnapshotSpan other) =>
-			span.Snapshot == other.Snapshot && span.Span.Contains(other.Span);
+		public bool Contains(SnapshotSpan other)
+		{
+			SnapshotMismatchException.ThrowIfMismatch(span.Snapshot, other.Snapshot);
+			return span.Span.Contains(other.Span);
+		}
 
-		public bool OverlapsWith(SnapshotSpan other) =>
-			span.Snapshot == other.Snapshot && span.Span.OverlapsWith(other.Span);
+		public bool OverlapsWith(SnapshotSpan other)
+		{
+			SnapshotMismatchException.ThrowIfMismatch(span.Snapshot, other.Snapshot);
+			return span.Span.OverlapsWith(other.Span);
+		}
 
 		public long Length => span.Span.Length;
 

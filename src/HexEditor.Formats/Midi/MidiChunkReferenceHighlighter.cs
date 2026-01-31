@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace HexEditor.Formats.Midi;
 
 [ContentType(MidiContentTypeDefinition.Id)]
-public sealed class MidiReferenceHighlighter(
+public sealed class MidiChunkReferenceHighlighter(
 	[FromKeyedServices(MidiContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider,
 	IViewAccessor viewAccessor
 ) : BinaryChunkReferenceTagger(viewAccessor, syntaxTreeProvider)

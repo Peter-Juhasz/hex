@@ -53,16 +53,16 @@ internal class RowFormatter
 						}
 
 					case UrlTag:
-						if (context.Theme.HyperlinkStyle is not null)
+						if (context.Theme.Hyperlink is not null)
 						{
-							effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.HyperlinkStyle);
+							effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.Hyperlink);
 						}
 						break;
 
 					case UnnecessaryTag:
-						if (context.Theme.UnnecessaryStyle is not null)
+						if (context.Theme.Unnecessary is not null)
 						{
-							effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.UnnecessaryStyle);
+							effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.Unnecessary);
 						}
 						break;
 				}

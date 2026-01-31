@@ -10,17 +10,11 @@ namespace HexEditor.Formats.Binary;
 public abstract class BinaryChunkReferenceTagger(
 	IViewAccessor viewAccessor,
 	IPartialSyntaxTreeProvider syntaxTreeProvider
-) : ITagger<ReferenceTag>
+) : AbstractSyntaxTreeTagger<ReferenceTag>(syntaxTreeProvider)
 {
-	public async Task<ImmutableArray<TagSpan<ReferenceTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	protected override ImmutableArray<TagSpan<ReferenceTag>> GetTags(IPartialSyntaxTree syntaxTree, SnapshotSpan span, CancellationToken cancellationToken)
 	{
 		var caret = viewAccessor.View.Caret.Position.Point;
-
-		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
-		if (syntaxTree == null)
-		{
-			return [];
-		}
 
 		var node = syntaxTree.Root.DescendantsAndSelf<TypeLengthChunkSyntaxNode>().FirstOrDefault(n => n.TypeToken.Span.Contains(caret));
 		if (node == null)

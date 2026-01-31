@@ -12,30 +12,10 @@ namespace HexEditor.Formats.Midi;
 [ContentType(MidiContentTypeDefinition.Id)]
 public sealed class MidiDiagnostics(
 	[FromKeyedServices(MidiContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
-) : ITagger<DiagnosticTag>
+) : AbstractSyntaxTreeTagger<DiagnosticTag>(syntaxTreeProvider)
 {
-	private static readonly DiagnosticDescriptor UnknownChunkDiagnostic = new(
-		Id: "WAV001",
-		Title: "Unknown WAV Chunk",
-		MessageFormat: "The chunk type '{0}' is not recognized in a WAV file.",
-		Severity: DiagnosticSeverity.Warning
-	);
-
-	private static readonly DiagnosticDescriptor InvalidLengthDiagnostic = new(
-		Id: "WAV002",
-		Title: "Invalid WAV Chunk Length",
-		MessageFormat: "The chunk length specified is invalid.",
-		Severity: DiagnosticSeverity.Error
-	);
-
-	public async Task<ImmutableArray<TagSpan<DiagnosticTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	protected override ImmutableArray<TagSpan<DiagnosticTag>> GetTags(IPartialSyntaxTree syntaxTree, SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
-		if (syntaxTree == null)
-		{
-			return [];
-		}
-
 		if (syntaxTree.Root is not SyntaxNodeList list)
 		{
 			return [];
@@ -57,12 +37,12 @@ public sealed class MidiDiagnostics(
 			};
 			if (!isKnownChunk)
 			{
-				builder.Add(new TagSpan<DiagnosticTag>(chunkNode.TypeToken.Span, new DiagnosticTag(UnknownChunkDiagnostic)));
+				builder.Add(new TagSpan<DiagnosticTag>(chunkNode.TypeToken.Span, new DiagnosticTag(BinaryDiagnostics.UnknownChunkHeader)));
 			}
 
 			if (chunkNode.Span.Start.Position + 8 + chunkNode.LengthToken.Value != chunkNode.Span.End.Position)
 			{
-				builder.Add(new TagSpan<DiagnosticTag>(chunkNode.LengthToken.Span, new DiagnosticTag(InvalidLengthDiagnostic)));
+				builder.Add(new TagSpan<DiagnosticTag>(chunkNode.LengthToken.Span, new DiagnosticTag(BinaryDiagnostics.InvalidChunkLength)));
 			}
 		}
 		return builder.ToImmutableArray();

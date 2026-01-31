@@ -31,6 +31,9 @@
         "foreground": "#0000FF",
         "underline": true
     },
+    "unnecessary": {
+        "opacity": 0.5
+    },
     "squigglesMap": {
         "error": {
             "stroke": "#FF0000"

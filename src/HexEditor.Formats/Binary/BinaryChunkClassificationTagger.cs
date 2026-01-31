@@ -1,5 +1,4 @@
 ﻿using HexEditor.Core.Classification;
-using HexEditor.Core.Structure;
 using HexEditor.Core.Syntax;
 using HexEditor.Core.Tagging;
 using HexEditor.Model;
@@ -9,16 +8,11 @@ namespace HexEditor.Formats.Binary;
 
 public abstract class BinaryChunkClassificationTagger(
 	IPartialSyntaxTreeProvider syntaxTreeProvider
-) : ITagger<ClassificationTag>
+) 
+	: AbstractSyntaxTreeTagger<ClassificationTag>(syntaxTreeProvider)
 {
-	public async Task<ImmutableArray<TagSpan<ClassificationTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
+	protected override ImmutableArray<TagSpan<ClassificationTag>> GetTags(IPartialSyntaxTree syntaxTree, SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
-		if (syntaxTree == null)
-		{
-			return [];
-		}
-
 		using var builder = new PooledArrayBuilder<TagSpan<ClassificationTag>>();
 		foreach (var child in syntaxTree.Root.DescendantsAndSelf<TypeLengthChunkSyntaxNode>())
 		{

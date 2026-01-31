@@ -31,7 +31,7 @@ internal sealed class AsciiCaretLayer : Canvas
 
 		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
 		_view.Caret.ActiveViewChanged += OnCaretActiveViewChanged;
-		this.Visibility = _view.Caret.ActiveView == ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed;
+		this.Visibility = _view.Caret.ActiveView == ActiveView.Ascii ? Visibility.Visible : Visibility.Collapsed;
 	}
 
 	private readonly Canvas _canvas;

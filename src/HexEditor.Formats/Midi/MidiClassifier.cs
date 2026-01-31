@@ -8,6 +8,7 @@ namespace HexEditor.Formats.Midi;
 [ContentType(MidiContentTypeDefinition.Id)]
 public sealed class MidiClassifier(
 	[FromKeyedServices(MidiContentTypeDefinition.Id)] IPartialSyntaxTreeProvider syntaxTreeProvider
-) : BinaryChunkClassificationTagger(syntaxTreeProvider)
+)
+	: BinaryChunkClassificationTagger(syntaxTreeProvider)
 {
 }
