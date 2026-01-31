@@ -21,31 +21,35 @@ internal class BrushJsonConverter(ResourceDictionary? resources) : JsonConverter
 
 		if (resourceKey.StartsWith('#'))
 		{
-			if (resourceKey.Length == 4)
+			switch (resourceKey.Length)
 			{
-				Span<byte> bytes =
-				[
-					(byte)(FromHexCharacter(resourceKey[1]) * 16),
-					(byte)(FromHexCharacter(resourceKey[2]) * 16),
-					(byte)(FromHexCharacter(resourceKey[3]) * 16),
-				];
-				return new SolidColorBrush(Color.FromArgb(255, bytes[0], bytes[1], bytes[2]));
-			}
-			else if (resourceKey.Length == 7)
-			{
-				Span<byte> bytes = stackalloc byte[3];
-				Convert.FromHexString(resourceKey.AsSpan(1), bytes, out _, out _);
-				return new SolidColorBrush(Color.FromArgb(255, bytes[0], bytes[1], bytes[2]));
-			}
-			else if (resourceKey.Length == 9)
-			{
-				Span<byte> bytes = stackalloc byte[4];
-				Convert.FromHexString(resourceKey.AsSpan(1), bytes, out _, out _);
-				return new SolidColorBrush(Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]));
-			}
-			else
-			{
-				return null;
+				case 4:
+					{
+						Span<byte> bytes =
+						[
+							(byte)(FromHexCharacter(resourceKey[1]) * 16),
+							(byte)(FromHexCharacter(resourceKey[2]) * 16),
+							(byte)(FromHexCharacter(resourceKey[3]) * 16),
+						];
+						return new SolidColorBrush(Color.FromArgb(255, bytes[0], bytes[1], bytes[2]));
+					}
+
+				case 7:
+					{
+						Span<byte> bytes = stackalloc byte[3];
+						Convert.FromHexString(resourceKey.AsSpan(1), bytes, out _, out _);
+						return new SolidColorBrush(Color.FromArgb(255, bytes[0], bytes[1], bytes[2]));
+					}
+
+				case 9:
+					{
+						Span<byte> bytes = stackalloc byte[4];
+						Convert.FromHexString(resourceKey.AsSpan(1), bytes, out _, out _);
+						return new SolidColorBrush(Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]));
+					}
+
+				default:
+					return null;
 			}
 		}
 

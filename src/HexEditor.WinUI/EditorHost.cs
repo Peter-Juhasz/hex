@@ -487,6 +487,37 @@ internal static partial class Extensions
 		}
 	}
 
+	extension(TextBlock textBlock)
+	{
+		public void Apply(TextRunStyle style)
+		{
+			if (style.Foreground is not null)
+			{
+				textBlock.Foreground = style.Foreground;
+			}
+			if (style.FontWeight is not null)
+			{
+				textBlock.FontWeight = style.FontWeight.Value;
+			}
+			if (style.Opacity is not null)
+			{
+				textBlock.Opacity = style.Opacity.Value;
+			}
+			if (style.Underline)
+			{
+				textBlock.TextDecorations |= Windows.UI.Text.TextDecorations.Underline;
+			}
+			if (style.Strikethrough)
+			{
+				textBlock.TextDecorations |= Windows.UI.Text.TextDecorations.Strikethrough;
+			}
+			if (style.Italic)
+			{
+				textBlock.FontStyle = Windows.UI.Text.FontStyle.Italic;
+			}
+		}
+	}
+
 	extension(double)
 	{
 		public static bool AreApproximatelyEqual(double a, double b, double tolerance = double.Epsilon)

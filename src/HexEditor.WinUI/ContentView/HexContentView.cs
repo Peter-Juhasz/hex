@@ -38,7 +38,7 @@ internal sealed class HexContentView : Canvas
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
 		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(theme.Columns, theme.FontWidth, theme.HexView?.PrimaryGrouping ?? 0, theme.HexView?.SecondaryGrouping ?? 0);
-		this.Background = new SolidColorBrush(Colors.Transparent);
+		this.Background = theme.HexView?.Background ?? new SolidColorBrush(Colors.Transparent);
 		_canvas = this;
 
 		// render
@@ -136,26 +136,7 @@ internal sealed class HexContentView : Canvas
 							Canvas.SetLeft(rectangle, Math.Round(run.LeftPosition));
 							rowCanvas.Children.Add(rectangle);
 						}
-						if (style.Foreground is not null)
-						{
-							hexTextBlock.Foreground = style.Foreground;
-						}
-						if (style.FontWeight is not null)
-						{
-							hexTextBlock.FontWeight = style.FontWeight.Value;
-						}
-						if (style.Opacity is not null)
-						{
-							hexTextBlock.Opacity = style.Opacity.Value;
-						}
-						if (style.Underline)
-						{
-							hexTextBlock.TextDecorations |= Windows.UI.Text.TextDecorations.Underline;
-						}
-						if (style.Italic)
-						{
-							hexTextBlock.FontStyle = Windows.UI.Text.FontStyle.Italic;
-						}
+						hexTextBlock.Apply(style);
 					}
 					Canvas.SetLeft(hexTextBlock, Math.Round(run.LeftPosition));
 					rowCanvas.Children.Add(hexTextBlock);

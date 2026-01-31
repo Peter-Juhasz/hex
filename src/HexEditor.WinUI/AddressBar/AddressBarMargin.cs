@@ -26,7 +26,7 @@ internal sealed class AddressBarMargin : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
 		this.MinWidth = _theme.FontWidth * 8 + 8 * 2;
-		this.Background = new SolidColorBrush(Colors.Transparent);
+		this.Background = _theme.AddressMargin?.Background ?? new SolidColorBrush(Colors.Transparent);
 
 		_canvas = this;
 
@@ -37,8 +37,6 @@ internal sealed class AddressBarMargin : Canvas
 	private readonly Canvas _canvas;
 	private readonly VisualTheme _theme;
 
-	private readonly Brush _foregroundBrush = new SolidColorBrush(Color.FromArgb(255, 122, 122, 122));
-	private readonly Brush _caretForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IGraphicalHexView _view;
 
 	private TextBlock? _previouslyActiveTextBlock;
@@ -71,7 +69,6 @@ internal sealed class AddressBarMargin : Canvas
 					Text = row.Extent.Span.StartOffset.ToString("X8"),
 					FontFamily = _theme.FontFamily,
 					FontSize = _theme.FontSize,
-					Foreground = _foregroundBrush,
 					IsTextSelectionEnabled = false,
 					IsHitTestVisible = true,
 					TextWrapping = TextWrapping.NoWrap,
@@ -79,12 +76,20 @@ internal sealed class AddressBarMargin : Canvas
 					TextAlignment = TextAlignment.Right,
 					Tag = row.Extent.Span.StartOffset,
 				};
+				if (_theme.AddressMargin?.Text is { } style)
+				{
+					addressTextBlock.Apply(style);
+				}
 				Canvas.SetLeft(addressTextBlock, 8);
 				Canvas.SetTop(addressTextBlock, Math.Round(row.VisualBounds.Top));
 
 				if (row.Extent.Span.StartOffset == currentRow.Span.StartOffset)
 				{
-					addressTextBlock.Foreground = _caretForegroundBrush;
+					if (_theme.AddressMargin?.CurrentRow is { } currentRowStyle)
+					{
+						addressTextBlock.Apply(currentRowStyle);
+					}
+
 					_previouslyActiveTextBlock = addressTextBlock;
 				}
 
@@ -115,7 +120,10 @@ internal sealed class AddressBarMargin : Canvas
 				return;
 			}
 
-			_previouslyActiveTextBlock.Foreground = _foregroundBrush;
+			if (_theme.AddressMargin?.Text is { } style)
+			{
+				_previouslyActiveTextBlock.Apply(style);
+			}
 			_previouslyActiveTextBlock = null;
 		}
 
@@ -127,7 +135,10 @@ internal sealed class AddressBarMargin : Canvas
 					offset == row.Span.StartOffset
 				)
 				{
-					addressTextBlock.Foreground = _caretForegroundBrush;
+					if (_theme.AddressMargin?.CurrentRow is { } style)
+					{
+						addressTextBlock.Apply(style);
+					}
 					_previouslyActiveTextBlock = addressTextBlock;
 					break;
 				}

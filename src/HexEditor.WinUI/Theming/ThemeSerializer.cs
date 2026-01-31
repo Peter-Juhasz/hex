@@ -31,6 +31,7 @@ public class ThemeSerializer(string themesFolderPath)
 		{
 			Converters =
 			{
+				new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
 				new FontFamilyJsonConverter(),
 				new BrushJsonConverter(resources),
 			},

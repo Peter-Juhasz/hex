@@ -55,7 +55,7 @@ internal sealed class HexSelectionLayer : Canvas
 				},
 				IsHitTestVisible = false,
 			};
-			if ((_theme.HexView?.SelectionHighlight ?? _theme.SelectionHighlight) is { } style)
+			if ((_theme.HexView?.Selection ?? _theme.Selection) is { } style)
 			{
 				_selectionPath.Apply(style);
 			}

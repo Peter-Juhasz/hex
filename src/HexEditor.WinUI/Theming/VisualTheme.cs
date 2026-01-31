@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml.Controls;
+﻿using HexEditor.Core.Diagnostics;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System.Collections.Generic;
 
@@ -11,6 +12,7 @@ public record class VisualTheme(
 	double FontWidth = 8.25d,
 	double RowHeight = 20,
 	IReadOnlyDictionary<string, TextRunStyle>? ClassificationMap = null,
+	IReadOnlyDictionary<DiagnosticSeverity, PathStyle>? SquigglesMap = null,
 	TextRunStyle? HyperlinkStyle = null,
 	Brush? Background = null,
 	Brush? Foreground = null,
@@ -18,10 +20,11 @@ public record class VisualTheme(
 	AsciiViewStyle? AsciiView = null,
 	AddressMarginStyle? AddressMargin = null,
 	ShapeStyle? RowHighlight = null,
-	ShapeStyle? SelectionHighlight = null,
+	ShapeStyle? Selection = null,
 	ShapeStyle? ColumnHighlight = null,
 	ShapeStyle? ReferenceHighlight = null,
-	ShapeStyle? OutliningRegionHighlight = null
+	ShapeStyle? OutliningRegionHighlight = null,
+	PathStyle? Caret = null
 )
 {
 	public static double FontSizeToWidth(FontFamily fontFamily, double fontSize)
@@ -33,7 +36,7 @@ public record class VisualTheme(
 			FontSize = fontSize,
 		};
 		tb.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
-		double charWidth = tb.DesiredSize.Width / 10;
+		double charWidth = tb.DesiredSize.Width / 10d;
 		return charWidth;
 	}
 }
@@ -41,7 +44,8 @@ public record class VisualTheme(
 public record class AddressMarginStyle(
 	FontFamily? FontFamily = null,
 	Brush? Background = null,
-	Brush? Foreground = null
+	TextRunStyle? Text = null,
+	TextRunStyle? CurrentRow = null
 );
 
 public record class HexViewStyle(
@@ -50,10 +54,11 @@ public record class HexViewStyle(
 	Brush? Foreground = null,
 	int? PrimaryGrouping = null,
 	int? SecondaryGrouping = null,
-	ShapeStyle? SelectionHighlight = null,
+	ShapeStyle? Selection = null,
 	ShapeStyle? ColumnHighlight = null,
 	ShapeStyle? ReferenceHighlight = null,
-	ShapeStyle? OutliningRegionHighlight = null
+	ShapeStyle? OutliningRegionHighlight = null,
+	PathStyle? Caret = null
 );
 
 public record class AsciiViewStyle(
@@ -62,10 +67,11 @@ public record class AsciiViewStyle(
 	Brush? Foreground = null,
 	int? PrimaryGrouping = null,
 	int? SecondaryGrouping = null,
-	ShapeStyle? SelectionHighlight = null,
+	ShapeStyle? Selection = null,
 	ShapeStyle? ColumnHighlight = null,
 	ShapeStyle? ReferenceHighlight = null,
-	ShapeStyle? OutliningRegionHighlight = null
+	ShapeStyle? OutliningRegionHighlight = null,
+	PathStyle? Caret = null
 );
 
 public record class ShapeStyle(
@@ -73,4 +79,9 @@ public record class ShapeStyle(
 	Brush? Stroke = null,
 	double? StrokeThickness = null,
 	double? Opacity = null
+);
+
+public record class PathStyle(
+	Brush? Stroke = null,
+	double? StrokeThickness = null
 );

@@ -2,14 +2,11 @@
 using HexEditor.Core.Tagging;
 using HexEditor.Core.ViewModel;
 using HexEditor.Model;
-using HexEditor.WinUI.ContentView;
 using HexEditor.WinUI.Theming;
-using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
@@ -39,9 +36,6 @@ internal sealed class HexSquigglesLayer : Canvas
 
 	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
-	private readonly Brush _errorBrush = new SolidColorBrush(Colors.Red);
-	private readonly Brush _warningBrush = new SolidColorBrush(Colors.Green);
-	private readonly Brush _infoBrush = new SolidColorBrush(Colors.Blue);
 
 	private readonly BackgroundTaskQueue _queue = new(default);
 	private readonly ITagAggregator<DiagnosticTag> _diagnosticTagAggregator;
@@ -122,13 +116,7 @@ internal sealed class HexSquigglesLayer : Canvas
 		}
 
 		var diagnosticTag = tagSpan.Tag;
-		var brush = diagnosticTag.Descriptor.Severity switch
-		{
-			DiagnosticSeverity.Error => _errorBrush,
-			DiagnosticSeverity.Warning => _warningBrush,
-			DiagnosticSeverity.Information => _infoBrush,
-			_ => _errorBrush,
-		};
+		var style = _theme.SquigglesMap?.GetValueOrDefault(diagnosticTag.Descriptor.Severity);
 
 		var row = _view.GetContainingRow(segment.Start);
 		var startColumn = segment.Start - row.Start;
@@ -150,11 +138,11 @@ internal sealed class HexSquigglesLayer : Canvas
 			Data = SquiggleUnderline.BuildGeometry(
 				width: width,
 				height: 3d,
-				strokeThickness: 1d,
+				strokeThickness: style?.StrokeThickness ?? 1d,
 				wavelength: 6d
 			),
-			Stroke = brush,
-			StrokeThickness = 1,
+			Stroke = style?.Stroke,
+			StrokeThickness = style?.StrokeThickness ?? 1d,
 			IsHitTestVisible = false,
 			UseLayoutRounding = true,
 			Tag = new RenderTag(tagSpan, segment),

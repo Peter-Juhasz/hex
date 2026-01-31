@@ -1,7 +1,7 @@
 ﻿using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
 
-namespace HexEditor.WinUI.ContentView;
+namespace HexEditor.WinUI.Squiggles;
 
 internal static class SquiggleUnderline
 {

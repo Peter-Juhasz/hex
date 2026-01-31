@@ -39,13 +39,11 @@ internal sealed class AsciiCaretLayer : Canvas
 	private readonly VisualTheme _theme;
 	private readonly Line _caret;
 	private ScalarKeyFrameAnimation? _caretAnimation;
-	private readonly Brush _caretStroke = new SolidColorBrush(Colors.Black);
 
 	private Line CreateCaret()
 	{
 		var caret = new Line()
 		{
-			Stroke = _caretStroke,
 			StrokeThickness = 1,
 			IsHitTestVisible = false,
 			X1 = 0,
@@ -53,6 +51,12 @@ internal sealed class AsciiCaretLayer : Canvas
 			X2 = 0,
 			Y2 = _theme.RowHeight,
 		};
+
+		if ((_theme.AsciiView?.Caret ?? _theme.Caret) is { } style)
+		{
+			caret.Stroke = style.Stroke;
+			caret.StrokeThickness = style.StrokeThickness ?? 1d;
+		}
 
 		var compositor = CompositionTarget.GetCompositorForCurrentThread();
 		var animation = compositor.CreateScalarKeyFrameAnimation();

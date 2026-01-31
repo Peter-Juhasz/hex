@@ -55,7 +55,7 @@ internal sealed class AsciiSelectionLayer : Canvas
 				},
 				IsHitTestVisible = false,
 			};
-			if ((_theme.AsciiView?.SelectionHighlight ?? _theme.SelectionHighlight) is { } style)
+			if ((_theme.AsciiView?.Selection ?? _theme.Selection) is { } style)
 			{
 				_selectionPath.Apply(style);
 			}
