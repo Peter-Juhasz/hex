@@ -28,6 +28,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -270,7 +271,7 @@ public partial class EditorHost : ContentControl
 		FontFamily: new FontFamily("Cascadia Mono"),
 		FontSize: 16,
 		FontWidth: VisualTheme.FontSizeToWidth(16),
-		RowHeight: 24,
+		RowHeight: 20,
 		ClassificationStyleMap: new Dictionary<string, WinUITextRunStyle>()
 		{
 			[AsciiClassifier.NonPrintableTag.Type] = new WinUITextRunStyle(
@@ -279,7 +280,7 @@ public partial class EditorHost : ContentControl
 			["keyword"] = new WinUITextRunStyle(
 				Foreground: new SolidColorBrush(Colors.Blue)
 			),
-		},
+		}.ToFrozenDictionary(),
 		HyperlinkStyle: new WinUITextRunStyle(
 			Foreground: new SolidColorBrush(Colors.Blue),
 			IsUnderline: true

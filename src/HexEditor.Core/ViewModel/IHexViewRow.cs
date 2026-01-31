@@ -165,7 +165,7 @@ public interface IHexViewRow
 
 	static double GetTotalVisualWidthOfAsciiRow(int columns, double fontWidth, int primaryGrouping, int secondaryGrouping)
 	{
-		var end = GetTotalCharactersInAsciiRow(columns - 1, primaryGrouping, secondaryGrouping);
+		var end = GetEndIndexOfAsciiColumnInCharacters(columns - 1, primaryGrouping, secondaryGrouping);
 		return fontWidth * end;
 	}
 
