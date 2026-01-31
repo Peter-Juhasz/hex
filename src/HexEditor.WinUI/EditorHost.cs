@@ -8,7 +8,6 @@ using HexEditor.Core.ReferenceHighlight;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.Tagging;
 using HexEditor.Core.ViewModel;
-using HexEditor.Formats.Binary;
 using HexEditor.Model;
 using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.Caret;
@@ -29,15 +28,13 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Windows.System;
-using Windows.UI;
 using Windows.UI.Core;
 
 namespace HexEditor.WinUI;
@@ -48,7 +45,8 @@ public partial class EditorHost : ContentControl
 		IServiceProvider serviceProvider,
 		IBinarySnapshot snapshot,
 		ITaggerProvider taggerProvider,
-		IContentTypeRegistry contentTypeRegistry
+		IContentTypeRegistry contentTypeRegistry,
+		VisualTheme theme
 	)
 	{
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -56,6 +54,7 @@ public partial class EditorHost : ContentControl
 		this.HorizontalContentAlignment = HorizontalAlignment.Stretch;
 		this.VerticalContentAlignment = VerticalAlignment.Stretch;
 		this.IsTabStop = true;
+		_visualTheme = theme;
 
 		_outerGrid = new Grid()
 		{
@@ -76,7 +75,7 @@ public partial class EditorHost : ContentControl
 			RequestedTheme = ElementTheme.Light,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			VerticalAlignment = VerticalAlignment.Top,
-			Background = new SolidColorBrush(Colors.White),
+			Background = _visualTheme.Background,
 		};
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
 		{
@@ -161,7 +160,7 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_hexOutliningHighlightLayer, 4);
 		_grid.Children.Add(_hexOutliningHighlightLayer);
 
-		if (_visualTheme.HexViewStyle?.ColumnHighlight != null)
+		if (_visualTheme.HexView?.ColumnHighlight != null)
 		{
 			_hexColumnHighlightLayer = new HexColumnHighlightLayer(_view, _visualTheme);
 			Grid.SetColumn(_hexColumnHighlightLayer, 4);
@@ -191,7 +190,7 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_asciiOutliningHighlightLayer, 5);
 		_grid.Children.Add(_asciiOutliningHighlightLayer);
 
-		if (_visualTheme.AsciiViewStyle?.ColumnHighlight != null)
+		if (_visualTheme.AsciiView?.ColumnHighlight != null)
 		{
 			_asciiColumnHighlightLayer = new AsciiColumnHighlightLayer(_view, _visualTheme);
 			Grid.SetColumn(_asciiColumnHighlightLayer, 5);
@@ -295,29 +294,7 @@ public partial class EditorHost : ContentControl
 	public IGraphicalHexView View => _view;
 
 
-	private VisualTheme _visualTheme = new(
-		Columns: 16,
-		FontFamily: new FontFamily("Cascadia Mono"),
-		FontSize: 16,
-		FontWidth: VisualTheme.FontSizeToWidth(16),
-		RowHeight: 20,
-		ClassificationStyleMap: new Dictionary<string, WinUITextRunStyle>()
-		{
-			[AsciiClassifier.NonPrintableTag.Type] = new WinUITextRunStyle(
-				Opacity: 0.5
-			),
-			["keyword"] = new WinUITextRunStyle(
-				Foreground: new SolidColorBrush(Colors.Blue)
-			),
-		}.ToFrozenDictionary(),
-		HyperlinkStyle: new WinUITextRunStyle(
-			Foreground: new SolidColorBrush(Colors.Blue),
-			IsUnderline: true
-		),
-		HexViewStyle: new(
-			PrimaryGrouping: 4
-		)
-	);
+	private VisualTheme _visualTheme;
 
 	[MemberNotNull(nameof(_caretPositionTextBlock))]
 	[MemberNotNull(nameof(_contentTypeTextBlock))]
@@ -487,6 +464,26 @@ internal static partial class Extensions
 
 			figure.StartPoint = points[0].ToPoint();
 			figure.Segments = segments;
+		}
+	}
+
+	extension(Shape path)
+	{
+		public void Apply(ShapeStyle style)
+		{
+			if (style.Fill != null)
+			{
+				path.Fill = style.Fill;
+			}
+			if (style.StrokeThickness > 0)
+			{
+				path.Stroke = style.Stroke;
+				path.StrokeThickness = style.StrokeThickness.Value;
+			}
+			if (style.Opacity != null)
+			{
+				path.Opacity = style.Opacity.Value;
+			}
 		}
 	}
 

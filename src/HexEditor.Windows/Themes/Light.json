@@ -1,0 +1,28 @@
+{
+    "fontFamily": "Cascadia Mono",
+    "columns": 16,
+    "fontSize": 16,
+    "rowHeight": 20,
+    "foreground": "#000",
+    "background": "#FFFFFF",
+    "selectionHighlight": {
+        "fill": "#99C9EF"
+    },
+    "outliningRegionHighlight": {
+        "fill": "#EBEEF4"
+    },
+    "hexView": {
+        "primaryGrouping": 4
+    },
+    "asciiView": {
+    },
+    "hyperlink": {
+        "foreground": "#0000FF",
+        "underline": true
+    },
+    "classificationMap": {
+        "keyword": {
+            "foreground": "#0000FF"
+        }
+    }
+}

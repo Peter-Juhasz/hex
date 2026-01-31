@@ -138,8 +138,8 @@ internal sealed class HexSquigglesLayer : Canvas
 			endColumn++;
 		}
 
-		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.HexViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
 		var x1 = IHexViewRow.GetVisualLeftOfHexColumn((int)startColumn, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 		var x2 = IHexViewRow.GetVisualRightOfHexColumn((int)endColumn - 1, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 		var width = x2 - x1;

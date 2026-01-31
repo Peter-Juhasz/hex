@@ -39,19 +39,14 @@ internal sealed class RowHighlightLayer : Canvas
 
 		if (_rowHighlight == null)
 		{
-			var style = _theme.RowHighlight!;
-
 			_rowHighlight = new Rectangle()
 			{
-				Fill = style.Background,
 				IsHitTestVisible = false,
-				Opacity = style.Opacity ?? 1.0,
 			};
 
-			if (style.BorderBrush != null && (style.BorderThickness ?? 0) > 0)
+			if (_theme.RowHighlight is { } style)
 			{
-				_rowHighlight.Stroke = style.BorderBrush;
-				_rowHighlight.StrokeThickness = style.BorderThickness ?? 0;
+				_rowHighlight.Apply(style);
 			}
 
 			this.Children.Add(_rowHighlight);

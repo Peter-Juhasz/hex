@@ -23,6 +23,7 @@ internal sealed class AsciiCaretLayer : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.MinWidth = theme.Columns * theme.FontWidth;
+		this.IsHitTestVisible = false;
 
 		_canvas = this;
 		_caret = CreateCaret();

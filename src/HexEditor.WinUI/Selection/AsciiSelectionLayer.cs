@@ -20,6 +20,7 @@ internal sealed class AsciiSelectionLayer : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.MinWidth = theme.Columns * theme.FontWidth;
+		this.IsHitTestVisible = false;
 
 		_canvas = this;
 
@@ -31,7 +32,6 @@ internal sealed class AsciiSelectionLayer : Canvas
 	private readonly VisualTheme _theme;
 
 	private Path? _selectionPath;
-	private readonly Brush _selectionBackground = new SolidColorBrush(Color.FromArgb(255, 153, 201, 239));
 
 	private void OnSelectionChanged(object? sender, Core.Selection.SelectionChangedEventArgs e)
 	{
@@ -53,9 +53,12 @@ internal sealed class AsciiSelectionLayer : Canvas
 						IsClosed = true,
 					}],
 				},
-				Fill = _selectionBackground,
 				IsHitTestVisible = false,
 			};
+			if ((_theme.AsciiView?.SelectionHighlight ?? _theme.SelectionHighlight) is { } style)
+			{
+				_selectionPath.Apply(style);
+			}
 			Canvas.SetZIndex(_selectionPath, -1);
 			_canvas.Children.Add(_selectionPath);
 		}

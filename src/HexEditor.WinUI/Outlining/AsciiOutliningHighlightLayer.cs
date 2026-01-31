@@ -21,6 +21,7 @@ internal sealed class AsciiOutliningHighlightLayer : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.MinWidth = theme.Columns * theme.FontWidth;
+		this.IsHitTestVisible = false;
 
 		_canvas = this;
 
@@ -33,7 +34,6 @@ internal sealed class AsciiOutliningHighlightLayer : Canvas
 
 	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
-	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
 
 	private Path? _regionPath;
 
@@ -51,9 +51,13 @@ internal sealed class AsciiOutliningHighlightLayer : Canvas
 						IsClosed = true,
 					}],
 				},
-				Fill = _pointerOverBrush,
 				IsHitTestVisible = false,
 			};
+			if ((_theme.AsciiView?.OutliningRegionHighlight ?? _theme.OutliningRegionHighlight) is { } style)
+			{
+				_regionPath.Apply(style);
+			}
+
 			Canvas.SetZIndex(_regionPath, -1);
 			_canvas.Children.Add(_regionPath);
 		}

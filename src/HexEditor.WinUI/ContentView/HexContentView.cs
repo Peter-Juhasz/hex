@@ -37,7 +37,7 @@ internal sealed class HexContentView : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
-		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(theme.Columns, theme.FontWidth, theme.HexViewStyle?.PrimaryGrouping ?? 0, theme.HexViewStyle?.SecondaryGrouping ?? 0);
+		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(theme.Columns, theme.FontWidth, theme.HexView?.PrimaryGrouping ?? 0, theme.HexView?.SecondaryGrouping ?? 0);
 		this.Background = new SolidColorBrush(Colors.Transparent);
 		_canvas = this;
 
@@ -59,7 +59,6 @@ internal sealed class HexContentView : Canvas
 
 	private readonly Canvas _canvas;
 
-	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
 
@@ -110,7 +109,7 @@ internal sealed class HexContentView : Canvas
 						Text = run.Text,
 						FontFamily = _theme.FontFamily,
 						FontSize = _theme.FontSize,
-						Foreground = _editorForegroundBrush,
+						Foreground = _theme.HexView?.Foreground ?? _theme.Foreground,
 						IsTextSelectionEnabled = false,
 						IsHitTestVisible = false,
 						TextWrapping = TextWrapping.NoWrap,
@@ -118,7 +117,7 @@ internal sealed class HexContentView : Canvas
 						TextAlignment = TextAlignment.Left,
 						Tag = run,
 					};
-					if (run.Style is WinUITextRunStyle style)
+					if (run.Style is TextRunStyle style)
 					{
 						if (style.Background is not null)
 						{
@@ -149,11 +148,11 @@ internal sealed class HexContentView : Canvas
 						{
 							hexTextBlock.Opacity = style.Opacity.Value;
 						}
-						if (style.IsUnderline)
+						if (style.Underline)
 						{
 							hexTextBlock.TextDecorations |= Windows.UI.Text.TextDecorations.Underline;
 						}
-						if (style.IsItalic)
+						if (style.Italic)
 						{
 							hexTextBlock.FontStyle = Windows.UI.Text.FontStyle.Italic;
 						}

@@ -7,6 +7,7 @@ using HexEditor.Core.ViewModel;
 using HexEditor.Formats;
 using HexEditor.Model;
 using HexEditor.WinUI;
+using HexEditor.WinUI.Theming;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -36,8 +37,8 @@ public sealed partial class MainWindow : Window
 
 	private async void MainGrid_Loaded(object sender, RoutedEventArgs e)
 	{
-		foreach (var testFile in new string[] 
-		{ 
+		foreach (var testFile in new string[]
+		{
 			@"E:\rock2.mid",
 		})
 		{
@@ -85,8 +86,13 @@ public sealed partial class MainWindow : Window
 			)
 		);
 
+		// get theme
+		var assemblyPath = Path.GetDirectoryName(typeof(MainWindow).Assembly.Location)!;
+		var themeSerializer = new ThemeSerializer(Path.Combine(assemblyPath, "Themes"));
+		var theme = await themeSerializer.DeserializeAsync("Light", default);
+
 		// create editor
-		var editorHost = new WinUI.EditorHost(serviceProvider, snapshot, taggerProvider, contentTypeRegistry);
+		var editorHost = new EditorHost(serviceProvider, snapshot, taggerProvider, contentTypeRegistry, theme);
 		Grid.SetRow(editorHost, 2);
 		MainGrid.Children.Add(editorHost);
 		_editor = editorHost;

@@ -19,6 +19,7 @@ internal sealed class HexColumnHighlightLayer : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.MinWidth = (theme.Columns * 2) * theme.FontWidth;
+		this.IsHitTestVisible = false;
 
 		_canvas = this;
 
@@ -39,27 +40,22 @@ internal sealed class HexColumnHighlightLayer : Canvas
 	private void Invalidate(CaretPosition position)
 	{
 		var columnIndex = position.Point.Position % _theme.Columns;
-		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.HexViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
 
 		var columnLeft = IHexViewRow.GetVisualLeftOfHexColumn((int)columnIndex, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 		var columnWidth = _theme.FontWidth * 2;
 
 		if (_columnHighlight == null)
 		{
-			var style = _theme.HexViewStyle?.ColumnHighlight!;
-
 			_columnHighlight = new Rectangle()
 			{
-				Fill = style.Background,
 				IsHitTestVisible = false,
-				Opacity = style.Opacity ?? 1.0,
 			};
 
-			if (style.BorderBrush != null && (style.BorderThickness ?? 0) > 0)
+			if ((_theme.HexView?.ColumnHighlight ?? _theme.ColumnHighlight) is { } style)
 			{
-				_columnHighlight.Stroke = style.BorderBrush;
-				_columnHighlight.StrokeThickness = style.BorderThickness ?? 0;
+				_columnHighlight.Apply(style);
 			}
 
 			_canvas.Children.Add(_columnHighlight);

@@ -139,8 +139,8 @@ internal sealed class AsciiSquigglesLayer : Canvas
 			endColumn++;
 		}
 
-		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.AsciiView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.AsciiView?.SecondaryGrouping ?? 0;
 		var x1 = IHexViewRow.GetVisualLeftOfAsciiColumn((int)startColumn, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 		var x2 = IHexViewRow.GetVisualRightOfAsciiColumn((int)endColumn - 1, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 		var width = x2 - x1;

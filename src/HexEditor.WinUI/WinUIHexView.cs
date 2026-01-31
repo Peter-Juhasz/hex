@@ -187,8 +187,8 @@ public class WinUIHexView : IGraphicalHexView
 
 		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
 
-		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.HexViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
 		var x = IHexViewRow.GetVisualLeftOfHexColumn((int)columnIndex, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return new ViewportBounds(
@@ -205,8 +205,8 @@ public class WinUIHexView : IGraphicalHexView
 
 		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
 
-		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.AsciiView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.AsciiView?.SecondaryGrouping ?? 0;
 		var x = IHexViewRow.GetVisualLeftOfAsciiColumn((int)columnIndex, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return new ViewportBounds(
@@ -260,8 +260,8 @@ public class WinUIHexView : IGraphicalHexView
 	{
 		var rowIndex = MapRowIndexFromVerticalOffset(point.Y);
 
-		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.HexViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
 		var columnIndex = IHexViewRow.GetColumnIndexFromHexPosition(point.X, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
@@ -271,8 +271,8 @@ public class WinUIHexView : IGraphicalHexView
 	{
 		var rowIndex = MapRowIndexFromVerticalOffset(point.Y);
 
-		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.AsciiView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.AsciiView?.SecondaryGrouping ?? 0;
 		var columnIndex = IHexViewRow.GetColumnIndexFromAsciiPosition(point.X, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
@@ -309,8 +309,8 @@ public class WinUIHexView : IGraphicalHexView
 			];
 		}
 
-		var primaryGrouping = _theme.HexViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.HexViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
 		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return
@@ -349,8 +349,8 @@ public class WinUIHexView : IGraphicalHexView
 			];
 		}
 
-		var primaryGrouping = _theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
-		var secondaryGrouping = _theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
+		var primaryGrouping = _theme.AsciiView?.PrimaryGrouping ?? 0;
+		var secondaryGrouping = _theme.AsciiView?.SecondaryGrouping ?? 0;
 		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return

@@ -27,7 +27,7 @@ internal sealed class AsciiContentView : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
-		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(theme.Columns, theme.FontWidth, theme.AsciiViewStyle?.PrimaryGrouping ?? 0, theme.AsciiViewStyle?.SecondaryGrouping ?? 0);
+		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(theme.Columns, theme.FontWidth, theme.AsciiView?.PrimaryGrouping ?? 0, theme.AsciiView?.SecondaryGrouping ?? 0);
 		this.Background = new SolidColorBrush(Colors.Transparent);
 
 		_canvas = this;
@@ -44,7 +44,6 @@ internal sealed class AsciiContentView : Canvas
 
 	private readonly Canvas _canvas;
 
-	private readonly Brush _editorForegroundBrush = new SolidColorBrush(Colors.Black);
 	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
 
@@ -86,7 +85,7 @@ internal sealed class AsciiContentView : Canvas
 						Text = run.Text,
 						FontFamily = _theme.FontFamily,
 						FontSize = _theme.FontSize,
-						Foreground = _editorForegroundBrush,
+						Foreground = _theme.AsciiView?.Foreground ?? _theme.Foreground,
 						IsTextSelectionEnabled = false,
 						IsHitTestVisible = false,
 						TextWrapping = TextWrapping.NoWrap,
@@ -94,7 +93,7 @@ internal sealed class AsciiContentView : Canvas
 						TextAlignment = TextAlignment.Left,
 						Tag = run,
 					};
-					if (run.Style is WinUITextRunStyle style)
+					if (run.Style is TextRunStyle style)
 					{
 						if (style.Background is not null)
 						{
@@ -125,11 +124,11 @@ internal sealed class AsciiContentView : Canvas
 						{
 							hexTextBlock.Opacity = style.Opacity.Value;
 						}
-						if (style.IsUnderline)
+						if (style.Underline)
 						{
 							hexTextBlock.TextDecorations |= Windows.UI.Text.TextDecorations.Underline;
 						}
-						if (style.IsItalic)
+						if (style.Italic)
 						{
 							hexTextBlock.FontStyle = Windows.UI.Text.FontStyle.Italic;
 						}

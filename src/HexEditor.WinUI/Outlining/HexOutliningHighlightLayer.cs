@@ -6,7 +6,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using System;
-using Windows.UI;
 
 namespace HexEditor.WinUI.Outlining;
 
@@ -18,6 +17,7 @@ internal sealed class HexOutliningHighlightLayer : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.MinWidth = (theme.Columns * 2) * theme.FontWidth;
+		this.IsHitTestVisible = false;
 
 		_canvas = this;
 
@@ -33,7 +33,6 @@ internal sealed class HexOutliningHighlightLayer : Canvas
 
 	private readonly IGraphicalHexView _view;
 	private readonly VisualTheme _theme;
-	private readonly Brush _pointerOverBrush = new SolidColorBrush(Color.FromArgb(255, 235, 238, 244));
 
 	private Path? _regionPath;
 
@@ -51,11 +50,14 @@ internal sealed class HexOutliningHighlightLayer : Canvas
 						IsClosed = true,
 					}],
 				},
-				Fill = _pointerOverBrush,
 				IsHitTestVisible = false,
 			};
 			Canvas.SetZIndex(_regionPath, -1);
 			_canvas.Children.Add(_regionPath);
+		}
+		if ((_theme.HexView?.OutliningRegionHighlight ?? _theme.OutliningRegionHighlight) is { } style)
+		{
+			_regionPath.Apply(style);
 		}
 
 		var points = _view.MapToVisualHex(e.Span.Span);

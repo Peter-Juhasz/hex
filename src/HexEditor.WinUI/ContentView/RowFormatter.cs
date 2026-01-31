@@ -24,10 +24,10 @@ internal class RowFormatter
 		using var hexRuns = new PooledArrayBuilder<FormattedTextRun>();
 		using var asciiRuns = new PooledArrayBuilder<FormattedTextRun>();
 
-		var hexPrimaryGrouping = context.Theme.HexViewStyle?.PrimaryGrouping ?? 0;
-		var hexSecondaryGrouping = context.Theme.HexViewStyle?.SecondaryGrouping ?? 0;
-		var asciiPrimaryGrouping = context.Theme.AsciiViewStyle?.PrimaryGrouping ?? 0;
-		var asciiSecondaryGrouping = context.Theme.AsciiViewStyle?.SecondaryGrouping ?? 0;
+		var hexPrimaryGrouping = context.Theme.HexView?.PrimaryGrouping ?? 0;
+		var hexSecondaryGrouping = context.Theme.HexView?.SecondaryGrouping ?? 0;
+		var asciiPrimaryGrouping = context.Theme.AsciiView?.PrimaryGrouping ?? 0;
+		var asciiSecondaryGrouping = context.Theme.AsciiView?.SecondaryGrouping ?? 0;
 
 		for (int i = 0; i < context.Span.Span.Length;)
 		{
@@ -36,21 +36,21 @@ internal class RowFormatter
 			context.Tags.GetClosestSplitPoint(remainingSpan, out var nextRun, out var tags);
 
 			// compute effective style
-			var effectiveStyle = WinUITextRunStyle.None;
+			var effectiveStyle = TextRunStyle.None;
 			foreach (var tagSpan in tags)
 			{
 				if (tagSpan.Tag is ClassificationTag classificationTag)
 				{
-					if (context.Theme.ClassificationStyleMap?.TryGetValue(classificationTag.Type, out var style) == true)
+					if (context.Theme.ClassificationMap?.TryGetValue(classificationTag.Type, out var style) == true)
 					{
-						effectiveStyle = WinUITextRunStyle.Merge(effectiveStyle, style);
+						effectiveStyle = TextRunStyle.Merge(effectiveStyle, style);
 					}
 				}
 				else if (tagSpan.Tag is UrlTag)
 				{
 					if (context.Theme.HyperlinkStyle is not null)
 					{
-						effectiveStyle = WinUITextRunStyle.Merge(effectiveStyle, context.Theme.HyperlinkStyle);
+						effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.HyperlinkStyle);
 					}
 				}
 			}
