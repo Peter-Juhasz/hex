@@ -107,13 +107,16 @@ internal sealed class ViewScroller : IViewport
 
 	public double Height { get; private set; }
 
+	public double Width { get; private set; }
+
 	public event EventHandler<ViewportHeightChangedEventArgs>? ViewportChanged;
 
-	public void Resize(double newHeight)
+	public void Resize(double newWidth, double newHeight)
 	{
-		if (Height != newHeight)
+		if (Height != newHeight || Width != newWidth)
 		{
 			Height = newHeight;
+			Width = newWidth;
 			ViewportChanged?.Invoke(this, new ViewportHeightChangedEventArgs(newHeight));
 		}
 	}

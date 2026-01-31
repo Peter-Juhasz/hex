@@ -18,7 +18,7 @@ internal sealed class HexColumnHighlightLayer : Canvas
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
-		this.MinWidth = (theme.Columns * 2) * theme.FontWidth;
+		this.MinWidth = (view.Columns * 2) * theme.FontWidth;
 		this.IsHitTestVisible = false;
 
 		_canvas = this;
@@ -39,7 +39,7 @@ internal sealed class HexColumnHighlightLayer : Canvas
 
 	private void Invalidate(CaretPosition position)
 	{
-		var columnIndex = position.Point.Position % _theme.Columns;
+		var columnIndex = position.Point.Position % _view.Columns;
 		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
 

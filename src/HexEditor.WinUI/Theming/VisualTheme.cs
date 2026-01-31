@@ -7,10 +7,10 @@ namespace HexEditor.WinUI.Theming;
 
 public record class VisualTheme(
 	FontFamily FontFamily,
-	int Columns = 16,
 	double FontSize = 14,
 	double FontWidth = 8.25d,
 	double RowHeight = 20,
+	int? Columns = null,
 	IReadOnlyDictionary<string, TextRunStyle>? ClassificationMap = null,
 	IReadOnlyDictionary<DiagnosticSeverity, PathStyle>? SquigglesMap = null,
 	TextRunStyle? HyperlinkStyle = null,

@@ -37,7 +37,7 @@ internal sealed class HexContentView : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
-		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(theme.Columns, theme.FontWidth, theme.HexView?.PrimaryGrouping ?? 0, theme.HexView?.SecondaryGrouping ?? 0);
+		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(view.Columns, theme.FontWidth, theme.HexView?.PrimaryGrouping ?? 0, theme.HexView?.SecondaryGrouping ?? 0);
 		this.Background = theme.HexView?.Background ?? new SolidColorBrush(Colors.Transparent);
 		_canvas = this;
 

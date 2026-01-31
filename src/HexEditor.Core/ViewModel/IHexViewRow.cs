@@ -230,6 +230,38 @@ public interface IHexViewRow
 			}
 		}
 	}
+
+	static int GetMaxColumnCountFromHexView(double availableWidth, double fontWidth, int primaryGrouping, int secondaryGrouping)
+	{
+		if (fontWidth <= 0)
+		{
+			return 0;
+		}
+		int columns = 0;
+		double totalWidth = 0;
+		while (true)
+		{
+			var nextColumnWidth = fontWidth * 2; // Each hex column is 2 characters wide
+			if (columns > 0)
+			{
+				if (primaryGrouping != 0 && (columns % primaryGrouping) == 0)
+				{
+					nextColumnWidth += fontWidth; // Add space for primary grouping
+				}
+				else if (secondaryGrouping != 0 && (columns % secondaryGrouping) == 0)
+				{
+					nextColumnWidth += fontWidth; // Add space for secondary grouping
+				}
+			}
+			if (totalWidth + nextColumnWidth > availableWidth)
+			{
+				break;
+			}
+			totalWidth += nextColumnWidth;
+			columns++;
+		}
+		return columns;
+	}
 }
 
 public static partial class Extensions

@@ -24,7 +24,7 @@ internal sealed class HexSquigglesLayer : Canvas
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
-		this.MinWidth = theme.Columns * theme.FontWidth;
+		this.MinWidth = (view.Columns * 2) * theme.FontWidth;
 
 		_diagnosticTagAggregator = tagAggregator;
 

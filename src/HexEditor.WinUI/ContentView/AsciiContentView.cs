@@ -27,7 +27,7 @@ internal sealed class AsciiContentView : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
 		this.IsTabStop = true;
-		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(theme.Columns, theme.FontWidth, theme.AsciiView?.PrimaryGrouping ?? 0, theme.AsciiView?.SecondaryGrouping ?? 0);
+		this.MinWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(view.Columns, theme.FontWidth, theme.AsciiView?.PrimaryGrouping ?? 0, theme.AsciiView?.SecondaryGrouping ?? 0);
 		this.Background = theme.AsciiView?.Background ?? new SolidColorBrush(Colors.Transparent);
 
 		_canvas = this;

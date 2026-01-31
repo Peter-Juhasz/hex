@@ -8,9 +8,10 @@ public interface IViewport
 {
 	double ScrollableHeight { get; }
 	double Height { get; }
+	double Width { get; }
 	double VerticalOffset { get; }
 
-	void Resize(double newHeight);
+	void Resize(double newWidth, double newHeight);
 
 	void ScrollBy(double delta);
 	void ScrollTo(double verticalOffset);

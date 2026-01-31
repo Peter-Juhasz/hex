@@ -19,7 +19,7 @@ internal sealed class HexSelectionLayer : Canvas
 		this.HorizontalAlignment = HorizontalAlignment.Stretch;
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.IBeam);
-		this.MinWidth = (theme.Columns * 2) * theme.FontWidth;
+		this.MinWidth = (view.Columns * 2) * theme.FontWidth;
 		this.IsHitTestVisible = false;
 
 		_canvas = this;

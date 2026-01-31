@@ -349,7 +349,8 @@ public partial class EditorHost : ContentControl
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 	{
 		var newHeight = e.NewSize.Height;
-		_view.Viewport.Resize(newHeight);
+		var newWidth = _hexContentView.ActualWidth;
+		_view.Viewport.Resize(newWidth, newHeight);
 		_queue.Enqueue(c => _view.InvalidateAsync(c));
 	}
 
@@ -377,7 +378,8 @@ public partial class EditorHost : ContentControl
 		DispatcherQueue.TryEnqueue(() =>
 		{
 			var newHeight = _scrollView.ActualHeight;
-			_view.Viewport.Resize(newHeight);
+			var newWidth = _hexContentView.ActualWidth;
+			_view.Viewport.Resize(newWidth, newHeight);
 			_queue.Enqueue(c => _view.InvalidateAsync(c));
 
 			_grid.Height = _view.ScrollableHeight;

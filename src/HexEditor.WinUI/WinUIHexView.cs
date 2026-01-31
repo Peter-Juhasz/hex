@@ -27,6 +27,7 @@ public class WinUIHexView : IGraphicalHexView
 		this.snapshot = snapshot;
 		ScrollableHeight = theme.RowHeight;
 		_theme = theme;
+		Columns = _theme.Columns ?? 16;
 		Selection = new SelectionManager(this);
 		Caret = new CaretManager(this);
 		Viewport = new ViewScroller(this, theme);
@@ -35,7 +36,7 @@ public class WinUIHexView : IGraphicalHexView
 		_classificationTagAggregator = new SequentialTagAggregator<ClassificationTag>(taggerProvider.CreateTaggers<ClassificationTag>(interestedContentTypes));
 		_urlTagAggregator = new SequentialTagAggregator<UrlTag>(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes));
 
-		TotalRowCount = (snapshot.Length / _theme.Columns) + 1;
+		TotalRowCount = (snapshot.Length / this.Columns) + 1;
 		ScrollableHeight = TotalRowCount * _theme.RowHeight;
 	}
 
@@ -64,7 +65,8 @@ public class WinUIHexView : IGraphicalHexView
 
 	public ICaret Caret { get; }
 
-	public int Columns => _theme.Columns;
+	public int Columns { get; private set; }
+	private double _lastCalculatedViewportWidth;
 
 	public IViewport Viewport { get; }
 
@@ -74,13 +76,27 @@ public class WinUIHexView : IGraphicalHexView
 		{
 			var visibleRowCount = (long)(Viewport.Height / _theme.RowHeight) + 2;
 			var firstVisibleRowIndex = (long)(Viewport.VerticalOffset / _theme.RowHeight);
-			var firstVisibleOffset = firstVisibleRowIndex * _theme.Columns;
-			return snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * _theme.Columns, snapshot.Length - firstVisibleOffset));
+			var firstVisibleOffset = firstVisibleRowIndex * this.Columns;
+			return snapshot.Slice(firstVisibleOffset, Math.Min(visibleRowCount * this.Columns, snapshot.Length - firstVisibleOffset));
 		}
 	}
 
 	internal async Task InvalidateAsync(CancellationToken cancellationToken)
 	{
+		// recalculate columns
+		if (_theme.Columns == null)
+		{
+			if (!double.AreApproximatelyEqual(_lastCalculatedViewportWidth, Viewport.Width, 1d))
+			{
+				var viewportWidth = Viewport.Width; // of hex view
+				var fontWidth = _theme.FontWidth;
+				var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
+				var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
+				Columns = IHexViewRow.GetMaxColumnCountFromHexView(viewportWidth, fontWidth, primaryGrouping, secondaryGrouping);
+				_lastCalculatedViewportWidth = Viewport.Width;
+			}
+		}
+
 		// calculate visible span
 		var visibleSpan = VisibleSpan;
 		var firstVisibleRowIndex = (long)(Viewport.VerticalOffset / _theme.RowHeight);
@@ -115,7 +131,7 @@ public class WinUIHexView : IGraphicalHexView
 		var processedRelativeOffset = 0L;
 		while (processedRelativeOffset < visibleSpan.Span.Length)
 		{
-			var rowSpan = visibleSpan.Slice(processedRelativeOffset, Math.Min(_theme.Columns, visibleSpan.Span.Length - processedRelativeOffset));
+			var rowSpan = visibleSpan.Slice(processedRelativeOffset, Math.Min(this.Columns, visibleSpan.Span.Length - processedRelativeOffset));
 
 			// try to reuse existing row if possible
 			var isReused = false;
@@ -137,7 +153,7 @@ public class WinUIHexView : IGraphicalHexView
 			}
 
 			// create new row
-			var rowIndex = (int)(processedRelativeOffset / _theme.Columns);
+			var rowIndex = (int)(processedRelativeOffset / this.Columns);
 			var rowTags = screenTagSpanMap.Slice(rowSpan);
 			var viewRow = RowFormatter.Format(new(
 				View: this,
@@ -185,7 +201,7 @@ public class WinUIHexView : IGraphicalHexView
 	{
 		SnapshotMismatchException.ThrowIfMismatch(Snapshot, point.Snapshot);
 
-		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
+		var (rowIndex, columnIndex) = Math.DivRem(point.Position, this.Columns);
 
 		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
@@ -203,7 +219,7 @@ public class WinUIHexView : IGraphicalHexView
 	{
 		SnapshotMismatchException.ThrowIfMismatch(Snapshot, point.Snapshot);
 
-		var (rowIndex, columnIndex) = Math.DivRem(point.Position, _theme.Columns);
+		var (rowIndex, columnIndex) = Math.DivRem(point.Position, this.Columns);
 
 		var primaryGrouping = _theme.AsciiView?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.AsciiView?.SecondaryGrouping ?? 0;
@@ -244,10 +260,10 @@ public class WinUIHexView : IGraphicalHexView
 		var remaining = span.Snapshot.Slice(firstRow.End.Position);
 		while (remaining.Length > 0)
 		{
-			var nextRow = remaining.Slice(0, Math.Min(Math.Min(span.End - remaining.Start, _theme.Columns), remaining.Length));
+			var nextRow = remaining.Slice(0, Math.Min(Math.Min(span.End - remaining.Start, this.Columns), remaining.Length));
 			builder.Add(nextRow);
 
-			if (nextRow.Length != _theme.Columns)
+			if (nextRow.Length != this.Columns)
 			{
 				break;
 			}
@@ -264,7 +280,7 @@ public class WinUIHexView : IGraphicalHexView
 		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
 		var columnIndex = IHexViewRow.GetColumnIndexFromHexPosition(point.X, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
-		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
+		return new SnapshotPoint(snapshot, Math.Min(rowIndex * this.Columns + columnIndex, snapshot.Length));
 	}
 
 	public SnapshotPoint MapFromVisualAscii(Vector2 point)
@@ -275,14 +291,14 @@ public class WinUIHexView : IGraphicalHexView
 		var secondaryGrouping = _theme.AsciiView?.SecondaryGrouping ?? 0;
 		var columnIndex = IHexViewRow.GetColumnIndexFromAsciiPosition(point.X, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
-		return new SnapshotPoint(snapshot, Math.Min(rowIndex * _theme.Columns + columnIndex, snapshot.Length));
+		return new SnapshotPoint(snapshot, Math.Min(rowIndex * this.Columns + columnIndex, snapshot.Length));
 	}
 
 	public SnapshotSpan MapRowFromVisual(double verticalOffset)
 	{
 		var rowIndex = MapRowIndexFromVerticalOffset(verticalOffset);
-		var rowStart = rowIndex * _theme.Columns;
-		var rowEnd = Math.Min(rowStart + _theme.Columns, snapshot.Length);
+		var rowStart = rowIndex * this.Columns;
+		var rowEnd = Math.Min(rowStart + this.Columns, snapshot.Length);
 		return new SnapshotSpan(snapshot, new LongSpan(rowStart, rowEnd - rowStart));
 	}
 
@@ -311,7 +327,7 @@ public class WinUIHexView : IGraphicalHexView
 
 		var primaryGrouping = _theme.HexView?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.HexView?.SecondaryGrouping ?? 0;
-		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfHexRow(this.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return
 		[
@@ -351,7 +367,7 @@ public class WinUIHexView : IGraphicalHexView
 
 		var primaryGrouping = _theme.AsciiView?.PrimaryGrouping ?? 0;
 		var secondaryGrouping = _theme.AsciiView?.SecondaryGrouping ?? 0;
-		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(_theme.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
+		var fullRowWidth = IHexViewRow.GetTotalVisualWidthOfAsciiRow(this.Columns, _theme.FontWidth, primaryGrouping, secondaryGrouping);
 
 		return
 		[
@@ -370,9 +386,9 @@ public class WinUIHexView : IGraphicalHexView
 	{
 		SnapshotMismatchException.ThrowIfMismatch(Snapshot, point.Snapshot);
 
-		var rowIndex = point.Position / _theme.Columns;
-		var rowStart = rowIndex * _theme.Columns;
-		var rowEnd = Math.Min(rowStart + _theme.Columns, snapshot.Length);
+		var rowIndex = point.Position / this.Columns;
+		var rowStart = rowIndex * this.Columns;
+		var rowEnd = Math.Min(rowStart + this.Columns, snapshot.Length);
 		return new SnapshotSpan(snapshot, new LongSpan(rowStart, rowEnd - rowStart));
 	}
 }
