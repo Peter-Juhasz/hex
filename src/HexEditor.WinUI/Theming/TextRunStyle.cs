@@ -15,11 +15,11 @@ public record class TextRunStyle(
 {
 	public static readonly TextRunStyle None = new TextRunStyle();
 
-	public static TextRunStyle Merge(TextRunStyle left, TextRunStyle right) => new TextRunStyle(
+	public static TextRunStyle Merge(TextRunStyle left, TextRunStyle right) => new(
 		Foreground: right.Foreground ?? left.Foreground,
 		Background: right.Background ?? left.Background,
 		FontWeight: right.FontWeight ?? left.FontWeight,
-		Opacity: right.Opacity ?? left.Opacity,
+		Opacity: right.Opacity != null && left.Opacity != null ? right.Opacity * left.Opacity : right.Opacity ?? left.Opacity,
 		Underline: left.Underline || right.Underline,
 		Strikethrough: left.Strikethrough || right.Strikethrough,
 		Italic: left.Italic || right.Italic

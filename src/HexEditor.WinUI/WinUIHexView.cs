@@ -6,6 +6,7 @@ using HexEditor.Core.Model;
 using HexEditor.Core.Scrolling;
 using HexEditor.Core.Selection;
 using HexEditor.Core.Tagging;
+using HexEditor.Core.Unnecessary;
 using HexEditor.Core.ViewModel;
 using HexEditor.Model;
 using HexEditor.WinUI.ContentView;
@@ -35,6 +36,7 @@ public class WinUIHexView : IGraphicalHexView
 		var interestedContentTypes = contentTypeRegistry.GetBaseTypesAndSelf(snapshot.Source.ContentType).Select(t => t.Type).ToImmutableArray();
 		_classificationTagAggregator = new SequentialTagAggregator<ClassificationTag>(taggerProvider.CreateTaggers<ClassificationTag>(interestedContentTypes));
 		_urlTagAggregator = new SequentialTagAggregator<UrlTag>(taggerProvider.CreateTaggers<UrlTag>(interestedContentTypes));
+		_unnecessaryTagAggregator = new SequentialTagAggregator<UnnecessaryTag>(taggerProvider.CreateTaggers<UnnecessaryTag>(interestedContentTypes));
 
 		TotalRowCount = (snapshot.Length / this.Columns) + 1;
 		ScrollableHeight = TotalRowCount * _theme.RowHeight;
@@ -42,6 +44,7 @@ public class WinUIHexView : IGraphicalHexView
 
 	private readonly ITagAggregator<ClassificationTag> _classificationTagAggregator;
 	private readonly ITagAggregator<UrlTag> _urlTagAggregator;
+	private readonly ITagAggregator<UnnecessaryTag> _unnecessaryTagAggregator;
 
 	private ImmutableArray<IHexViewRow> _visibleRows = [];
 
@@ -108,8 +111,9 @@ public class WinUIHexView : IGraphicalHexView
 		// collect tags
 		var classificationTags = await _classificationTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
 		var urlTags = await _urlTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
+		var unnecessaryTags = await _unnecessaryTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
 
-		var allTags = new TagSpan[classificationTags.Length + urlTags.Length];
+		var allTags = new TagSpan[classificationTags.Length + urlTags.Length + unnecessaryTags.Length];
 		var allTagsIndex = 0;
 		for (int i = 0; i < classificationTags.Length; i++)
 		{
@@ -119,6 +123,11 @@ public class WinUIHexView : IGraphicalHexView
 		for (int i = 0; i < urlTags.Length; i++)
 		{
 			allTags[allTagsIndex++] = urlTags[i];
+		}
+
+		for (int i = 0; i < unnecessaryTags.Length; i++)
+		{
+			allTags[allTagsIndex++] = unnecessaryTags[i];
 		}
 
 		var screenTagSpanMap = new TagIntersectionMap(allTags);
@@ -161,7 +170,7 @@ public class WinUIHexView : IGraphicalHexView
 				Top: (firstVisibleRowIndex + rowIndex) * _theme.RowHeight,
 				Span: rowSpan,
 				Data: screenBuffer.AsMemory((int)processedRelativeOffset, (int)rowSpan.Span.Length),
-				Tags: screenTagSpanMap
+				Tags: rowTags
 			));
 			totalRowsBuilder.Add(viewRow);
 			newRowsBuilder.Add(viewRow);

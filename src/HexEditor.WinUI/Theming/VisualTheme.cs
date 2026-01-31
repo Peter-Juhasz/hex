@@ -14,6 +14,7 @@ public record class VisualTheme(
 	IReadOnlyDictionary<string, TextRunStyle>? ClassificationMap = null,
 	IReadOnlyDictionary<DiagnosticSeverity, PathStyle>? SquigglesMap = null,
 	TextRunStyle? HyperlinkStyle = null,
+	TextRunStyle? UnnecessaryStyle = null,
 	Brush? Background = null,
 	Brush? Foreground = null,
 	HexViewStyle? HexView = null,

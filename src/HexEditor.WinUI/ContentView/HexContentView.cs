@@ -128,7 +128,7 @@ internal sealed class HexContentView : Canvas
 								Fill = style.Background,
 								IsHitTestVisible = false,
 							};
-							if (style.Opacity is not null)
+							if (style.Opacity < 1d)
 							{
 								rectangle.Opacity = style.Opacity.Value;
 							}

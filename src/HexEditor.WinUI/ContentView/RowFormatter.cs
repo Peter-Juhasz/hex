@@ -1,6 +1,7 @@
 ﻿using HexEditor.Core.Classification;
 using HexEditor.Core.Hyperlinks;
 using HexEditor.Core.Tagging;
+using HexEditor.Core.Unnecessary;
 using HexEditor.Core.ViewModel;
 using HexEditor.Model;
 using HexEditor.WinUI.Theming;
@@ -39,19 +40,31 @@ internal class RowFormatter
 			var effectiveStyle = TextRunStyle.None;
 			foreach (var tagSpan in tags)
 			{
-				if (tagSpan.Tag is ClassificationTag classificationTag)
+				switch (tagSpan.Tag)
 				{
-					if (context.Theme.ClassificationMap?.TryGetValue(classificationTag.Type, out var style) == true)
-					{
-						effectiveStyle = TextRunStyle.Merge(effectiveStyle, style);
-					}
-				}
-				else if (tagSpan.Tag is UrlTag)
-				{
-					if (context.Theme.HyperlinkStyle is not null)
-					{
-						effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.HyperlinkStyle);
-					}
+					case ClassificationTag classificationTag:
+						{
+							if (context.Theme.ClassificationMap?.TryGetValue(classificationTag.Type, out var style) == true)
+							{
+								effectiveStyle = TextRunStyle.Merge(effectiveStyle, style);
+							}
+
+							break;
+						}
+
+					case UrlTag:
+						if (context.Theme.HyperlinkStyle is not null)
+						{
+							effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.HyperlinkStyle);
+						}
+						break;
+
+					case UnnecessaryTag:
+						if (context.Theme.UnnecessaryStyle is not null)
+						{
+							effectiveStyle = TextRunStyle.Merge(effectiveStyle, context.Theme.UnnecessaryStyle);
+						}
+						break;
 				}
 			}
 

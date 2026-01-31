@@ -236,7 +236,7 @@ public partial class EditorHost : ContentControl
 			VerticalContentAlignment = VerticalAlignment.Top,
 			HorizontalScrollMode = ScrollingScrollMode.Disabled,
 			HorizontalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden,
-			VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Auto,
+			VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Visible,
 			Content = _grid,
 		};
 
@@ -501,7 +501,7 @@ internal static partial class Extensions
 			{
 				textBlock.FontWeight = style.FontWeight.Value;
 			}
-			if (style.Opacity is not null)
+			if (style.Opacity < 1d)
 			{
 				textBlock.Opacity = style.Opacity.Value;
 			}
