@@ -1,7 +1,7 @@
 {
     "fontFamily": "Cascadia Mono",
-    "fontSize": 16,
-    "rowHeight": 20,
+    "fontSize": 17,
+    "rowHeight": 22,
     "foreground": "#000",
     "background": "#FFFFFF",
     "selection": {

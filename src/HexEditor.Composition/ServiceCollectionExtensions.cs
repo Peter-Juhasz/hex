@@ -1,4 +1,5 @@
-﻿using HexEditor.Core.ContentType;
+﻿using HexEditor.Core.Actions;
+using HexEditor.Core.ContentType;
 using HexEditor.Core.Syntax;
 using HexEditor.Core.Tagging;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ public static partial class ServiceCollectionExtensions
 			services.AddContentTypes(assembly);
 			services.AddSyntax(assembly);
 			services.AddTaggers(assembly);
+			services.AddActions(assembly);
 		}
 
 		public void AddContentTypes(Assembly assembly)
@@ -82,5 +84,27 @@ public static partial class ServiceCollectionExtensions
 				}
 			}
 		}
+
+		public void AddActions(Assembly assembly)
+		{
+			var factoryServiceType = typeof(IBinaryActionProvider);
+			foreach (var type in assembly.GetExportedTypes()
+				.Where(t => factoryServiceType.IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
+			)
+			{
+				foreach (var contentType in type.GetCustomAttributes<ContentTypeAttribute>().Select(a => a.Type).DefaultIfEmpty(null))
+				{
+					if (contentType == null)
+					{
+						services.AddSingleton(factoryServiceType, type);
+					}
+					else
+					{
+						services.AddKeyedSingleton(factoryServiceType, contentType, type);
+					}
+				}
+			}
+		}
+
 	}
 }

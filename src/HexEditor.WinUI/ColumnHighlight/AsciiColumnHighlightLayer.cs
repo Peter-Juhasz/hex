@@ -23,7 +23,7 @@ internal sealed class AsciiColumnHighlightLayer : Canvas
 
 		_canvas = this;
 
-		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.PositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly Canvas _canvas;

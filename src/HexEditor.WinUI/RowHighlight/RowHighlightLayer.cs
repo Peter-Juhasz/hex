@@ -19,7 +19,7 @@ internal sealed class RowHighlightLayer : Canvas
 		this.VerticalAlignment = VerticalAlignment.Stretch;
 		this.IsHitTestVisible = false;
 
-		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.PositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly IGraphicalHexView _view;

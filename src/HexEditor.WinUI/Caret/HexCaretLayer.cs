@@ -29,7 +29,7 @@ internal sealed class HexCaretLayer : Canvas
 		_caret = CreateCaret();
 		_canvas.Children.Add(_caret);
 
-		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.PositionChanged += OnCaretPositionChanged;
 		_view.Caret.ActiveViewChanged += OnCaretActiveViewChanged;
 		this.Visibility = _view.Caret.ActiveView == ActiveView.Hex ? Visibility.Visible : Visibility.Collapsed;
 	}

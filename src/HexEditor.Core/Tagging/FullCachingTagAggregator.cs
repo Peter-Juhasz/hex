@@ -16,15 +16,7 @@ public sealed class FullCachingTagAggregator<TTag>(
 		var currentSnapshot = span.Snapshot;
 		if (_lastCached is { } cacheItem && cacheItem.Snapshot == currentSnapshot)
 		{
-			using var result = new PooledArrayBuilder<TagSpan<TTag>>();
-			foreach (var tag in cacheItem.Tags)
-			{
-				if (tag.Span.Span.OverlapsWith(span.Span))
-				{
-					result.Add(tag);
-				}
-			}
-			return new(result.ToImmutableArray());
+			return new(ImmutableCollectionsMarshal.AsImmutableArray(cacheItem.Tags.OverlapsWith(span)));
 		}
 
 		return GetCoreAsync(span, cancellationToken);
@@ -37,15 +29,7 @@ public sealed class FullCachingTagAggregator<TTag>(
 		var cacheItem = new CacheItem(currentSnapshot, ImmutableCollectionsMarshal.AsArray(tags) ?? []);
 		_lastCached = cacheItem;
 
-		using var result = new PooledArrayBuilder<TagSpan<TTag>>();
-		foreach (var tag in cacheItem.Tags)
-		{
-			if (tag.Span.Span.OverlapsWith(span.Span))
-			{
-				result.Add(tag);
-			}
-		}
-		return result.ToImmutableArray();
+		return ImmutableCollectionsMarshal.AsImmutableArray(cacheItem.Tags.OverlapsWith(span));
 	}
 
 	private record class CacheItem(IBinarySnapshot Snapshot, TagSpan<TTag>[] Tags);

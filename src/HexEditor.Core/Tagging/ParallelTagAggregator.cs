@@ -52,6 +52,10 @@ public sealed class ParallelTagAggregator<TTag>(
 		{
 			results[index] = await tagger.GetTagsAsync(span, cancellationToken).ConfigureAwait(false);
 		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
 		catch { }
 	}
 }

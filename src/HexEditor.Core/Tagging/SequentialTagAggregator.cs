@@ -29,6 +29,10 @@ public sealed class SequentialTagAggregator<TTag>(
 				var tagger = taggers[i];
 				results[i] = await tagger.GetTagsAsync(span, cancellationToken).ConfigureAwait(false);
 			}
+			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+			{
+				throw;
+			}
 			catch (Exception)
 			{
 				// TODO: log

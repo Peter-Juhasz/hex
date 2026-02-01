@@ -20,7 +20,7 @@ public class CaretManager : ICaret
 		if (e.Selection != null)
 		{
 			_caretPosition = new CaretPosition(e.Selection.ActivePoint);
-			CaretPositionChanged?.Invoke(this, new CaretPositionChangedEventArgs(_caretPosition));
+			PositionChanged?.Invoke(this, new CaretPositionChangedEventArgs(_caretPosition));
 		}
 	}
 
@@ -32,7 +32,7 @@ public class CaretManager : ICaret
 
 	public ActiveView ActiveView => _activeView;
 
-	public event EventHandler<CaretPositionChangedEventArgs>? CaretPositionChanged;
+	public event EventHandler<CaretPositionChangedEventArgs>? PositionChanged;
 	public event EventHandler<ActiveViewChangedEventArgs>? ActiveViewChanged;
 
 	public void MoveTo(SnapshotPoint point)
@@ -176,7 +176,7 @@ public class CaretManager : ICaret
 	private void Set(CaretPosition caretPosition)
 	{
 		_caretPosition = caretPosition;
-		CaretPositionChanged?.Invoke(this, new CaretPositionChangedEventArgs(caretPosition));
+		PositionChanged?.Invoke(this, new CaretPositionChangedEventArgs(caretPosition));
 
 		_view.Selection.Clear();
 

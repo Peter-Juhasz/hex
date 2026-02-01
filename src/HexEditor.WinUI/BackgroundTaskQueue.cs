@@ -33,9 +33,14 @@ internal sealed class BackgroundTaskQueue
 	{
 		await foreach (var workItem in _workerThreadQueue.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
 		{
+			if (workItem.CancellationToken.IsCancellationRequested)
+			{
+				continue;
+			}
+
 			try
 			{
-				await workItem.Factory(cancellationToken).ConfigureAwait(false);
+				await workItem.Factory(workItem.CancellationToken).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 			{

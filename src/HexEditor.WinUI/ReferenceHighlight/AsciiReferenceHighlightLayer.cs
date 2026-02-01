@@ -33,7 +33,7 @@ internal sealed class AsciiReferenceHighlightLayer : Canvas
 
 		_canvas = this;
 		_view.VisibleRowsChanged += OnVisibleRowsChanged;
-		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.PositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly Canvas _canvas;

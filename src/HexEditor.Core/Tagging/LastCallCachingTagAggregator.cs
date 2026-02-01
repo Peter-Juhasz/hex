@@ -12,9 +12,16 @@ public sealed class LastCallCachingTagAggregator<TTag>(
 
 	public ValueTask<ImmutableArray<TagSpan<TTag>>> GetTagsAsync(SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		if (_lastCached is { } cacheItem && cacheItem.Span == span)
+		if (_lastCached is { } cacheItem)
 		{
-			return new(cacheItem.Tags);
+			if (cacheItem.Span == span)
+			{
+				return new(cacheItem.Tags);
+			}
+			else if (cacheItem.Span.Contains(span))
+			{
+				return new(cacheItem.Tags.OverlapsWith(span));
+			}
 		}
 
 		return GetCoreAsync(span, cancellationToken);

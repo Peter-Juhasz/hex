@@ -114,21 +114,15 @@ public class WinUIHexView : IGraphicalHexView
 		var unnecessaryTags = await _unnecessaryTagAggregator.GetTagsAsync(visibleSpan, cancellationToken).ConfigureAwait(false);
 
 		var allTags = new TagSpan[classificationTags.Length + urlTags.Length + unnecessaryTags.Length];
-		var allTagsIndex = 0;
-		for (int i = 0; i < classificationTags.Length; i++)
-		{
-			allTags[allTagsIndex++] = classificationTags[i];
-		}
+		var written = 0;
 
-		for (int i = 0; i < urlTags.Length; i++)
-		{
-			allTags[allTagsIndex++] = urlTags[i];
-		}
+		classificationTags.CopyTo(allTags);
+		written += classificationTags.Length;
 
-		for (int i = 0; i < unnecessaryTags.Length; i++)
-		{
-			allTags[allTagsIndex++] = unnecessaryTags[i];
-		}
+		urlTags.CopyTo(allTags.AsSpan(written));
+		written += urlTags.Length;
+
+		unnecessaryTags.CopyTo(allTags.AsSpan(written));
 
 		var screenTagSpanMap = new TagIntersectionMap(allTags);
 

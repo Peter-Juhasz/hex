@@ -9,7 +9,7 @@ public interface ICaret
 	CaretPosition Position { get; }
 
 	event EventHandler<ActiveViewChangedEventArgs>? ActiveViewChanged;
-	event EventHandler<CaretPositionChangedEventArgs>? CaretPositionChanged;
+	event EventHandler<CaretPositionChangedEventArgs>? PositionChanged;
 
 	void ChangeView(ActiveView activeView);
 

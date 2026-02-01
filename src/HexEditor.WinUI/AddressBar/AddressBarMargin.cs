@@ -31,7 +31,7 @@ internal sealed class AddressBarMargin : Canvas
 		_canvas = this;
 
 		_view.VisibleRowsChanged += OnViewVisibleRowsChanged;
-		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.PositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly Canvas _canvas;

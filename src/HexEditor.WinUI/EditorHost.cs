@@ -1,3 +1,4 @@
+using HexEditor.Core.Actions;
 using HexEditor.Core.Caret;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Diagnostics;
@@ -9,6 +10,7 @@ using HexEditor.Core.Scrolling;
 using HexEditor.Core.Tagging;
 using HexEditor.Core.ViewModel;
 using HexEditor.Model;
+using HexEditor.WinUI.Actions;
 using HexEditor.WinUI.AddressBar;
 using HexEditor.WinUI.Caret;
 using HexEditor.WinUI.ColumnHighlight;
@@ -83,15 +85,15 @@ public partial class EditorHost : ContentControl
 		});
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
 		{
+			Width = new GridLength(16, GridUnitType.Pixel),
+		});
+		_grid.ColumnDefinitions.Add(new ColumnDefinition()
+		{
 			Width = new GridLength(8, GridUnitType.Pixel),
 		});
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
 		{
 			Width = GridLength.Auto
-		});
-		_grid.ColumnDefinitions.Add(new ColumnDefinition()
-		{
-			Width = new GridLength(8, GridUnitType.Pixel),
 		});
 		_grid.ColumnDefinitions.Add(new ColumnDefinition()
 		{
@@ -221,7 +223,11 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_addressBarMargin, 0);
 		_grid.Children.Add(_addressBarMargin);
 
-		Grid.SetColumn(_outliningMargin, 2);
+		_actionsMargin = new ActionsMargin(_view, _visualTheme, serviceProvider.GetRequiredService<IBinaryActionProvider>(), contentTypeRegistry);
+		Grid.SetColumn(_actionsMargin, 1);
+		_grid.Children.Add(_actionsMargin);
+
+		Grid.SetColumn(_outliningMargin, 3);
 		_grid.Children.Add(_outliningMargin);
 
 		var statusBar = CreateStatusBar(snapshot.Source.ContentType);
@@ -252,7 +258,7 @@ public partial class EditorHost : ContentControl
 		this.SizeChanged += OnSizeChanged;
 
 		_invalidationTimer.Tick += OnScrollTick;
-		_view.Caret.CaretPositionChanged += OnCaretPositionChanged;
+		_view.Caret.PositionChanged += OnCaretPositionChanged;
 	}
 
 	private readonly ScrollView _scrollView;
@@ -264,6 +270,8 @@ public partial class EditorHost : ContentControl
 	};
 
 	private readonly AddressBarMargin _addressBarMargin;
+
+	private readonly ActionsMargin _actionsMargin;
 
 	private readonly OutliningMargin _outliningMargin;
 
