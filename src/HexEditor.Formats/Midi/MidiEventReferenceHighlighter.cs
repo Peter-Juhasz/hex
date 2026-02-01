@@ -19,20 +19,20 @@ public sealed class MidiEventReferenceHighlighter(
 {
 	protected override async Task<ImmutableArray<TagSpan<ReferenceTag>>> GetTagsAsync(SnapshotPoint triggerPoint, SnapshotSpan span, CancellationToken cancellationToken)
 	{
-		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken);
+		var syntaxTree = await syntaxTreeProvider.GetSyntaxTreeAsync(span, cancellationToken).ConfigureAwait(false);
 		if (syntaxTree == null)
 		{
 			goto NoResults;
 		}
 
 		// find event
-		if (await MidiParser.TryFindEventAsync(syntaxTree, triggerPoint, cancellationToken) is not { } eventSpan)
+		if (await MidiParser.TryFindEventAsync(syntaxTree, triggerPoint, cancellationToken).ConfigureAwait(false) is not { } eventSpan)
 		{
 			goto NoResults;
 		}
 
 		var buffer = new byte[eventSpan.Length];
-		await eventSpan.CopyToAsync(buffer, cancellationToken);
+		await eventSpan.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
 		if (!MidiParser.TryReadVariableLengthQuantity(buffer, out _, out var deltaTimeLength))
 		{
 			goto NoResults;
@@ -59,7 +59,7 @@ public sealed class MidiEventReferenceHighlighter(
 		}
 
 		// find all matching events
-		return await FindEventsAsync(syntaxTree, currentStatus, span, cancellationToken);
+		return await FindEventsAsync(syntaxTree, currentStatus, span, cancellationToken).ConfigureAwait(false);
 
 	NoResults:
 		return [];
@@ -85,7 +85,7 @@ public sealed class MidiEventReferenceHighlighter(
 			}
 
 			var trackBuffer = new byte[trackNode.Span.Length - 8];
-			await trackNode.Span.Slice(8).CopyToAsync(trackBuffer, cancellationToken);
+			await trackNode.Span.Slice(8).CopyToAsync(trackBuffer, cancellationToken).ConfigureAwait(false);
 
 			var startIndex = 0;
 			var runningStatus = (byte?)null;

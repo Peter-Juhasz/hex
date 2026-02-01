@@ -198,7 +198,7 @@ public sealed class MidiParser : IPartialSyntaxTreeFactory
 		// read track data
 		// TODO: optimize to avoid allocation
 		var trackBuffer = new byte[trackNode.Span.Length - 8];
-		await trackNode.Span.Slice(8).CopyToAsync(trackBuffer, cancellationToken);
+		await trackNode.Span.Slice(8).CopyToAsync(trackBuffer, cancellationToken).ConfigureAwait(false);
 
 		// find current event
 		var runningStatus = (byte?)null;

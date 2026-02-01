@@ -2,6 +2,7 @@ using HexEditor.Core.Actions;
 using HexEditor.Core.Caret;
 using HexEditor.Core.ContentType;
 using HexEditor.Core.Diagnostics;
+using HexEditor.Core.Fields;
 using HexEditor.Core.Hyperlinks;
 using HexEditor.Core.Model;
 using HexEditor.Core.QuickInfo;
@@ -142,6 +143,17 @@ public partial class EditorHost : ContentControl
 			)
 		);
 
+		var fieldTagAggregator = new LockingTagAggregator<FieldTag>(
+			new LastCallWithEditorStateCachingTagAggregator<FieldTag>(
+				new PostFilteringTagAggregator<FieldTag>(
+					new ParallelTagAggregator<FieldTag>(
+						taggerProvider.CreateTaggers<FieldTag>(interestedContentTypes)
+					)
+				),
+				serviceProvider.GetRequiredService<IViewAccessor>()
+			)
+		);
+
 		_view = new WinUIHexView(snapshot, _visualTheme, taggerProvider, contentTypeRegistry);
 		_view.Viewport.VerticalOffsetChanged += OnViewScrollerScrollOffsetChanged;
 		_view.Viewport.ScrollableHeightChanged += OnModelScrollableHeightChanged;
@@ -173,6 +185,10 @@ public partial class EditorHost : ContentControl
 		Grid.SetColumn(_hexReferenceHighlightLayer, 4);
 		_grid.Children.Add(_hexReferenceHighlightLayer);
 
+		_hexFieldHighlightLayer = new HexFieldHighlightLayer(_view, fieldTagAggregator, _visualTheme);
+		Grid.SetColumn(_hexFieldHighlightLayer, 4);
+		_grid.Children.Add(_hexFieldHighlightLayer);
+
 		_hexSelectionLayer = new HexSelectionLayer(_view, _visualTheme);
 		Grid.SetColumn(_hexSelectionLayer, 4);
 		_grid.Children.Add(_hexSelectionLayer);
@@ -202,6 +218,10 @@ public partial class EditorHost : ContentControl
 		_asciiReferenceHighlightLayer = new AsciiReferenceHighlightLayer(_view, referenceTagAggregator, _visualTheme);
 		Grid.SetColumn(_asciiReferenceHighlightLayer, 5);
 		_grid.Children.Add(_asciiReferenceHighlightLayer);
+
+		_asciiFieldHighlightLayer = new AsciiFieldHighlightLayer(_view, fieldTagAggregator, _visualTheme);
+		Grid.SetColumn(_asciiFieldHighlightLayer, 5);
+		_grid.Children.Add(_asciiFieldHighlightLayer);
 
 		_asciiSelectionLayer = new AsciiSelectionLayer(_view, _visualTheme);
 		Grid.SetColumn(_asciiSelectionLayer, 5);
@@ -279,6 +299,7 @@ public partial class EditorHost : ContentControl
 
 	private readonly HexOutliningHighlightLayer _hexOutliningHighlightLayer;
 	private readonly HexReferenceHighlightLayer _hexReferenceHighlightLayer;
+	private readonly HexFieldHighlightLayer _hexFieldHighlightLayer;
 	private readonly HexColumnHighlightLayer? _hexColumnHighlightLayer;
 	private readonly HexContentView _hexContentView;
 	private readonly HexSquigglesLayer _hexSquigglesLayer;
@@ -287,6 +308,7 @@ public partial class EditorHost : ContentControl
 
 	private readonly AsciiOutliningHighlightLayer _asciiOutliningHighlightLayer;
 	private readonly AsciiReferenceHighlightLayer _asciiReferenceHighlightLayer;
+	private readonly AsciiFieldHighlightLayer _asciiFieldHighlightLayer;
 	private readonly AsciiColumnHighlightLayer? _asciiColumnHighlightLayer;
 	private readonly AsciiContentView _asciiContentView;
 	private readonly AsciiSquigglesLayer _asciiSquigglesLayer;
@@ -473,6 +495,49 @@ internal static partial class Extensions
 			}
 
 			figure.StartPoint = points[0].ToPoint();
+			figure.Segments = segments;
+		}
+
+		public void FillRounded(Vector2[] points, float radius)
+		{
+			if (points == null || points.Length < 3)
+				throw new ArgumentException("Polygon must have at least 3 points.");
+
+			var segments = new PathSegmentCollection();
+			int count = points.Length;
+
+			Vector2 Get(int i) => points[(i + count) % count];
+
+			Vector2 MoveTowards(Vector2 from, Vector2 to, float distance)
+			{
+				var dir = Vector2.Normalize(to - from);
+				return from + dir * distance;
+			}
+
+			for (int i = 0; i < count; i++)
+			{
+				var prev = Get(i - 1);
+				var curr = Get(i);
+				var next = Get(i + 1);
+
+				var inPoint = MoveTowards(curr, prev, radius);
+				var outPoint = MoveTowards(curr, next, radius);
+
+				if (i == 0)
+					figure.StartPoint = inPoint.ToPoint();
+				else
+					segments.Add(new LineSegment { Point = inPoint.ToPoint() });
+
+				segments.Add(new ArcSegment
+				{
+					Point = outPoint.ToPoint(),
+					Size = new(radius, radius),
+					SweepDirection = SweepDirection.Clockwise,
+					IsLargeArc = false
+				});
+			}
+
+			figure.IsClosed = true;
 			figure.Segments = segments;
 		}
 	}
