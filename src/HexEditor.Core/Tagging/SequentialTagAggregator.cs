@@ -1,4 +1,5 @@
-﻿using HexEditor.Model;
+﻿using HexEditor.Core.Model;
+using HexEditor.Model;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
@@ -30,6 +31,10 @@ public sealed class SequentialTagAggregator<TTag>(
 				results[i] = await tagger.GetTagsAsync(span, cancellationToken).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+			{
+				throw;
+			}
+			catch (SnapshotMismatchException)
 			{
 				throw;
 			}

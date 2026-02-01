@@ -18,7 +18,7 @@ public sealed class LastCallCachingTagAggregator<TTag>(
 			{
 				return new(cacheItem.Tags);
 			}
-			else if (cacheItem.Span.Contains(span))
+			else if (cacheItem.Span.Snapshot == span.Snapshot && cacheItem.Span.Contains(span))
 			{
 				return new(cacheItem.Tags.OverlapsWith(span));
 			}
